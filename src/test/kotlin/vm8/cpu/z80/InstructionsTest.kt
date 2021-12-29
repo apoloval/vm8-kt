@@ -12,7 +12,10 @@ internal class InstructionsTest : FunSpec({
     val sys = MinimalSystem()
     val cpu = Processor(sys)
 
-    beforeEach { cpu.reset() }
+    beforeEach { 
+        cpu.reset() 
+        cpu.regs.f = Octet(0x00)
+    }
 
     test("DEC8 instruction") {
         cpu.regs.a = Octet(0x42)
@@ -21,6 +24,17 @@ internal class InstructionsTest : FunSpec({
         cycles shouldBe 4
         cpu.regs.pc shouldBe Word(0x0001)
         cpu.regs.a shouldBe Octet(0x41)
+    }
+
+    test("EX instruction") {
+        cpu.regs.af = Word(0xABCD)
+        cpu.regs.`af'` = Word(0x1234)
+        val cycles = cpu.run(Ex(Reg16.AF, Reg16.`AF'`, cycles = 4, size = 1))
+
+        cycles shouldBe 4
+        cpu.regs.pc shouldBe Word(0x0001)
+        cpu.regs.af shouldBe Word(0x1234)
+        cpu.regs.`af'` shouldBe Word(0xABCD)
     }
 
     test("JP instruction") {

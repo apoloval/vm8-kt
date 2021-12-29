@@ -16,6 +16,9 @@ class Assembler(size: Int = 64*1024) {
     val H = Reg8.H
     val L = Reg8.L
 
+    val AF = Reg16.AF
+    val `AF'` = Reg16.`AF'`
+
     val NOP: Unit get() = DB(OpCodes.NOP)
 
     operator fun String.unaryPlus(): Int = symbols.getValue(this)
@@ -51,6 +54,11 @@ class Assembler(size: Int = 64*1024) {
         Reg8.H -> DB(OpCodes.`DEC H`)
         Reg8.L -> DB(OpCodes.`DEC L`)
         else -> throw IllegalArgumentException("invalid instruction: DEC $r")
+    }
+
+    fun EX(a: Reg16, b: Reg16) = when(Pair(a, b)) {
+        Pair(Reg16.AF, Reg16.`AF'`) -> DB(OpCodes.`EX AF, AF'`)
+        else -> throw IllegalArgumentException("invalid instruction: EX $a, $b")
     }
 
     fun INC(r: Reg8) = when(r) { 

@@ -15,6 +15,7 @@ fun main() {
         INC(B)
         DEC(C)
         RLCA
+        EX(AF, `AF'`)
         JP(+"begin")
     }
 

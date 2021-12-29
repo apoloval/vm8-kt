@@ -11,6 +11,8 @@ class RegsBank {
     var pc: Word = Word(0x0000)
     var sp: Word = Word(0x0000)
 
+    var `af'`: Word = Word(0x0000)
+
     var a: Octet 
         inline get() = af.high()
         inline set(v) { af = af.setHigh(v) }
