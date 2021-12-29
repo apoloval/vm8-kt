@@ -49,6 +49,18 @@ data class Jp(val addr: SrcOp16) : Inst {
 }
 
 /**
+ * LOAD instruction for 8-bit operands
+ */
+data class Ld8(val dest: DestOp8, val src: SrcOp8, val cycles: Int, val size: Int): Inst {
+    override suspend fun Processor.exec(): Int {
+        val v = load8(src)
+        store8(dest, v)
+        regs.pc += size
+        return cycles
+    }
+}
+
+/**
  * LOAD instruction for 16-bit operands
  */
 data class Ld16(val dest: DestOp16, val src: SrcOp16, val cycles: Int, val size: Int): Inst {
