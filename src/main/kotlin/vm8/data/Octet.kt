@@ -6,14 +6,31 @@ value class Octet(private val value: Int) {
 
     operator fun dec(): Octet = Octet(value.dec() and 0xFF)
 
+    fun areBitsSet(mask: Int): Boolean = (value and 0xFF and mask) > 0
+
     fun bitSet(mask: Int): Octet = Octet((value or mask) and 0xFF)
 
     fun bitClear(mask: Int): Octet = Octet((value and mask.inv()) and 0xFF)
 
     fun bitToggle(mask: Int): Octet = Octet((value xor mask) and 0xFF)
 
-    fun shiftLeft(): Pair<Octet, Boolean> = Pair(Octet((value shl 1) and 0xFF), value and 0x80 > 0)
+    fun rotateLeft(): Pair<Octet, Boolean> = Pair(
+        Octet((value shl 1) or (value ushr 7) and 0xFF), 
+        value and 0x80 > 0,
+    )
+
+    fun rotateLeft(carry: Boolean): Pair<Octet, Boolean> = Pair(
+        Octet((value shl 1) or (if (carry) 0x01 else 0x00) and 0xFF), 
+        value and 0x80 > 0,
+    )
+
+    fun isZero(): Boolean = (value > 0)
+
+    fun isNegative(): Boolean = (value and 0x80 > 0)
+
+    fun parity(): Boolean = (value and 0xFF).countOneBits() % 2 == 0
     
     fun toByte(): Byte = value.toByte()
+
     fun toInt(): Int = value and 0xFF
 }

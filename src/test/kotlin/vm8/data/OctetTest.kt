@@ -34,9 +34,17 @@ class OctetTest : FunSpec({
         Octet(0b00000011).bitToggle(0b01010101) shouldBe Octet(0b01010110)
     }
 
-    test("shift left") {
-        Octet(0b00000001).shiftLeft() shouldBe Pair(Octet(0b00000010), false)
-        Octet(0b00000011).shiftLeft() shouldBe Pair(Octet(0b00000110), false)
-        Octet(0b10000011).shiftLeft() shouldBe Pair(Octet(0b00000110), true)
+    test("rotate left") {
+        Octet(0b00000001).rotateLeft() shouldBe Pair(Octet(0b00000010), false)
+        Octet(0b00000011).rotateLeft() shouldBe Pair(Octet(0b00000110), false)
+        Octet(0b10000011).rotateLeft() shouldBe Pair(Octet(0b00000111), true)
+    }
+
+    test("rotate left with carry") {
+        Octet(0b00000001).rotateLeft(carry = true) shouldBe Pair(Octet(0b00000011), false)
+        Octet(0b00000001).rotateLeft(carry = false) shouldBe Pair(Octet(0b00000010), false)
+        Octet(0b00000011).rotateLeft(carry = true) shouldBe Pair(Octet(0b00000111), false)
+        Octet(0b10000011).rotateLeft(carry = true) shouldBe Pair(Octet(0b00000111), true)
+        Octet(0b10000011).rotateLeft(carry = false) shouldBe Pair(Octet(0b00000110), true)
     }
 })

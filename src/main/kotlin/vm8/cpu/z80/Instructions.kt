@@ -13,6 +13,11 @@ sealed interface Inst {
 }
 
 /**
+ * Run the given instruction over the Z80 processor.
+ */
+suspend fun Processor.run(inst: Inst): Int = with(inst) { exec() }
+
+/**
  * DEC instruction for 8-bit operands
  */
 data class Dec8(val dest: DestOp8) : Inst {
@@ -92,6 +97,26 @@ object Nop : Inst {
     override suspend fun Processor.exec(): Int {
         regs.pc++
         return 4
+    }
+}
+
+/**
+ * NOP instruction
+ */
+data class Rlca(val cycles: Int, val size: Int) : Inst {
+    override suspend fun Processor.exec(): Int {
+        val (v, carry) = regs.a.rotateLeft(isFlag(Flag.C))
+        regs.a = v
+
+        // --503-0C
+        val flags = 
+            (Flag.F5 on v.isBit5()) and 
+            (Flag.F3 on v.isBit3()) and 
+            (Flag.C on carry) - Flag.H - Flag.N
+        apply(flags)
+        
+        regs.pc += size
+        return cycles
     }
 }
 

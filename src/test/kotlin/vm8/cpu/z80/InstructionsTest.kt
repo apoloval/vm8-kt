@@ -79,6 +79,21 @@ internal class InstructionsTest : FunSpec({
         cpu.regs.pc shouldBe Word(0x0001)
     }
 
+    test("RLCA instruction") {
+        cpu.regs.a = Octet(0b10010101)
+        val cycles = cpu.run(Rlca(cycles = 4, size = 1))
+
+        cycles shouldBe 4
+        cpu.regs.pc shouldBe Word(0x0001)
+        cpu.regs.a shouldBe Octet(0b00101010)
+        cpu.regs.f shouldBe Octet(0b00101001)
+
+        cpu.run(Rlca(cycles = 4, size = 1))
+
+        cpu.regs.a shouldBe Octet(0b01010101)
+        cpu.regs.f shouldBe Octet(0b00000000)
+    }
+
     test("illegal instruction") {
         shouldThrow<Exception> {
             with(Illegal) { cpu.exec() }

@@ -14,6 +14,7 @@ fun main() {
         NOP
         INC(B)
         DEC(C)
+        RLCA
         JP(+"begin")
     }
 

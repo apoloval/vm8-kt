@@ -68,6 +68,8 @@ class Assembler(size: Int = 64*1024) {
         DB(OpCodes.`JP NN`)
         DW(addr)
     }
+
+    val RLCA: Unit get() { DB(OpCodes.RLCA) }
 }
 
 fun asm(size: Int = 64*1024, f: Assembler.() -> Unit): ByteArray {
