@@ -16,6 +16,6 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
 }
 
 suspend fun Processor.decode(): Inst {
-    val opcode: Int = bus.read(regs.pc.toUShort()).toInt() and 0xFF
+    val opcode: Int = bus.read(regs.pc).toInt()
     return OPCODES_MAIN[opcode]
 }

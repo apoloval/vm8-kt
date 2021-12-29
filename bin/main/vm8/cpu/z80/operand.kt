@@ -7,9 +7,6 @@ enum class Reg8 : DestOp8 {
     B, C
 }
 
-data class MemOp8(val addr: Addr): DestOp8
-
-
 sealed interface SrcOp16
 sealed interface DestOp16 : SrcOp16
 
@@ -18,5 +15,3 @@ enum class Reg16 : DestOp16 {
 }
 
 object Imm16 : SrcOp16
-
-data class MemOp16(val addr: Addr): SrcOp16

@@ -4,15 +4,16 @@ import kotlin.system.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.*
-import vm8.cpu.z80.OPCODE_INC_B
-import vm8.cpu.z80.OPCODE_JP_NN
+
+import vm8.cpu.z80.*
+import vm8.data.*
 
 internal class ProcessorTest {
 
     val mem = ByteArray(64*1024)
     val bus: Bus = object : Bus {
-        override suspend fun read(addr: Addr): Byte = mem[addr.toInt()]
-        override suspend fun write(addr: Addr, v: Byte) { mem[addr.toInt()] = v }
+        override suspend fun read(addr: Addr): Octet = Octet(mem[addr.toInt()].toInt()) 
+        override suspend fun write(addr: Addr, v: Octet) { mem[addr.toInt()] = v.toByte() }
     }
     val cpu = Processor(bus)
 
@@ -22,7 +23,7 @@ internal class ProcessorTest {
         val cycles = runBlocking { cpu.run() }
 
         assertEquals(4, cycles)
-        assertEquals(0x0001, cpu.regs.pc)
+        assertEquals(Word(0x0001), cpu.regs.pc)
     }
 
     @Test
@@ -31,8 +32,8 @@ internal class ProcessorTest {
         val cycles = runBlocking { cpu.run() }
 
         assertEquals(4, cycles)
-        assertEquals(0x0001, cpu.regs.pc)
-        assertEquals(0x01, cpu.regs.b)
+        assertEquals(Word(0x0001), cpu.regs.pc)
+        assertEquals(Octet(0x01), cpu.regs.b)
     }
 
     @Test
@@ -41,18 +42,18 @@ internal class ProcessorTest {
         val cycles = runBlocking { cpu.run() }
 
         assertEquals(4, cycles)
-        assertEquals(0x0001, cpu.regs.pc)
-        assertEquals(0xFF.toByte(), cpu.regs.c)
+        assertEquals(Word(0x0001), cpu.regs.pc)
+        assertEquals(Octet(0xFF), cpu.regs.c)
     }
 
     @Test
     fun testExecJp() {
         mem[0x0000] = OPCODE_JP_NN.toByte()
-        mem[0x0001] = 0xCD.toByte()
-        mem[0x0002] = 0xAB.toByte()
+        mem[0x0001] = 0x34.toByte()
+        mem[0x0002] = 0x12.toByte()
         val cycles = runBlocking { cpu.run() }
 
         assertEquals(10, cycles)
-        assertEquals(0xABCD.toShort(), cpu.regs.pc)
+        assertEquals(Word(0x1234), cpu.regs.pc)
     }
 }
