@@ -22,7 +22,9 @@ object Nop : Inst {
 
 data class Inc8(val dest: DestOp8) : Inst {
     override suspend fun Processor.exec(): Int {
-        unary8(dest) { it.inc() }
+        var v = load8(dest)
+        v++
+        store8(dest, v)
         regs.pc++
         return 4
     }
@@ -30,7 +32,9 @@ data class Inc8(val dest: DestOp8) : Inst {
 
 data class Dec8(val dest: DestOp8) : Inst {
     override suspend fun Processor.exec(): Int {
-        unary8(dest) { it.dec() }
+        var v = load8(dest)
+        v--
+        store8(dest, v)
         regs.pc++
         return 4
     }
