@@ -3,9 +3,11 @@ package vm8.cpu.z80
 object OpCodes {
     const val `NOP`         : Int = 0x00
     const val `LD BC, NN`   : Int = 0x01
-
+    const val `LD (BC), A`  : Int = 0x02
+    const val `INC BC`      : Int = 0x03
     const val `INC B`       : Int = 0x04
     const val `DEC B`       : Int = 0x05
+    const val `LD B, N`     : Int = 0x06
 
     const val `INC C`       : Int = 0x0C
     const val `DEC C`       : Int = 0x0D    
@@ -41,8 +43,13 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
     when(it) {
         OpCodes.`NOP` -> Nop
         OpCodes.`LD BC, NN` -> Ld16(Reg16.BC, Imm16, cycles = 10, size = 3)
+        OpCodes.`LD (BC), A` -> Ld8(Ind8(Reg16.BC), Reg8.A, cycles = 7, size = 1)
+        OpCodes.`INC BC` -> Inc16(Reg16.BC, cycles = 6, size = 1)
         OpCodes.`INC B` -> Inc8(Reg8.B)
+        OpCodes.`DEC B` -> Dec8(Reg8.B)
         OpCodes.`DEC C` -> Dec8(Reg8.C)
+        OpCodes.`LD B, N` -> Ld8(Reg8.B, Imm8, cycles = 7, size = 2)
+
         OpCodes.`JP NN` -> Jp(Imm16)
         else -> Illegal
     }
