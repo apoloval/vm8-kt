@@ -8,7 +8,7 @@ class Processor(val bus: Bus) {
 
     suspend fun run(): Int {
         val inst = decode() 
-        return exec(inst)
+        return with(inst) { exec() }
     }    
 
     inline suspend fun load8(op: SrcOp8): Octet = when(op) {
