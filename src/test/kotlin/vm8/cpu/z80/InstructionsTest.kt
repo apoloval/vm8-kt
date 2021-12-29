@@ -40,6 +40,15 @@ internal class InstructionsTest : FunSpec({
         cpu.regs.a shouldBe Octet(0x43)
     }
 
+    test("INC16 instruction") {
+        cpu.regs.hl = Word(0xABCD)
+        val cycles = with(Inc16(Reg16.HL, cycles = 6, size = 1)) { cpu.exec() }
+
+        cycles shouldBe 6
+        cpu.regs.pc shouldBe Word(0x0001)
+        cpu.regs.hl shouldBe Word(0xABCE)
+    }
+
     test("LD8 instruction") {
         cpu.regs.a = Octet(0x00)
         cpu.regs.pc = Word(0x4000)

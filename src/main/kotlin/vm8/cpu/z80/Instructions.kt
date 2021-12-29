@@ -39,6 +39,19 @@ data class Inc8(val dest: DestOp8) : Inst {
 }
 
 /**
+ * INC instruction for 16-bit operands
+ */
+data class Inc16(val dest: DestOp16, val cycles: Int, val size: Int) : Inst {
+    override suspend fun Processor.exec(): Int {
+        var v = load16(dest)
+        v++
+        store16(dest, v)
+        regs.pc += size
+        return cycles
+    }
+}
+
+/**
  * JP instruction.
  */
 data class Jp(val addr: SrcOp16) : Inst {
