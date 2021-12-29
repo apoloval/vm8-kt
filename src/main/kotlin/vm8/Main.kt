@@ -9,16 +9,12 @@ import vm8.data.*
 const val TOTAL_INST = 250_000_000
 
 fun main() {
-    val mem = ByteArray(64*1024) {
-        when(it) {
-            0x00 -> OpCodes.NOP.toByte()
-            0x01 -> OpCodes.`INC B`.toByte()
-            0x02 -> OpCodes.`DEC C`.toByte()
-            0x03 -> OpCodes.`JP NN`.toByte()
-            0x04 -> 0x00
-            0x05 -> 0x00
-            else -> 0x00
-        }
+    val mem = asm {
+        LABEL("begin")
+        NOP
+        INC(B)
+        DEC(C)
+        JP(+"begin")
     }
 
     val bus = object : vm8.cpu.z80.Bus {
