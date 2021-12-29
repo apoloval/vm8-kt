@@ -135,6 +135,15 @@ internal class OperandsTest : FunSpec({
         }))
     }
 
+    context("8-bit immediate") {
+        test("as source operand") {
+            cpu.regs.pc = Word(0xA800)
+            sys.memory[0xA801] = 0x42.toByte()
+
+            cpu.load8(Imm8) shouldBe Octet(0x42)
+        }
+    }
+
     context("16-bit immediate") {
         test("as source operand") {
             cpu.regs.pc = Word(0xA800)

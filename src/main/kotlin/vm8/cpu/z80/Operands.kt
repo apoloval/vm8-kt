@@ -49,6 +49,10 @@ enum class Reg8 : DestOp8 {
     },    
 }
 
+object Imm8 : SrcOp8 {
+    override suspend fun Processor.get(): Octet = bus.read(regs.pc.inc())
+}
+
 data class Ind8(val addr: SrcOp16) : DestOp8 {
     override suspend fun Processor.get(): Octet = bus.read(load16(addr))
 
