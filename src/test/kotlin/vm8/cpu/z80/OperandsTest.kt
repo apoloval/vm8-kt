@@ -135,13 +135,31 @@ internal class OperandsTest : FunSpec({
         }))
     }
 
-    context("immediate operands") {
-        test("immediate word as source operator") {
+    context("16-bit immediate") {
+        test("as source operand") {
             cpu.regs.pc = Word(0xA800)
             sys.memory[0xA801] = 0xCD.toByte()
             sys.memory[0xA802] = 0xAB.toByte()
 
             cpu.load16(Imm16) shouldBe Word(0xABCD)
+        }
+    }
+
+    context("8-bit indirect") {
+        test("as source operand") {
+            cpu.regs.hl = Word(0xA800)
+            sys.memory[0xA800] = 0x42.toByte()
+
+            cpu.load8(Ind8(Reg16.HL)) shouldBe Octet(0x42)
+        }
+
+        test("as dest operand") {
+            cpu.regs.hl = Word(0xA800)
+            sys.memory[0xA800] = 0x00.toByte()
+
+            cpu.store8(Ind8(Reg16.HL), Octet(0x42))
+            
+            sys.memory[0xA800] shouldBe 0x42.toByte()
         }
     }
 })

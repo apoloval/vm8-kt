@@ -49,6 +49,12 @@ enum class Reg8 : DestOp8 {
     },    
 }
 
+data class Ind8(val addr: SrcOp16) : DestOp8 {
+    override suspend fun Processor.get(): Octet = bus.read(load16(addr))
+
+    override suspend fun Processor.set(v: Octet) { bus.write(load16(addr), v) }
+}
+
 sealed interface SrcOp16 {
     suspend fun Processor.get(): Word
 }
