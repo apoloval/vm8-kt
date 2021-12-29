@@ -11,6 +11,8 @@ value class Octet(private val value: Int) {
     fun bitClear(mask: Int): Octet = Octet((value and mask.inv()) and 0xFF)
 
     fun bitToggle(mask: Int): Octet = Octet((value xor mask) and 0xFF)
+
+    fun shiftLeft(): Pair<Octet, Boolean> = Pair(Octet((value shl 1) and 0xFF), value and 0x80 > 0)
     
     fun toByte(): Byte = value.toByte()
     fun toInt(): Int = value and 0xFF

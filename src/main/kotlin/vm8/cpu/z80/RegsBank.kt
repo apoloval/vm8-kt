@@ -42,4 +42,8 @@ class RegsBank {
     var l: Octet 
         inline get() = hl.low()
         inline set(v) { hl = hl.setLow(v) }
+
+    inline fun updateFlags(fn: (Octet) -> Octet) {
+        f = fn(f)
+    }
 }

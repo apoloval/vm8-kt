@@ -33,4 +33,10 @@ class OctetTest : FunSpec({
         Octet(0b00000001).bitToggle(0b01010101) shouldBe Octet(0b01010100)
         Octet(0b00000011).bitToggle(0b01010101) shouldBe Octet(0b01010110)
     }
+
+    test("shift left") {
+        Octet(0b00000001).shiftLeft() shouldBe Pair(Octet(0b00000010), false)
+        Octet(0b00000011).shiftLeft() shouldBe Pair(Octet(0b00000110), false)
+        Octet(0b10000011).shiftLeft() shouldBe Pair(Octet(0b00000110), true)
+    }
 })
