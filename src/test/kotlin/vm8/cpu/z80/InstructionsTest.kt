@@ -40,6 +40,18 @@ internal class InstructionsTest : FunSpec({
         cpu.regs.a shouldBe Octet(0x43)
     }
 
+    test("LD16 instruction") {
+        cpu.regs.bc = Word(0x0000)
+        cpu.regs.pc = Word(0x4000)
+        sys.memory[0x4001] = 0xCD.toByte()
+        sys.memory[0x4002] = 0xAB.toByte()
+        val cycles = with(Ld16(Reg16.BC, Imm16, 10, 3)) { cpu.exec() }
+
+        cycles shouldBe 10
+        cpu.regs.pc shouldBe Word(0x4003)
+        cpu.regs.bc shouldBe Word(0xABCD)
+    }
+
     test("NOP instruction") {
         val cycles = with(Nop) { cpu.exec() }
 

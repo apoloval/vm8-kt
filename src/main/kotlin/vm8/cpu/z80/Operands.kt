@@ -82,6 +82,10 @@ enum class Reg16 : DestOp16 {
         override suspend fun Processor.get(): Word = regs.pc
         override suspend fun Processor.set(v: Word) { regs.pc = v }
     },
+    SP {
+        override suspend fun Processor.get(): Word = regs.sp
+        override suspend fun Processor.set(v: Word) { regs.sp = v }
+    },
 }
 
 object Imm16 : SrcOp16 {

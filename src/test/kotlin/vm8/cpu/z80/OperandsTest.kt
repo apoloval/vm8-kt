@@ -127,6 +127,12 @@ internal class OperandsTest : FunSpec({
             override val op: Reg16 = Reg16.PC
             override var reg: Word by cpu.regs::pc
         }))
+
+        include(regAsOperatorTest(object : RegRef() {
+            override val name: String = "SP"
+            override val op: Reg16 = Reg16.SP
+            override var reg: Word by cpu.regs::sp
+        }))
     }
 
     context("immediate operands") {

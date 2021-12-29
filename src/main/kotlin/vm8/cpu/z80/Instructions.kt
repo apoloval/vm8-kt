@@ -13,17 +13,13 @@ sealed interface Inst {
 }
 
 /**
- * Illegal pseudo-instruction to refer to an illegal opcode.
+ * DEC instruction for 8-bit operands
  */
-object Illegal : Inst {
-    override suspend fun Processor.exec(): Int = throw Exception("illegal opcode")
-}
-
-/**
- * NOP instruction
- */
-object Nop : Inst {
+data class Dec8(val dest: DestOp8) : Inst {
     override suspend fun Processor.exec(): Int {
+        var v = load8(dest)
+        v--
+        store8(dest, v)
         regs.pc++
         return 4
     }
@@ -43,19 +39,6 @@ data class Inc8(val dest: DestOp8) : Inst {
 }
 
 /**
- * DEC instruction for 8-bit operands
- */
-data class Dec8(val dest: DestOp8) : Inst {
-    override suspend fun Processor.exec(): Int {
-        var v = load8(dest)
-        v--
-        store8(dest, v)
-        regs.pc++
-        return 4
-    }
-}
-
-/**
  * JP instruction.
  */
 data class Jp(val addr: SrcOp16) : Inst {
@@ -63,4 +46,33 @@ data class Jp(val addr: SrcOp16) : Inst {
         regs.pc = load16(addr)
         return 10
     }
+}
+
+/**
+ * LOAD instruction for 16-bit operands
+ */
+data class Ld16(val dest: DestOp16, val src: SrcOp16, val cycles: Int, val size: Int): Inst {
+    override suspend fun Processor.exec(): Int {
+        val v = load16(src)
+        store16(dest, v)
+        regs.pc += size
+        return cycles
+    }
+}
+
+/**
+ * NOP instruction
+ */
+object Nop : Inst {
+    override suspend fun Processor.exec(): Int {
+        regs.pc++
+        return 4
+    }
+}
+
+/**
+ * Illegal pseudo-instruction to refer to an illegal opcode.
+ */
+object Illegal : Inst {
+    override suspend fun Processor.exec(): Int = throw Exception("illegal opcode")
 }

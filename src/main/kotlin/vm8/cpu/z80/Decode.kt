@@ -1,16 +1,27 @@
 package vm8.cpu.z80
 
-const val OPCODE_NOP:       Int = 0x00
-const val OPCODE_INC_B:     Int = 0x04
-const val OPCODE_DEC_C:     Int = 0x0D
-const val OPCODE_JP_NN:     Int = 0xC3
+object OpCodes {
+    const val `NOP`         : Int = 0x00
+    const val `LD BC, NN`   : Int = 0x01
+
+    const val `INC B`       : Int = 0x04
+
+    const val `DEC C`       : Int = 0x0D
+
+    const val `JP NN`       : Int = 0xC3
+
+    const val `LD DE, NN`   : Int = 0x10
+    const val `LD HL, NN`   : Int = 0x20
+    const val `LD SP, NN`   : Int = 0x30
+}
 
 private val OPCODES_MAIN: Array<Inst> = Array(256) {
     when(it) {
-        OPCODE_NOP -> Nop
-        OPCODE_INC_B -> Inc8(Reg8.B)
-        OPCODE_DEC_C -> Dec8(Reg8.C)
-        OPCODE_JP_NN -> Jp(Imm16)
+        OpCodes.`NOP` -> Nop
+        OpCodes.`LD BC, NN` -> Ld16(Reg16.BC, Imm16, cycles = 10, size = 3)
+        OpCodes.`INC B` -> Inc8(Reg8.B)
+        OpCodes.`DEC C` -> Dec8(Reg8.C)
+        OpCodes.`JP NN` -> Jp(Imm16)
         else -> Illegal
     }
 }

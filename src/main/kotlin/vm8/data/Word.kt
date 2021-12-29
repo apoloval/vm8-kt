@@ -4,6 +4,8 @@ package vm8.data
 value class Word(private val value: Int) {
     operator fun inc(): Word = Word(value.inc() and 0xFFFF)
 
+    operator fun plus(v: Int): Word = Word((value + v) and 0xFFFF)
+
     operator fun dec(): Word = Word(value.inc() and 0xFFFF)
 
     fun low(): Octet = Octet(((value ushr 0) and 0xFF))

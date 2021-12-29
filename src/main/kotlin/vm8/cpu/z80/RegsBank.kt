@@ -9,6 +9,7 @@ class RegsBank {
     var de: Word = Word(0x0000)
     var hl: Word = Word(0x0000)
     var pc: Word = Word(0x0000)
+    var sp: Word = Word(0x0000)
 
     var a: Octet 
         inline get() = af.high()

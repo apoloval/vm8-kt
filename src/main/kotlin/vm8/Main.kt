@@ -11,10 +11,10 @@ const val TOTAL_INST = 250_000_000
 fun main() {
     val mem = ByteArray(64*1024) {
         when(it) {
-            0x00 -> OPCODE_NOP.toByte()
-            0x01 -> OPCODE_INC_B.toByte()
-            0x02 -> OPCODE_DEC_C.toByte()
-            0x03 -> OPCODE_JP_NN.toByte()
+            0x00 -> OpCodes.NOP.toByte()
+            0x01 -> OpCodes.`INC B`.toByte()
+            0x02 -> OpCodes.`DEC C`.toByte()
+            0x03 -> OpCodes.`JP NN`.toByte()
             0x04 -> 0x00
             0x05 -> 0x00
             else -> 0x00
