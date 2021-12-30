@@ -34,14 +34,33 @@ enum class Flag(val mask: Int) {
 }
 
 /**
- * An accumulation of flag effections
+ * An accumulation of flag affections
  */
 class FlagsAffection(val set: Int = 0, val clear: Int = 0) {
-    operator fun plus(f: Flag): FlagsAffection = FlagsAffection(set or f.mask, clear)
+    /**
+     * Indicate the given flag will be set
+     */
+    operator fun plus(f: Flag): FlagsAffection = FlagsAffection(set or f.mask, clear and f.mask.inv())
 
-    operator fun minus(f: Flag): FlagsAffection = FlagsAffection(set, clear or f.mask)    
+    /**
+     * Indicate the given flag will be clear
+     */
+    operator fun minus(f: Flag): FlagsAffection = FlagsAffection(set and f.mask.inv(), clear or f.mask)
 
+    /**
+     * Indicate the given flag will be unaffected
+     */
+    operator fun times(f: Flag): FlagsAffection = FlagsAffection(set and f.mask.inv(), clear and f.mask.inv())
+
+    /**
+     * Combine this flags affection with others.
+     */
     infix fun and(other: FlagsAffection): FlagsAffection = FlagsAffection(set or other.set, clear or other.clear)
+
+    /**
+     * Apply this flag affections to the given octet.
+     */
+    fun applyTo(v: Octet): Octet = v.bitSet(set).bitClear(clear)
 }
 
 /**
@@ -75,20 +94,65 @@ fun Octet.isBit3(): Boolean = areBitsSet(Flag.F3.mask)
 
 /**
  * Flags instrinsic to this octet.
+ * 
+ * Intrinsic flags are those that are obtained from the ALU result, such as S (sign), Z (zero),
+ * F3 and F5 (copy of bits 3 and 5, respectively). 
+ * 
+ * This method calculates the flags on the fly. What you probably cannot afford while executing
+ * instructions. The [IntrinsicFlags] array have pre-computed values. Use that instead.
  */
-fun Octet.flags(): FlagsAffection = 
+fun Octet.flagsIntrinsic(): FlagsAffection = 
     (Flag.S on isNegative()) and 
     (Flag.Z on isZero()) and
     (Flag.F5 on isBit5()) and
-    (Flag.F3 on isBit3()) and
-    (Flag.P on parity())
+    (Flag.F3 on isBit3())
 
 /**
- * Precomputed intrinsic flags for all octets.
+ * Precomputed flags for 8-bit arithmetic.
  */
-val IntrinsicFlags: Array<FlagsAffection> = Array(256) { Octet(it).flags() }
+object PrecomputedFlags { 
+    private val intrinsic: Array<FlagsAffection> = Array(256) { Octet(it).run {
+        (Flag.S on isNegative()) and 
+        (Flag.Z on isZero()) and
+        (Flag.F5 on isBit5()) and
+        (Flag.F3 on isBit3())
+    }}
 
-/**
- * Get the intrinsic flags of the given octet.
- */
-fun Array<FlagsAffection>.of(v: Octet): FlagsAffection = this[v.toInt()]
+    // ADD(a, b) flags
+    private val add = Array(256) { a -> 
+        Array(256) { b ->
+            val c = a + b
+            intrinsic[c and 0xFF] - Flag.N and 
+                (Flag.H on halfCarry(a, c)) and 
+                (Flag.V on overflow(a, b, c)) and
+                (Flag.C on carry(a, c))
+        }
+    }
+
+    // INC(a) flags are ADD(a, 1) flags but C is not affected
+    private val inc = Array(256) { add[it][1] * Flag.C }
+
+    /**
+     * Get the intrinsic flags of the given octet.
+     * 
+     * Intrinsic flags are those that are obtained from the ALU result, such as S (sign), Z (zero),
+     * F3 and F5 (copy of bits 3 and 5, respectively). 
+     */
+    fun intrinsicOf(v: Octet): FlagsAffection = intrinsic[v.toInt()]
+
+    /**
+     * Get the flags resulting from adding two octets.
+     */
+    fun ofAdd(a: Octet, b: Octet): FlagsAffection = add[a.toInt()][b.toInt()]
+
+    /**
+     * Get the flags resulting from incrementing an octet.
+     */
+    fun ofInc(a: Octet): FlagsAffection = inc[a.toInt()]
+
+    private fun halfCarry(a: Int, c: Int): Boolean = (a and 0x0F) > (c and 0x0F)
+
+    private fun overflow(a: Int, b: Int, c: Int): Boolean = ((a xor b xor 0x80) and (b xor c) and 0x80) != 0
+
+    private fun carry(a: Int, c: Int): Boolean = (c and 0xFF) < (a and 0xFF)
+}

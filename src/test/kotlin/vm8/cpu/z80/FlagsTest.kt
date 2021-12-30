@@ -1,7 +1,10 @@
 package vm8.cpu.z80
 
 import io.kotest.core.spec.style.*
+import io.kotest.data.row
+import io.kotest.data.forAll as forAllData
 import io.kotest.matchers.*
+import io.kotest.property.*
 
 import vm8.data.*
 
@@ -78,5 +81,85 @@ internal class FlagsTest : FunSpec({
         cpu.regs.f shouldBe Octet(0b11111111)
         cpu.apply(-Flag.C - Flag.PV - Flag.H - Flag.Z)
         cpu.regs.f shouldBe Octet(0b10101010)
+    }
+
+    context("precomputed intrinsic") {
+        test("S flag") {
+            PrecomputedFlags.intrinsicOf(Octet(0x00)).applyTo(Octet(0x00)).bit(7) shouldBe false
+            PrecomputedFlags.intrinsicOf(Octet(0x80)).applyTo(Octet(0x00)).bit(7) shouldBe true
+        }
+        test("Z flag") {
+            PrecomputedFlags.intrinsicOf(Octet(0x00)).applyTo(Octet(0x00)).bit(6) shouldBe true
+            PrecomputedFlags.intrinsicOf(Octet(0x80)).applyTo(Octet(0x00)).bit(6) shouldBe false
+        }
+        test("F5 flag") {
+            PrecomputedFlags.intrinsicOf(Octet(0b00000000)).applyTo(Octet(0x00)).bit(5) shouldBe false
+            PrecomputedFlags.intrinsicOf(Octet(0b00100000)).applyTo(Octet(0x00)).bit(5) shouldBe true
+        }
+        test("F3 flag") {
+            PrecomputedFlags.intrinsicOf(Octet(0b00000000)).applyTo(Octet(0x00)).bit(3) shouldBe false
+            PrecomputedFlags.intrinsicOf(Octet(0b00001000)).applyTo(Octet(0x00)).bit(3) shouldBe true
+        }
+    }
+
+    context("precomputed ADD/ADC") {
+        test("H flag") {
+            forAllData(
+                row(0x0F, 0x01, true),
+                row(0x01, 0x0F, true),
+                row(0x01, 0xFF, true),
+                row(0x0F, 0xFF, true),
+                row(0x01, 0x01, false),
+                row(0xF1, 0xF1, false),
+            ) { a, b, res -> 
+                PrecomputedFlags.ofAdd(Octet(a), Octet(b)).applyTo(Octet(0x00)).bit(4) shouldBe res
+            }
+        }
+        test("V flag") {
+            forAllData(
+                row(0x01, 0x01, false),
+                row(0x7F, 0x01, true),
+                row(0xFF, 0x01, false),
+            ) { a, b, res -> 
+                PrecomputedFlags.ofAdd(Octet(a), Octet(b)).applyTo(Octet(0x00)).bit(2) shouldBe res
+            }
+        }
+        test("N flag") {
+            forAll<Byte, Byte> { a, b ->
+                !PrecomputedFlags.ofAdd(a.toOctet(), b.toOctet()).applyTo(Octet(0x00)).bit(1)
+            }
+        }
+    }
+
+    context("precomputed INC") {
+        test("H flag") {
+            forAllData(
+                row(0x0F, true),
+                row(0x01, false),
+                row(0xF1, false),
+            ) { a, res -> 
+                PrecomputedFlags.ofInc(Octet(a)).applyTo(Octet(0x00)).bit(4) shouldBe res
+            }
+        }
+        test("V flag") {
+            forAllData(
+                row(0x01, false),
+                row(0x7F, true),
+                row(0xFF, false),
+            ) { a, res -> 
+                PrecomputedFlags.ofInc(Octet(a)).applyTo(Octet(0x00)).bit(2) shouldBe res
+            }
+        }
+        test("N flag") {
+            forAll<Byte> { a ->
+                !PrecomputedFlags.ofInc(a.toOctet()).applyTo(Octet(0x00)).bit(1)
+            }
+        }
+        test("C flag") {
+            forAll<Byte> { a ->
+                !PrecomputedFlags.ofInc(a.toOctet()).applyTo(Octet(0x00)).bit(0)
+                PrecomputedFlags.ofInc(a.toOctet()).applyTo(Octet(0x01)).bit(0)
+            }
+        }
     }
 })
