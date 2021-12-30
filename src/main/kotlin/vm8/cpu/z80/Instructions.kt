@@ -123,14 +123,7 @@ data class Rlca(val cycles: Int, val size: Int) : Inst {
     override suspend fun Processor.exec(): Int {
         val (v, carry) = regs.a.rotateLeft(isFlag(Flag.C))
         regs.a = v
-
-        // --503-0C
-        val flags = 
-            (Flag.F5 on v.bit(5)) and 
-            (Flag.F3 on v.bit(3)) and 
-            (Flag.C on carry) - Flag.H - Flag.N
-        apply(flags)
-        
+        apply(PrecomputedFlags.ofRotateA(v, carry))        
         regs.pc += size
         return cycles
     }

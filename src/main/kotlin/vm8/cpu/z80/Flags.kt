@@ -121,6 +121,11 @@ object PrecomputedFlags {
     // DEC(a) flags are SUB(a, 1) flags but C is not affected
     private val dec = Array(256) { sub[it][1] * Flag.C }
 
+    // RLCA/RLA/RRCA/RRA intrinsic flags
+    private val rotA = Array(256) { Octet(it).run {
+        (Flag.F5 on bit(5)) and (Flag.F3 on bit(3)) - Flag.H - Flag.N
+    }}
+
     /**
      * Get the intrinsic flags of the given octet.
      * 
@@ -148,6 +153,13 @@ object PrecomputedFlags {
      * Get the flags resulting from decrementing an octet.
      */
     fun ofDec(a: Octet): FlagsAffection = dec[a.toInt()]
+
+    /**
+     * Get the flags resulting from a rotation of A register
+     * 
+     * This function receives the result as argument. Take this into account while calling.
+     */
+    fun ofRotateA(c: Octet, carry: Boolean): FlagsAffection = rotA[c.toInt()] and (Flag.C on carry)
 
     private fun halfCarry(a: Int, c: Int): Boolean = (a and 0x0F) > (c and 0x0F)
     

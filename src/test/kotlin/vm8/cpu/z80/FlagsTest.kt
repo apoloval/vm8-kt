@@ -184,8 +184,8 @@ internal class FlagsTest : FunSpec({
         }
         test("C flag") {
             forAll<Byte> { a ->
-                !PrecomputedFlags.ofInc(a.toOctet()).applyTo(Octet(0x00)).bit(0)
-                PrecomputedFlags.ofInc(a.toOctet()).applyTo(Octet(0x01)).bit(0)
+                !PrecomputedFlags.ofInc(a.toOctet()).applyTo(Octet(0x00)).bit(0) &&
+                    PrecomputedFlags.ofInc(a.toOctet()).applyTo(Octet(0x01)).bit(0)
             }
         }
     }
@@ -216,8 +216,30 @@ internal class FlagsTest : FunSpec({
         }
         test("C flag") {
             forAll<Byte> { a ->
-                !PrecomputedFlags.ofDec(a.toOctet()).applyTo(Octet(0x00)).bit(0)
-                PrecomputedFlags.ofDec(a.toOctet()).applyTo(Octet(0x01)).bit(0)
+                !PrecomputedFlags.ofDec(a.toOctet()).applyTo(Octet(0x00)).bit(0) &&
+                    PrecomputedFlags.ofDec(a.toOctet()).applyTo(Octet(0x01)).bit(0)
+            }
+        }
+    }
+
+    context("precomputed RLCA/RLA/RRCA/RRA") {
+        test("H and N flags") {
+            forAll<Byte, Boolean> { a, carry ->
+                !PrecomputedFlags.ofRotateA(a.toOctet(), carry).applyTo(Octet(0x00)).bit(1) &&
+                    !PrecomputedFlags.ofRotateA(a.toOctet(), carry).applyTo(Octet(0x00)).bit(4)
+            }
+        }
+        test("F3 and F5 flags") {
+            forAll<Byte, Boolean> { a, carry ->
+                val v = a.toOctet()
+                PrecomputedFlags.ofRotateA(v, carry).applyTo(Octet(0x00)).bit(3) == v.bit(3) &&
+                    PrecomputedFlags.ofRotateA(v, carry).applyTo(Octet(0x00)).bit(5) == v.bit(5)
+            }
+        }
+        test("C flag") {
+            forAll<Byte, Boolean> { a, carry ->
+                val v = a.toOctet()
+                PrecomputedFlags.ofRotateA(v, carry).applyTo(Octet(0x00)).bit(0) == carry
             }
         }
     }
