@@ -83,39 +83,14 @@ inline fun Processor.updateFlags(fn: (Octet) -> Octet) {
 fun Processor.isFlag(flag: Flag): Boolean = regs.f.areBitsSet(flag.mask)
 
 /**
- * Return true if bit 5 of this octet is set
- */
-fun Octet.isBit5(): Boolean = areBitsSet(Flag.F5.mask)
-
-/**
- * Return true if bit 3 of this octet is set
- */
-fun Octet.isBit3(): Boolean = areBitsSet(Flag.F3.mask)
-
-/**
- * Flags instrinsic to this octet.
- * 
- * Intrinsic flags are those that are obtained from the ALU result, such as S (sign), Z (zero),
- * F3 and F5 (copy of bits 3 and 5, respectively). 
- * 
- * This method calculates the flags on the fly. What you probably cannot afford while executing
- * instructions. The [IntrinsicFlags] array have pre-computed values. Use that instead.
- */
-fun Octet.flagsIntrinsic(): FlagsAffection = 
-    (Flag.S on isNegative()) and 
-    (Flag.Z on isZero()) and
-    (Flag.F5 on isBit5()) and
-    (Flag.F3 on isBit3())
-
-/**
  * Precomputed flags for 8-bit arithmetic.
  */
 object PrecomputedFlags { 
     private val intrinsic: Array<FlagsAffection> = Array(256) { Octet(it).run {
         (Flag.S on isNegative()) and 
         (Flag.Z on isZero()) and
-        (Flag.F5 on isBit5()) and
-        (Flag.F3 on isBit3())
+        (Flag.F5 on bit(5)) and
+        (Flag.F3 on bit(3))
     }}
 
     // ADD(a, b) flags

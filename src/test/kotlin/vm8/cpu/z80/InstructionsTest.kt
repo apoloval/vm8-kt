@@ -52,6 +52,7 @@ internal class InstructionsTest : FunSpec({
         cycles shouldBe 4
         cpu.regs.pc shouldBe Word(0x0001)
         cpu.regs.a shouldBe Octet(0x43)
+        cpu.regs.f shouldBe PrecomputedFlags.ofInc(Octet(0x42)).applyTo(Octet(0x00))
     }
 
     test("INC16 instruction") {

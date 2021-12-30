@@ -49,9 +49,10 @@ data class Ex(val a: DestOp16, val b: DestOp16, val cycles: Int, val size: Int) 
  */
 data class Inc8(val dest: DestOp8) : Inst {
     override suspend fun Processor.exec(): Int {
-        var v = load8(dest)
-        v++
-        store8(dest, v)
+        val a = load8(dest)
+        val c = a.inc()
+        store8(dest, c)
+        apply(PrecomputedFlags.ofInc(a))
         regs.pc++
         return 4
     }
@@ -124,8 +125,8 @@ data class Rlca(val cycles: Int, val size: Int) : Inst {
 
         // --503-0C
         val flags = 
-            (Flag.F5 on v.isBit5()) and 
-            (Flag.F3 on v.isBit3()) and 
+            (Flag.F5 on v.bit(5)) and 
+            (Flag.F3 on v.bit(3)) and 
             (Flag.C on carry) - Flag.H - Flag.N
         apply(flags)
         
