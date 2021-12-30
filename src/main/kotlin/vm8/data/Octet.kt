@@ -2,9 +2,15 @@ package vm8.data
 
 @JvmInline
 value class Octet(private val value: Int) {
+    override fun toString(): String = "0x${Integer.toHexString(value and 0xFF)}"
+
     operator fun inc(): Octet = Octet(value.inc() and 0xFF)
 
     operator fun dec(): Octet = Octet(value.dec() and 0xFF)
+
+    operator fun plus(v: Octet): Octet = Octet((value + v.value) and 0xFF)
+
+    operator fun minus(v: Octet): Octet = Octet((value - v.value) and 0xFF)
 
     fun bit(n: Int): Boolean = (value shr n) and 0x01 > 0
 

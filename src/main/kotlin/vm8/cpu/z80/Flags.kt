@@ -37,6 +37,8 @@ enum class Flag(val mask: Int) {
  * An accumulation of flag affections
  */
 class FlagsAffection(val set: Int = 0, val clear: Int = 0) {
+    override fun toString(): String = "[set:${Integer.toBinaryString(set)}, clr:${Integer.toBinaryString(clear)}]"
+
     /**
      * Indicate the given flag will be set
      */
@@ -54,8 +56,14 @@ class FlagsAffection(val set: Int = 0, val clear: Int = 0) {
 
     /**
      * Combine this flags affection with others.
+     * 
+     * The affections of the right hand have higher priority. This means, if lhs says set/clear for a flag
+     * and rhs also affects that flag, rhs affection prevails. 
      */
-    infix fun and(other: FlagsAffection): FlagsAffection = FlagsAffection(set or other.set, clear or other.clear)
+    infix fun and(other: FlagsAffection): FlagsAffection = FlagsAffection(
+        other.set or (set and other.clear.inv()),   // consider only lhs sets that are not clear in rhs
+        other.clear or (clear and other.set.inv()), // consider only lhs clears that are not set in rhs
+    )
 
     /**
      * Apply this flag affections to the given octet.
@@ -93,30 +101,30 @@ object PrecomputedFlags {
         (Flag.F3 on bit(3))
     }}
 
-    // ADD/ADC(a, b) flags
-    private val add = Array(256) { a -> 
+    // ADD/ADC(a, b) flags for 8-bit operands
+    private val add8 = Array(256) { a -> 
         Array(256) { b ->
-            val c = a + b
-            intrinsic[c and 0xFF] - Flag.N and 
-                (Flag.H on halfCarry(a, c)) and 
+            val c = (a + b) and 0xFF
+            intrinsic[c] - Flag.N and 
+                (Flag.H on carryNibble(a, c)) and 
                 (Flag.V on overflow(a, b, c)) and
-                (Flag.C on carry(a, c))
+                (Flag.C on carryByte(a, c))
         }
     }
 
     // SUB/SBC(a, b) flags
     private val sub = Array(256) { a -> 
         Array(256) { b ->
-            val c = a - b
-            intrinsic[c and 0xFF] + Flag.N and 
-                (Flag.H on halfBorrow(a, c)) and 
+            val c = (a - b) and 0xFF
+            intrinsic[c] + Flag.N and 
+                (Flag.H on borrowNibble(a, c)) and 
                 (Flag.V on underflow(a, b, c)) and
-                (Flag.C on borrow(a, c))
+                (Flag.C on borrowByte(a, c))
         }
     }
 
     // INC(a) flags are ADD(a, 1) flags but C is not affected
-    private val inc = Array(256) { add[it][1] * Flag.C }
+    private val inc = Array(256) { add8[it][1] * Flag.C }
 
     // DEC(a) flags are SUB(a, 1) flags but C is not affected
     private val dec = Array(256) { sub[it][1] * Flag.C }
@@ -137,7 +145,19 @@ object PrecomputedFlags {
     /**
      * Get the flags resulting from adding two octets.
      */
-    fun ofAdd(a: Octet, b: Octet): FlagsAffection = add[a.toInt()][b.toInt()]
+    fun ofAdd(a: Octet, b: Octet): FlagsAffection = add8[a.toInt()][b.toInt()]
+
+    /**
+     * Get the flags resulting from adding two words.
+     */
+    fun ofAdd(a: Word, b: Word): FlagsAffection {
+        // This is not actually pre-computed. But...         
+        val c = a + b
+        return (Flag.F5 on c.high().bit(5)) and
+            (Flag.H on carry(a.toInt(), c.toInt(), 0x0FFF)) and
+            (Flag.F3 on c.high().bit(3)) - Flag.N and
+            (Flag.C on carryWord(a.toInt(), c.toInt()))
+    }
 
     /**
      * Get the flags resulting from subtracting two octets.
@@ -161,15 +181,23 @@ object PrecomputedFlags {
      */
     fun ofRotateA(c: Octet, carry: Boolean): FlagsAffection = rotA[c.toInt()] and (Flag.C on carry)
 
-    private fun halfCarry(a: Int, c: Int): Boolean = (a and 0x0F) > (c and 0x0F)
+    private fun carryNibble(a: Int, c: Int): Boolean = carry(a, c, 0x0F)
     
-    private fun halfBorrow(a: Int, c: Int): Boolean = (a and 0x0F) < (c and 0x0F)
+    private fun borrowNibble(a: Int, c: Int): Boolean = borrow(a, c, 0x0F)
+
+    private fun carryByte(a: Int, c: Int): Boolean = carry(a, c, 0xFF)
+
+    private fun borrowByte(a: Int, c: Int): Boolean = borrow(a, c, 0xFF)
+
+    private fun carryWord(a: Int, c: Int): Boolean = carry(a, c, 0xFFFF)
+
+    private fun borrowWord(a: Int, c: Int): Boolean = borrow(a, c, 0xFFFF)
+
+    private fun carry(a: Int, c: Int, mask: Int) = (a and mask) > (c and mask)
+
+    private fun borrow(a: Int, c: Int, mask: Int) = (a and mask) < (c and mask)
 
     private fun overflow(a: Int, b: Int, c: Int): Boolean = ((a xor b xor 0x80) and (b xor c) and 0x80) != 0
 
     private fun underflow(a: Int, b: Int, c: Int): Boolean = ((a xor b) and ((a xor c) and 0x80)) != 0
-
-    private fun carry(a: Int, c: Int): Boolean = (c and 0xFF) < (a and 0xFF)
-
-    private fun borrow(a: Int, c: Int): Boolean = (c and 0xFF) > (a and 0xFF)
 }
