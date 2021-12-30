@@ -22,9 +22,10 @@ suspend fun Processor.run(inst: Inst): Int = with(inst) { exec() }
  */
 data class Dec8(val dest: DestOp8) : Inst {
     override suspend fun Processor.exec(): Int {
-        var v = load8(dest)
-        v--
-        store8(dest, v)
+        val a = load8(dest)
+        val c = a.dec()
+        store8(dest, c)
+        apply(PrecomputedFlags.ofDec(a))
         regs.pc++
         return 4
     }

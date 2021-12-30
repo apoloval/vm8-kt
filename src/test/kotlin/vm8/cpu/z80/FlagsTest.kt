@@ -131,6 +131,33 @@ internal class FlagsTest : FunSpec({
         }
     }
 
+    context("precomputed SUB/SBC") {
+        test("H flag") {
+            forAllData(
+                row(0x10, 0x01, true),
+                row(0x01, 0x12, true),
+                row(0x01, 0x01, false),
+                row(0xF1, 0xF1, false),
+            ) { a, b, res -> 
+                PrecomputedFlags.ofSub(Octet(a), Octet(b)).applyTo(Octet(0x00)).bit(4) shouldBe res
+            }
+        }
+        test("V flag") {
+            forAllData(
+                row(0x01, 0x01, false),
+                row(0x80, 0x01, true),
+                row(0x00, 0x01, false),
+            ) { a, b, res -> 
+                PrecomputedFlags.ofSub(Octet(a), Octet(b)).applyTo(Octet(0x00)).bit(2) shouldBe res
+            }
+        }
+        test("N flag") {
+            forAll<Byte, Byte> { a, b ->
+                PrecomputedFlags.ofSub(a.toOctet(), b.toOctet()).applyTo(Octet(0x00)).bit(1)
+            }
+        }
+    }
+
     context("precomputed INC") {
         test("H flag") {
             forAllData(
@@ -159,6 +186,38 @@ internal class FlagsTest : FunSpec({
             forAll<Byte> { a ->
                 !PrecomputedFlags.ofInc(a.toOctet()).applyTo(Octet(0x00)).bit(0)
                 PrecomputedFlags.ofInc(a.toOctet()).applyTo(Octet(0x01)).bit(0)
+            }
+        }
+    }
+
+    context("precomputed DEC") {
+        test("H flag") {
+            forAllData(
+                row(0x00, true),
+                row(0x0F, false),
+                row(0xF1, false),
+            ) { a, res -> 
+                PrecomputedFlags.ofDec(Octet(a)).applyTo(Octet(0x00)).bit(4) shouldBe res
+            }
+        }
+        test("V flag") {
+            forAllData(
+                row(0x01, false),
+                row(0x80, true),
+                row(0x00, false),
+            ) { a, res -> 
+                PrecomputedFlags.ofDec(Octet(a)).applyTo(Octet(0x00)).bit(2) shouldBe res
+            }
+        }
+        test("N flag") {
+            forAll<Byte> { a ->
+                PrecomputedFlags.ofDec(a.toOctet()).applyTo(Octet(0x00)).bit(1)
+            }
+        }
+        test("C flag") {
+            forAll<Byte> { a ->
+                !PrecomputedFlags.ofDec(a.toOctet()).applyTo(Octet(0x00)).bit(0)
+                PrecomputedFlags.ofDec(a.toOctet()).applyTo(Octet(0x01)).bit(0)
             }
         }
     }

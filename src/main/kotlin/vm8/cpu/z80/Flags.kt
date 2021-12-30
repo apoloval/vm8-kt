@@ -93,7 +93,7 @@ object PrecomputedFlags {
         (Flag.F3 on bit(3))
     }}
 
-    // ADD(a, b) flags
+    // ADD/ADC(a, b) flags
     private val add = Array(256) { a -> 
         Array(256) { b ->
             val c = a + b
@@ -104,8 +104,22 @@ object PrecomputedFlags {
         }
     }
 
+    // SUB/SBC(a, b) flags
+    private val sub = Array(256) { a -> 
+        Array(256) { b ->
+            val c = a - b
+            intrinsic[c and 0xFF] + Flag.N and 
+                (Flag.H on halfBorrow(a, c)) and 
+                (Flag.V on underflow(a, b, c)) and
+                (Flag.C on borrow(a, c))
+        }
+    }
+
     // INC(a) flags are ADD(a, 1) flags but C is not affected
     private val inc = Array(256) { add[it][1] * Flag.C }
+
+    // DEC(a) flags are SUB(a, 1) flags but C is not affected
+    private val dec = Array(256) { sub[it][1] * Flag.C }
 
     /**
      * Get the intrinsic flags of the given octet.
@@ -121,13 +135,29 @@ object PrecomputedFlags {
     fun ofAdd(a: Octet, b: Octet): FlagsAffection = add[a.toInt()][b.toInt()]
 
     /**
+     * Get the flags resulting from subtracting two octets.
+     */
+    fun ofSub(a: Octet, b: Octet): FlagsAffection = sub[a.toInt()][b.toInt()]
+
+    /**
      * Get the flags resulting from incrementing an octet.
      */
     fun ofInc(a: Octet): FlagsAffection = inc[a.toInt()]
 
+    /**
+     * Get the flags resulting from decrementing an octet.
+     */
+    fun ofDec(a: Octet): FlagsAffection = dec[a.toInt()]
+
     private fun halfCarry(a: Int, c: Int): Boolean = (a and 0x0F) > (c and 0x0F)
+    
+    private fun halfBorrow(a: Int, c: Int): Boolean = (a and 0x0F) < (c and 0x0F)
 
     private fun overflow(a: Int, b: Int, c: Int): Boolean = ((a xor b xor 0x80) and (b xor c) and 0x80) != 0
 
+    private fun underflow(a: Int, b: Int, c: Int): Boolean = ((a xor b) and ((a xor c) and 0x80)) != 0
+
     private fun carry(a: Int, c: Int): Boolean = (c and 0xFF) < (a and 0xFF)
+
+    private fun borrow(a: Int, c: Int): Boolean = (c and 0xFF) > (a and 0xFF)
 }
