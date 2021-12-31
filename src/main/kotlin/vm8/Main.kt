@@ -9,7 +9,8 @@ import vm8.data.*
 const val TOTAL_INST = 250_000_000
 
 fun main() {
-    val mem = asm {
+    val mem = ByteArray(64*1024)
+    mem.asm {
         LABEL("begin")
         NOP
         INC(B)

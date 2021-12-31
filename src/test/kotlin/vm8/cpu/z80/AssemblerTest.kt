@@ -7,8 +7,10 @@ import vm8.cpu.z80.*
 
 internal class AssemblerTest : FunSpec({
 
+    val bytes = ByteArray(64*1024)
+
     test("DB directive") {
-        val bytes = asm {
+        bytes.asm {
             DB(0x12)
             DB(0x34)
             DB(0xAB)
@@ -21,7 +23,7 @@ internal class AssemblerTest : FunSpec({
     }
 
     test("DW directive") {
-        val bytes = asm {
+        bytes.asm {
             DW(0x1234)
             DW(0xABCD)
         }
@@ -32,7 +34,7 @@ internal class AssemblerTest : FunSpec({
     }
 
     test("label directive") {
-        val bytes = asm {
+        bytes.asm {
             DB(0x12)
             LABEL("foobar")
             DB(0x34)
@@ -44,19 +46,8 @@ internal class AssemblerTest : FunSpec({
         bytes[0x0003] shouldBe 0x00.toByte()
     }
 
-    test("NOP instruction") {
-        val bytes = asm {
-            DB(0xFF)
-            NOP
-            DB(0xFF)
-        }
-        bytes[0x0000] shouldBe 0xFF.toByte()
-        bytes[0x0001] shouldBe 0x00.toByte()
-        bytes[0x0002] shouldBe 0xFF.toByte()
-    }
-
     test("DEC for 8-bit register") {
-        val bytes = asm {
+        bytes.asm {
             DEC(A)
             DEC(B)
             DEC(C)
@@ -72,8 +63,15 @@ internal class AssemblerTest : FunSpec({
         bytes[0x0005] shouldBe 0x2D.toByte()
     }
 
+    test("EX") {
+        bytes.asm {
+            EX(AF, `AF'`)
+        }
+        bytes[0x0000] shouldBe 0x08.toByte()
+    }
+
     test("INC for 8-bit register") {
-        val bytes = asm {
+        bytes.asm {
             INC(A)
             INC(B)
             INC(C)
@@ -90,11 +88,29 @@ internal class AssemblerTest : FunSpec({
     }
 
     test("JP NN") {
-        val bytes = asm {
+        bytes.asm {
             JP(0xABCD)
         }
         bytes[0x0000] shouldBe 0xC3.toByte()
         bytes[0x0001] shouldBe 0xCD.toByte()
         bytes[0x0002] shouldBe 0xAB.toByte()
+    }
+
+    test("NOP instruction") {
+        bytes.asm {
+            DB(0xFF)
+            NOP
+            DB(0xFF)
+        }
+        bytes[0x0000] shouldBe 0xFF.toByte()
+        bytes[0x0001] shouldBe 0x00.toByte()
+        bytes[0x0002] shouldBe 0xFF.toByte()
+    }
+
+    test("RLCA instruction") {
+        bytes.asm {
+            RLCA
+        }
+        bytes[0x0000] shouldBe 0x07.toByte()
     }
 })

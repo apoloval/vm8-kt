@@ -3,9 +3,8 @@ package vm8.cpu.z80
 import vm8.byteorder.*
 import vm8.data.*
 
-class Assembler(size: Int = 64*1024) {
-    val buffer = ByteArray(size)
-    var pointer: Int = 0
+class Assembler(private val buffer: ByteArray, org: Int = 0) {
+    var pointer: Int = org
     val symbols: MutableMap<String, Int> = mutableMapOf()
 
     val A = Reg8.A
@@ -18,8 +17,6 @@ class Assembler(size: Int = 64*1024) {
 
     val AF = Reg16.AF
     val `AF'` = Reg16.`AF'`
-
-    val NOP: Unit get() = DB(OpCodes.NOP)
 
     operator fun String.unaryPlus(): Int = symbols.getValue(this)
 
@@ -77,11 +74,13 @@ class Assembler(size: Int = 64*1024) {
         DW(addr)
     }
 
+    val NOP: Unit get() = DB(OpCodes.NOP)
+
     val RLCA: Unit get() { DB(OpCodes.RLCA) }
 }
 
-fun asm(size: Int = 64*1024, f: Assembler.() -> Unit): ByteArray {
-    val asm = Assembler(size)
+fun ByteArray.asm(org: Int = 0, f: Assembler.() -> Unit): ByteArray {
+    val asm = Assembler(this, org)
     asm.f()
-    return asm.buffer
+    return this
 }
