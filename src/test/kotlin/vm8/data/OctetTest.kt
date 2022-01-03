@@ -2,6 +2,8 @@ package vm8.cpu.z80
 
 import io.kotest.core.spec.style.*
 import io.kotest.matchers.*
+import io.kotest.property.*
+import io.kotest.property.arbitrary.boolean
 
 import vm8.data.*
 
@@ -35,16 +37,50 @@ class OctetTest : FunSpec({
     }
 
     test("rotate left") {
-        Octet(0b00000001).rotateLeft() shouldBe Pair(Octet(0b00000010), false)
-        Octet(0b00000011).rotateLeft() shouldBe Pair(Octet(0b00000110), false)
-        Octet(0b10000011).rotateLeft() shouldBe Pair(Octet(0b00000111), true)
+        checkAll(OctetArb) { value -> 
+            val (res, cout) = value.rotateLeft()
+
+            for (i in 1..7) {
+                res.bit(i) shouldBe value.bit(i-1)
+            }
+            res.bit(0) shouldBe value.bit(7)
+            cout shouldBe value.bit(7)
+        }
     }
 
     test("rotate left with carry") {
-        Octet(0b00000001).rotateLeft(carry = true) shouldBe Pair(Octet(0b00000011), false)
-        Octet(0b00000001).rotateLeft(carry = false) shouldBe Pair(Octet(0b00000010), false)
-        Octet(0b00000011).rotateLeft(carry = true) shouldBe Pair(Octet(0b00000111), false)
-        Octet(0b10000011).rotateLeft(carry = true) shouldBe Pair(Octet(0b00000111), true)
-        Octet(0b10000011).rotateLeft(carry = false) shouldBe Pair(Octet(0b00000110), true)
+        checkAll(OctetArb, Arb.boolean()) { value, cin -> 
+            val (res, cout) = value.rotateLeft(cin)
+
+            for (i in 1..7) {
+                res.bit(i) shouldBe value.bit(i-1)
+            }
+            res.bit(0) shouldBe cin
+            cout shouldBe value.bit(7)
+        }
+    }
+
+    test("rotate right") {
+        checkAll(OctetArb) { value -> 
+            val (res, cout) = value.rotateRight()
+
+            for (i in 0..6) {
+                res.bit(i) shouldBe value.bit(i+1)
+            }
+            res.bit(7) shouldBe value.bit(0)
+            cout shouldBe value.bit(0)
+        }
+    }
+
+    test("rotate right with carry") {
+        checkAll(OctetArb, Arb.boolean()) { value, cin -> 
+            val (res, cout) = value.rotateRight(cin)
+
+            for (i in 0..6) {
+                res.bit(i) shouldBe value.bit(i+1)
+            }
+            res.bit(7) shouldBe cin
+            cout shouldBe value.bit(0)
+        }
     }
 })

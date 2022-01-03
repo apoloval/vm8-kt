@@ -145,11 +145,24 @@ object Nop : Inst {
 }
 
 /**
- * NOP instruction
+ * RLCA instruction
  */
 data class Rlca(val cycles: Int, val size: Int) : Inst {
     override suspend fun Processor.exec(): Int {
         val (v, carry) = regs.a.rotateLeft()
+        regs.a = v
+        apply(PrecomputedFlags.ofRotateA(v, carry))        
+        regs.pc += size
+        return cycles
+    }
+}
+
+/**
+ * RRCA instruction
+ */
+data class Rrca(val cycles: Int, val size: Int) : Inst {
+    override suspend fun Processor.exec(): Int {
+        val (v, carry) = regs.a.rotateRight()
         regs.a = v
         apply(PrecomputedFlags.ofRotateA(v, carry))        
         regs.pc += size

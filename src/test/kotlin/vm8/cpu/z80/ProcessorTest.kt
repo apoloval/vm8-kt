@@ -125,6 +125,14 @@ class ProcessorTest : FunSpec({
             regs.c shouldBe Octet(0x42)
         }
     }}
+
+    test("RRCA") { behavesLike { value: Octet, flags ->
+        given { regs.a = value }
+        whenProcessorRuns { RRCA }
+        var (xval, carry) = value.rotateRight()
+        expectRotate(xval, carry, flags)
+    }}
+
 })
 
 suspend fun behavesLike(f: suspend ProcessorBehavior.() -> Unit) {

@@ -32,6 +32,16 @@ value class Octet(private val value: Int) {
         value and 0x80 > 0,
     )
 
+    fun rotateRight(): Pair<Octet, Boolean> = Pair(
+        Octet((value shr 1) or (value shl 7) and 0xFF),
+        value and 0x01 > 0,
+    )
+
+    fun rotateRight(carry: Boolean): Pair<Octet, Boolean> = Pair(
+        Octet((value shr 1) or (if (carry) 0x80 else 0x00) and 0xFF),
+        value and 0x01 > 0,
+    )
+
     fun isZero(): Boolean = (value and 0xFF == 0)
 
     fun isNegative(): Boolean = (value and 0x80 > 0)
