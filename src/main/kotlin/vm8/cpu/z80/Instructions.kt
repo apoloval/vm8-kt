@@ -47,6 +47,19 @@ data class Dec8(val dest: DestOp8) : Inst {
 }
 
 /**
+ * DEC instruction for 16-bit operands
+ */
+data class Dec16(val dst: DestOp16, val cycles: Int, val size: Int) : Inst {
+    override suspend fun Processor.exec(): Int {
+        val a = load16(dst)
+        val c = a.dec()
+        store16(dst, c)
+        regs.pc += size
+        return cycles
+    }
+}
+
+/**
  * EX instruction
  */
 data class Ex(val a: DestOp16, val b: DestOp16, val cycles: Int, val size: Int) : Inst {

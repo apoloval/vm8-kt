@@ -62,6 +62,11 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
         else -> throw IllegalArgumentException("invalid instruction: DEC $r")
     }
 
+    fun DEC(r: Reg16) = when(r) { 
+        Reg16.BC -> DB(OpCodes.`DEC BC`)
+        else -> throw IllegalArgumentException("invalid instruction: DEC $r")
+    }
+
     fun EX(a: Reg16, b: Reg16) = when(Pair(a, b)) {
         Pair(Reg16.AF, Reg16.`AF'`) -> DB(OpCodes.`EX AF, AF'`)
         else -> throw IllegalArgumentException("invalid instruction: EX $a, $b")
