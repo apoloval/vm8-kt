@@ -87,6 +87,17 @@ class ProcessorTest : FunSpec({
         whenProcessorRuns { ADD(HL, BC) }
         expectAdd16(regs.hl, a, b, flags)
     }}
+
+    test("LD A, (BC)") { behavesLike { flags -> 
+        given {
+            regs.bc = Word(0xABCD)
+            mem[0xABCD] = 0x42.toByte()
+        }
+        whenProcessorRuns { LD(A, !BC) }
+        expect(cycles = 7, pc = Word(0x0001), flags) {
+            regs.a shouldBe Octet(0x42)
+        }
+    }}
 })
 
 suspend fun behavesLike(f: suspend ProcessorBehavior.() -> Unit) {

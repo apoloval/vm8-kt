@@ -101,6 +101,13 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
         }
     }
 
+    fun LD(dst: Reg8, src: Ind8) {
+        when(Pair(dst, src)) {
+            Pair(Reg8.A, Ind8(Reg16.BC)) -> DB(OpCodes.`LD A, (BC)`)
+            else -> throw IllegalArgumentException("invalid instruction: LD $dst, $src")
+        }
+    }
+
     fun LD(dst: Ind8, src: Reg8) {
         when(Pair(dst, src)) {
             Pair(Ind8(Reg16.BC), Reg8.A) -> DB(OpCodes.`LD (BC), A`)
