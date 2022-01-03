@@ -118,6 +118,13 @@ class ProcessorTest : FunSpec({
         whenProcessorRuns { DEC(C) }
         expectDec(value, regs.c, flags)
     }}
+
+    test("LD C, N") { behavesLike { flags ->
+        whenProcessorRuns { LD(C, 0x42) }
+        expect(cycles = 7, pc = Word(0x0002), flags) {
+            regs.c shouldBe Octet(0x42)
+        }
+    }}
 })
 
 suspend fun behavesLike(f: suspend ProcessorBehavior.() -> Unit) {

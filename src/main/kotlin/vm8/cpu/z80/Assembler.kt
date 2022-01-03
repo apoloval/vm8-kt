@@ -98,10 +98,8 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
 
     fun LD(dst: Reg8, src: Int) {
         when(dst) {
-            Reg8.B -> {
-                DB(OpCodes.`LD B, N`)
-                DB(src)
-            }
+            Reg8.B -> { DB(OpCodes.`LD B, N`); DB(src) }
+            Reg8.C -> { DB(OpCodes.`LD C, N`); DB(src) }
             else -> throw IllegalArgumentException("invalid instruction: LD $dst, $src")
         }
     }
