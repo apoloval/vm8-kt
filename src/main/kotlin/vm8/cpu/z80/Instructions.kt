@@ -35,14 +35,14 @@ data class Add16(val dst: DestOp16, val src: SrcOp16, val cycles: Int, val size:
 /**
  * DEC instruction for 8-bit operands
  */
-data class Dec8(val dest: DestOp8) : Inst {
+data class Dec8(val dest: DestOp8, val cycles: Int, val size: Int) : Inst {
     override suspend fun Processor.exec(): Int {
         val a = load8(dest)
         val c = a.dec()
         store8(dest, c)
         apply(PrecomputedFlags.ofDec(a))
-        regs.pc++
-        return 4
+        regs.pc += size
+        return cycles
     }
 }
 
