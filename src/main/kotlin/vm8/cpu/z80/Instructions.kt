@@ -121,7 +121,7 @@ object Nop : Inst {
  */
 data class Rlca(val cycles: Int, val size: Int) : Inst {
     override suspend fun Processor.exec(): Int {
-        val (v, carry) = regs.a.rotateLeft(isFlag(Flag.C))
+        val (v, carry) = regs.a.rotateLeft()
         regs.a = v
         apply(PrecomputedFlags.ofRotateA(v, carry))        
         regs.pc += size

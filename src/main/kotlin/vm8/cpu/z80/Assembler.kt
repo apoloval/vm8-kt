@@ -17,8 +17,11 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
 
     val AF = Reg16.AF
     val `AF'` = Reg16.`AF'`
+    val BC = Reg16.BC
 
     operator fun String.unaryPlus(): Int = symbols.getValue(this)
+
+    operator fun Reg16.not() = Ind8(this)
 
     fun LABEL(name: String) = symbols.put(name, pointer)
 
@@ -67,6 +70,36 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
         Reg8.H -> DB(OpCodes.`INC H`)
         Reg8.L -> DB(OpCodes.`INC L`)
         else -> throw IllegalArgumentException("invalid instruction: INC $r")
+    }
+
+    fun INC(r: Reg16) = when(r) {
+        Reg16.BC -> DB(OpCodes.`INC BC`)
+        else -> throw IllegalArgumentException("invalid instruction: INC $r")
+    }
+
+    fun LD(r: Reg16, v: Int) {
+        when(r) {
+            Reg16.BC -> DB(OpCodes.`LD BC, NN`)
+            else -> throw IllegalArgumentException("invalid instruction: LD $r")
+        }
+        DW(v)
+    }
+
+    fun LD(dst: Reg8, src: Int) {
+        when(dst) {
+            Reg8.B -> {
+                DB(OpCodes.`LD B, N`)
+                DB(src)
+            }
+            else -> throw IllegalArgumentException("invalid instruction: LD $dst, $src")
+        }
+    }
+
+    fun LD(dst: Ind8, src: Reg8) {
+        when(Pair(dst, src)) {
+            Pair(Ind8(Reg16.BC), Reg8.A) -> DB(OpCodes.`LD (BC), A`)
+            else -> throw IllegalArgumentException("invalid instruction: LD $dst, $src")
+        }
     }
 
     fun JP(addr: Int) {
