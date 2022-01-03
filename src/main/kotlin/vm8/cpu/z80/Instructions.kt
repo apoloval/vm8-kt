@@ -76,14 +76,14 @@ data class Ex(val a: DestOp16, val b: DestOp16, val cycles: Int, val size: Int) 
 /**
  * INC instruction for 8-bit operands
  */
-data class Inc8(val dest: DestOp8) : Inst {
+data class Inc8(val dest: DestOp8, val cycles: Int, val size: Int) : Inst {
     override suspend fun Processor.exec(): Int {
         val a = load8(dest)
         val c = a.inc()
         store8(dest, c)
         apply(PrecomputedFlags.ofInc(a))
-        regs.pc++
-        return 4
+        regs.pc += size
+        return cycles
     }
 }
 

@@ -106,6 +106,12 @@ class ProcessorTest : FunSpec({
             regs.bc shouldBe value.dec()
         }
     }}
+
+    test("INC C") { behavesLike { value: Octet, flags -> 
+        given { regs.c = value }
+        whenProcessorRuns { INC(C) }
+        expectInc(value, regs.c, flags)
+    }}
 })
 
 suspend fun behavesLike(f: suspend ProcessorBehavior.() -> Unit) {
