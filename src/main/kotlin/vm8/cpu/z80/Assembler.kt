@@ -18,6 +18,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     val AF = Reg16.AF
     val `AF'` = Reg16.`AF'`
     val BC = Reg16.BC
+    val HL = Reg16.HL
 
     operator fun String.unaryPlus(): Int = symbols.getValue(this)
 
@@ -43,6 +44,11 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
         for (l in labels) {
             DW(symbols.getValue(l))
         }
+    }
+
+    fun ADD(dst: Reg16, src: Reg16) = when(Pair(dst, src)) {
+        Pair(Reg16.HL, Reg16.BC) -> DB(OpCodes.`ADD HL, BC`)
+        else -> throw IllegalArgumentException("invalid instruction: ADD $dst, $src")
     }
 
     fun DEC(r: Reg8) = when(r) { 

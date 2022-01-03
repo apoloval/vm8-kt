@@ -18,6 +18,21 @@ sealed interface Inst {
 suspend fun Processor.run(inst: Inst): Int = with(inst) { exec() }
 
 /**
+ * ADD instruction for 16-bit operands.
+ */
+data class Add16(val dst: DestOp16, val src: SrcOp16, val cycles: Int, val size: Int) : Inst {
+    override suspend fun Processor.exec(): Int {
+        val a = load16(src)
+        val b = load16(dst)
+        val c = a + b
+        store16(dst, c)
+        apply(PrecomputedFlags.ofAdd(a, b))
+        regs.pc += size
+        return cycles
+    }
+}
+
+/**
  * DEC instruction for 8-bit operands
  */
 data class Dec8(val dest: DestOp8) : Inst {

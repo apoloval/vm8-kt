@@ -78,6 +78,15 @@ class ProcessorTest : FunSpec({
             regs.`af'` shouldBe Word(0xABCD)
         }
     }}
+
+    test("ADD HL, BC") { behavesLike { a: Word, b: Word, flags ->
+        given {
+            regs.hl = a
+            regs.bc = b
+        }
+        whenProcessorRuns { ADD(HL, BC) }
+        expectAdd16(regs.hl, a, b, flags)
+    }}
 })
 
 suspend fun behavesLike(f: suspend ProcessorBehavior.() -> Unit) {
@@ -99,6 +108,16 @@ inline suspend fun<reified T> behavesLike(crossinline f: suspend ProcessorBehavi
         val b = ProcessorBehavior()
         b.cpu.regs.f = flags
         b.f(a, flags)
+    }
+}
+
+inline suspend fun<reified T1, reified T2> behavesLike(crossinline f: suspend ProcessorBehavior.(a: T1, b: T2, flags: Octet) -> Unit) {
+    val gen1 = generatorForClass<T1>(T1::class)
+    val gen2 = generatorForClass<T2>(T2::class)
+    checkAll(gen1, gen2, OctetArb) { a, b, flags -> 
+        val behav = ProcessorBehavior()
+        behav.cpu.regs.f = flags
+        behav.f(a, b, flags)
     }
 }
 
@@ -128,6 +147,19 @@ class ProcessorBehavior {
         if (flags != null)
             cpu.regs.f shouldBe flags
         this.f()
+    }
+
+    fun expectAdd16(xval: Word, a: Word, b: Word, flags: Octet) = expect(cycles = 11, pc = Word(0x0001)) {
+        xval shouldBe a + b
+
+        regs.f.bit(0) shouldBe flagActiveOnCarry(a, xval, 0xFFFF)
+        regs.f.bit(1) shouldBe false
+        regs.f.bit(2) shouldBe flags.bit(2)
+        regs.f.bit(3) shouldBe xval.high().bit(3)
+        regs.f.bit(4) shouldBe flagActiveOnCarry(a, xval, 0x0FFF)
+        regs.f.bit(5) shouldBe xval.high().bit(5)
+        regs.f.bit(6) shouldBe flags.bit(6)
+        regs.f.bit(7) shouldBe flags.bit(7)
     }
 
     fun expectInc(from: Octet, to: Octet, flags: Octet) = expect(cycles = 4, pc = Word(0x0001)) {
@@ -186,6 +218,8 @@ class ProcessorBehavior {
     fun flagActiveOnCarry(a: Int, c: Int, mask: Int): Boolean = (a and mask) > (c and mask)
 
     fun flagActiveOnCarry(a: Octet, c: Octet, mask: Int): Boolean = flagActiveOnCarry(a.toInt(), c.toInt(), mask)
+
+    fun flagActiveOnCarry(a: Word, c: Word, mask: Int): Boolean = flagActiveOnCarry(a.toInt(), c.toInt(), mask)
 
     fun flagActiveOnBorrow(a: Int, c: Int, mask: Int): Boolean = (a and mask) < (c and mask)
 
