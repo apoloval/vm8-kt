@@ -34,7 +34,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
 
     fun DW(vararg bytes: Int) {
         for (b in bytes) {
-            val (v0, v1) = ByteOrder.LITTLE_ENDIAN.encode(Word(b))
+            val (v0, v1) = ByteOrder.LITTLE_ENDIAN.encode(b.toUShort())
             buffer[pointer++] = v0.toByte()
             buffer[pointer++] = v1.toByte()
         }

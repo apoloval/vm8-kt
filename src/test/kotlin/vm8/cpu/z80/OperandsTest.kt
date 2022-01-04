@@ -1,10 +1,8 @@
 package vm8.cpu.z80
 
-import io.kotest.core.spec.style.*
-import io.kotest.matchers.*
-
-import vm8.cpu.z80.*
-import vm8.data.*
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.core.spec.style.funSpec
+import io.kotest.matchers.shouldBe
 
 internal class OperandsTest : FunSpec({
 
@@ -15,67 +13,67 @@ internal class OperandsTest : FunSpec({
         abstract class RegRef {
             abstract val name: String
             abstract val op: Reg8
-            abstract var reg: Octet
+            abstract var reg: UByte
         }
     
         fun regAsOperatorTest(ref: RegRef) = funSpec {
             test("$ref.name as source operator") {
-                ref.reg = Octet(0xAB)
-                cpu.load8(ref.op) shouldBe Octet(0xAB)
+                ref.reg = 0xABu
+                cpu.load8(ref.op) shouldBe 0xABu
             }
     
             test("$ref.name as destination operator") {
-                cpu.store8(ref.op, Octet(0xAB))
-                ref.reg shouldBe Octet(0xAB)
+                cpu.store8(ref.op, 0xABu)
+                ref.reg shouldBe 0xABu
             }
         }
     
         include(regAsOperatorTest(object : RegRef() {
             override val name: String = "A"
             override val op: Reg8 = Reg8.A
-            override var reg: Octet by cpu.regs::a
+            override var reg: UByte by cpu.regs::a
         }))
     
         include(regAsOperatorTest(object : RegRef() {
             override val name: String = "F"
             override val op: Reg8 = Reg8.F
-            override var reg: Octet by cpu.regs::f
+            override var reg: UByte by cpu.regs::f
         }))
     
         include(regAsOperatorTest(object : RegRef() {
             override val name: String = "B"
             override val op: Reg8 = Reg8.B
-            override var reg: Octet by cpu.regs::b
+            override var reg: UByte by cpu.regs::b
         }))
     
         include(regAsOperatorTest(object : RegRef() {
             override val name: String = "C"
             override val op: Reg8 = Reg8.C
-            override var reg: Octet by cpu.regs::c
+            override var reg: UByte by cpu.regs::c
         }))
     
         include(regAsOperatorTest(object : RegRef() {
             override val name: String = "D"
             override val op: Reg8 = Reg8.D
-            override var reg: Octet by cpu.regs::d
+            override var reg: UByte by cpu.regs::d
         }))
     
         include(regAsOperatorTest(object : RegRef() {
             override val name: String = "E"
             override val op: Reg8 = Reg8.E
-            override var reg: Octet by cpu.regs::e
+            override var reg: UByte by cpu.regs::e
         }))
     
         include(regAsOperatorTest(object : RegRef() {
             override val name: String = "H"
             override val op: Reg8 = Reg8.H
-            override var reg: Octet by cpu.regs::h
+            override var reg: UByte by cpu.regs::h
         }))
     
         include(regAsOperatorTest(object : RegRef() {
             override val name: String = "L"
             override val op: Reg8 = Reg8.L
-            override var reg: Octet by cpu.regs::l
+            override var reg: UByte by cpu.regs::l
         }))
     }
 
@@ -83,90 +81,90 @@ internal class OperandsTest : FunSpec({
         abstract class RegRef {
             abstract val name: String
             abstract val op: Reg16
-            abstract var reg: Word
+            abstract var reg: UShort
         }
     
         fun regAsOperatorTest(ref: RegRef) = funSpec {
             test("$ref.name as source operator") {
-                ref.reg = Word(0xABCD)
-                cpu.load16(ref.op) shouldBe Word(0xABCD)
+                ref.reg = 0xABCDu
+                cpu.load16(ref.op) shouldBe 0xABCDu
             }
     
             test("$ref.name as destination operator") {
-                cpu.store16(ref.op, Word(0xABCD))
-                ref.reg shouldBe Word(0xABCD)
+                cpu.store16(ref.op, 0xABCDu)
+                ref.reg shouldBe 0xABCDu
             }
         }
     
         include(regAsOperatorTest(object : RegRef() {
             override val name: String = "AF"
             override val op: Reg16 = Reg16.AF
-            override var reg: Word by cpu.regs::af
+            override var reg: UShort by cpu.regs::af
         }))
     
         include(regAsOperatorTest(object : RegRef() {
             override val name: String = "BC"
             override val op: Reg16 = Reg16.BC
-            override var reg: Word by cpu.regs::bc
+            override var reg: UShort by cpu.regs::bc
         }))
     
         include(regAsOperatorTest(object : RegRef() {
             override val name: String = "DE"
             override val op: Reg16 = Reg16.DE
-            override var reg: Word by cpu.regs::de
+            override var reg: UShort by cpu.regs::de
         }))
     
         include(regAsOperatorTest(object : RegRef() {
             override val name: String = "HL"
             override val op: Reg16 = Reg16.HL
-            override var reg: Word by cpu.regs::hl
+            override var reg: UShort by cpu.regs::hl
         }))
     
         include(regAsOperatorTest(object : RegRef() {
             override val name: String = "PC"
             override val op: Reg16 = Reg16.PC
-            override var reg: Word by cpu.regs::pc
+            override var reg: UShort by cpu.regs::pc
         }))
 
         include(regAsOperatorTest(object : RegRef() {
             override val name: String = "SP"
             override val op: Reg16 = Reg16.SP
-            override var reg: Word by cpu.regs::sp
+            override var reg: UShort by cpu.regs::sp
         }))
     }
 
     context("8-bit immediate") {
         test("as source operand") {
-            cpu.regs.pc = Word(0xA800)
+            cpu.regs.pc = 0xA800u
             sys.memory[0xA801] = 0x42.toByte()
 
-            cpu.load8(Imm8) shouldBe Octet(0x42)
+            cpu.load8(Imm8) shouldBe 0x42u
         }
     }
 
     context("16-bit immediate") {
         test("as source operand") {
-            cpu.regs.pc = Word(0xA800)
+            cpu.regs.pc = 0xA800u
             sys.memory[0xA801] = 0xCD.toByte()
             sys.memory[0xA802] = 0xAB.toByte()
 
-            cpu.load16(Imm16) shouldBe Word(0xABCD)
+            cpu.load16(Imm16) shouldBe 0xABCDu
         }
     }
 
     context("8-bit indirect") {
         test("as source operand") {
-            cpu.regs.hl = Word(0xA800)
+            cpu.regs.hl = 0xA800u
             sys.memory[0xA800] = 0x42.toByte()
 
-            cpu.load8(Ind8(Reg16.HL)) shouldBe Octet(0x42)
+            cpu.load8(Ind8(Reg16.HL)) shouldBe 0x42u
         }
 
         test("as dest operand") {
-            cpu.regs.hl = Word(0xA800)
+            cpu.regs.hl = 0xA800u
             sys.memory[0xA800] = 0x00.toByte()
 
-            cpu.store8(Ind8(Reg16.HL), Octet(0x42))
+            cpu.store8(Ind8(Reg16.HL), 0x42u)
             
             sys.memory[0xA800] shouldBe 0x42.toByte()
         }

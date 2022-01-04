@@ -5,7 +5,7 @@ import kotlin.test.assertEquals
 
 import vm8.byteorder.*
 
-internal class ExtensionsTest {
+internal class UShortExtTest {
 
     val abcd = 0xABCD.toShort()
 

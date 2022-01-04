@@ -1,14 +1,14 @@
 package vm8.cpu.z80
 
-import io.kotest.assertions.*
-import io.kotest.core.spec.style.*
-import io.kotest.data.row
-import io.kotest.data.forAll as forAllData
-import io.kotest.matchers.*
-import io.kotest.property.*
-import io.kotest.property.arbitrary.boolean
-
-import vm8.data.*
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.Matcher
+import io.kotest.matchers.MatcherResult
+import io.kotest.matchers.shouldBe
+import io.kotest.property.checkAll
+import vm8.data.bit
+import vm8.data.high
+import vm8.data.isNegative
+import vm8.data.isZero
 
 internal class FlagsTest : FunSpec({
 
@@ -17,76 +17,76 @@ internal class FlagsTest : FunSpec({
 
     beforeEach { 
         cpu.reset() 
-        cpu.regs.f = Octet(0)
+        cpu.regs.f = 0x00u
     }
 
     test("set/clear flag C") {
         cpu.apply(+Flag.C)
-        cpu.regs.f shouldBe Octet(0b00000001)
+        cpu.regs.f shouldBe 0b00000001u
         cpu.apply(-Flag.C)
-        cpu.regs.f shouldBe Octet(0b00000000)
+        cpu.regs.f shouldBe 0b00000000u
     }
 
     test("set/clear flag N") {
         cpu.apply(+Flag.N)
-        cpu.regs.f shouldBe Octet(0b00000010)
+        cpu.regs.f shouldBe 0b00000010u
         cpu.apply(-Flag.N)
-        cpu.regs.f shouldBe Octet(0b00000000)
+        cpu.regs.f shouldBe 0b00000000u
     }
 
     test("set/clear flag P/V") {
         cpu.apply(+Flag.PV)
-        cpu.regs.f shouldBe Octet(0b00000100)
+        cpu.regs.f shouldBe 0b00000100u
         cpu.apply(-Flag.PV)
-        cpu.regs.f shouldBe Octet(0b00000000)
+        cpu.regs.f shouldBe 0b00000000u
     }
 
     test("set/clear flag F3") {
         cpu.apply(+Flag.F3)
-        cpu.regs.f shouldBe Octet(0b00001000)
+        cpu.regs.f shouldBe 0b00001000u
         cpu.apply(-Flag.F3)
-        cpu.regs.f shouldBe Octet(0b00000000)
+        cpu.regs.f shouldBe 0b00000000u
     }
 
     test("set/clear flag H") {
         cpu.apply(+Flag.H)
-        cpu.regs.f shouldBe Octet(0b00010000)
+        cpu.regs.f shouldBe 0b00010000u
         cpu.apply(-Flag.H)
-        cpu.regs.f shouldBe Octet(0b00000000)
+        cpu.regs.f shouldBe 0b00000000u
     }
 
     test("set/clear flag F5") {
         cpu.apply(+Flag.F5)
-        cpu.regs.f shouldBe Octet(0b00100000)
+        cpu.regs.f shouldBe 0b00100000u
         cpu.apply(-Flag.F5)
-        cpu.regs.f shouldBe Octet(0b00000000)
+        cpu.regs.f shouldBe 0b00000000u
     }
 
     test("set/clear flag Z") {
         cpu.apply(+Flag.Z)
-        cpu.regs.f shouldBe Octet(0b01000000)
+        cpu.regs.f shouldBe 0b01000000u
         cpu.apply(-Flag.Z)
-        cpu.regs.f shouldBe Octet(0b00000000)
+        cpu.regs.f shouldBe 0b00000000u
     }
 
     test("set/clear flag S") {
         cpu.apply(+Flag.S)
-        cpu.regs.f shouldBe Octet(0b10000000)
+        cpu.regs.f shouldBe 0b10000000u
         cpu.apply(-Flag.S)
-        cpu.regs.f shouldBe Octet(0b00000000)
+        cpu.regs.f shouldBe 0b00000000u
     }
 
     test("set/clear several flags") {
         cpu.apply(+Flag.C + Flag.PV + Flag.H + Flag.Z)
-        cpu.regs.f shouldBe Octet(0b01010101)
+        cpu.regs.f shouldBe 0b01010101u
         cpu.apply(+Flag.N + Flag.F3 + Flag.F5 + Flag.S)
-        cpu.regs.f shouldBe Octet(0b11111111)
+        cpu.regs.f shouldBe 0b11111111u
         cpu.apply(-Flag.C - Flag.PV - Flag.H - Flag.Z)
-        cpu.regs.f shouldBe Octet(0b10101010)
+        cpu.regs.f shouldBe 0b10101010u
     }
 
     test("precomputed intrinsic") {
-        checkAll(OctetArb, OctetArb) { a, f -> 
+        checkAll<UByte, UByte> { a, f ->
             val res = PrecomputedFlags.intrinsicOf(a).applyTo(f)
             res.bit(3) shouldBe a.bit(3)
             res.bit(5) shouldBe a.bit(5)
@@ -96,8 +96,8 @@ internal class FlagsTest : FunSpec({
     }
 
     test("precomputed ADD/ADC for 8-bit") {
-        checkAll(OctetArb, OctetArb, OctetArb) { a, b, f -> 
-            val c = a + b
+        checkAll<UByte, UByte, UByte> { a, b, f ->
+            val c = (a + b).toUByte()
             val res = PrecomputedFlags.ofAdd(a, b).applyTo(f)
             res.bit(0) shouldBe setOnCarry(a, b, mask = 0xFF)
             res.bit(1) shouldBe false
@@ -111,8 +111,8 @@ internal class FlagsTest : FunSpec({
     }
 
     test("precomputed ADD/ADC for 16-bit") {
-        checkAll(WordArb, WordArb, OctetArb) { a, b, f -> 
-            val c = a + b
+        checkAll<UShort, UShort, UByte> { a, b, f ->
+            val c = (a + b).toUShort()
             val res = PrecomputedFlags.ofAdd(a, b).applyTo(f)
             res.bit(0) shouldBe (a.toInt() + b.toInt() > 0xFFFF)                
             res.bit(1) shouldBe false
@@ -125,8 +125,8 @@ internal class FlagsTest : FunSpec({
     }
 
     test("precomputed SUB/SBC for 8-bit") {
-        checkAll(OctetArb, OctetArb, OctetArb) { a, b, f -> 
-            val c = a - b
+        checkAll<UByte, UByte, UByte> { a, b, f ->
+            val c = (a - b).toUByte()
             val res = PrecomputedFlags.ofSub(a, b).applyTo(f)
             res.bit(0) shouldBe setOnBorrow(a, b, mask = 0xFF)
             res.bit(1) shouldBe true
@@ -140,9 +140,9 @@ internal class FlagsTest : FunSpec({
     }
 
     test("precomputed INC") {
-        checkAll(OctetArb, OctetArb) { a, f -> 
-            val b = Octet(1)
-            val c = a + b
+        checkAll<UByte, UByte> { a, f ->
+            val b: UByte = 1u
+            val c = (a + b).toUByte()
             val res = PrecomputedFlags.ofInc(a).applyTo(f)
             res.bit(0) shouldBe f.bit(0)
             res.bit(1) shouldBe false
@@ -156,9 +156,9 @@ internal class FlagsTest : FunSpec({
     }
 
     test("precomputed DEC") {
-        checkAll(OctetArb, OctetArb) { a, f -> 
-            val b = Octet(1)
-            val c = a - b
+        checkAll<UByte, UByte> { a, f ->
+            val b: UByte = 1u
+            val c = (a - b).toUByte()
             val res = PrecomputedFlags.ofDec(a).applyTo(f)
             res.bit(0) shouldBe f.bit(0)
             res.bit(1) shouldBe true
@@ -172,7 +172,7 @@ internal class FlagsTest : FunSpec({
     }
 
     test("precomputed RLCA/RLA/RRCA/RRA") {
-        checkAll(OctetArb, OctetArb, Arb.boolean()) { c, f, carry -> 
+        checkAll<UByte, UByte, Boolean> { c, f, carry ->
             val res = PrecomputedFlags.ofRotateA(c, carry).applyTo(f)
             res.bit(0) shouldBe carry
             res.bit(1) shouldBe false
@@ -197,7 +197,7 @@ private fun setOnCarry(a: Int, b: Int, mask: Int) = object : Matcher<Boolean> {
     }
 }
 
-private fun setOnCarry(a: Octet, b: Octet, mask: Int): Matcher<Boolean> = setOnCarry(a.toInt(), b.toInt(), mask)
+private fun setOnCarry(a: UByte, b: UByte, mask: Int): Matcher<Boolean> = setOnCarry(a.toInt(), b.toInt(), mask)
 
 private fun setOnBorrow(a: Int, b: Int, mask: Int) = object : Matcher<Boolean> {
     override fun test(value: Boolean): MatcherResult { 
@@ -210,7 +210,7 @@ private fun setOnBorrow(a: Int, b: Int, mask: Int) = object : Matcher<Boolean> {
     }
 }
 
-private fun setOnBorrow(a: Octet, b: Octet, mask: Int): Matcher<Boolean> = setOnBorrow(a.toInt(), b.toInt(), mask)
+private fun setOnBorrow(a: UByte, b: UByte, mask: Int): Matcher<Boolean> = setOnBorrow(a.toInt(), b.toInt(), mask)
 
 private fun setOnOverflow(a: Int, b: Int) = object : Matcher<Boolean> {
     override fun test(value: Boolean): MatcherResult { 
@@ -223,7 +223,7 @@ private fun setOnOverflow(a: Int, b: Int) = object : Matcher<Boolean> {
     }
 }
 
-private fun setOnOverflow(a: Octet, b: Octet): Matcher<Boolean> = setOnOverflow(a.toInt(), b.toInt())
+private fun setOnOverflow(a: UByte, b: UByte): Matcher<Boolean> = setOnOverflow(a.toInt(), b.toInt())
 
 private fun setOnUnderflow(a: Int, b: Int) = object : Matcher<Boolean> {
     override fun test(value: Boolean): MatcherResult { 
@@ -236,4 +236,4 @@ private fun setOnUnderflow(a: Int, b: Int) = object : Matcher<Boolean> {
     }
 }
 
-private fun setOnUnderflow(a: Octet, b: Octet): Matcher<Boolean> = setOnUnderflow(a.toInt(), b.toInt())
+private fun setOnUnderflow(a: UByte, b: UByte): Matcher<Boolean> = setOnUnderflow(a.toInt(), b.toInt())

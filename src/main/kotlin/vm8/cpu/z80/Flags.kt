@@ -5,17 +5,17 @@ import vm8.data.*
 /**
  * A flag of the Z80 processor
  */
-enum class Flag(val mask: Int) {
-    S (0b10000000), 
-    Z (0b01000000), 
-    F5(0b00100000), 
-    H (0b00010000), 
-    F3(0b00001000), 
-    PV(0b00000100), 
-    P (0b00000100), 
-    V (0b00000100), 
-    N (0b00000010), 
-    C (0b00000001);
+enum class Flag(val mask: UByte) {
+    S (0b10000000u),
+    Z (0b01000000u),
+    F5(0b00100000u),
+    H (0b00010000u),
+    F3(0b00001000u),
+    PV(0b00000100u),
+    P (0b00000100u),
+    V (0b00000100u),
+    N (0b00000010u),
+    C (0b00000001u);
 
     /**
      * Convert this flag into a [FlagAffection] by requesting this flag to be set
@@ -36,8 +36,9 @@ enum class Flag(val mask: Int) {
 /**
  * An accumulation of flag affections
  */
-class FlagsAffection(val set: Int = 0, val clear: Int = 0) {
-    override fun toString(): String = "[set:${Integer.toBinaryString(set)}, clr:${Integer.toBinaryString(clear)}]"
+class FlagsAffection(val set: UByte = 0u, val clear: UByte = 0u) {
+    override fun toString(): String =
+        "[set:${Integer.toBinaryString(set.toInt())}, clr:${Integer.toBinaryString(clear.toInt())}]"
 
     /**
      * Indicate the given flag will be set
@@ -66,9 +67,9 @@ class FlagsAffection(val set: Int = 0, val clear: Int = 0) {
     )
 
     /**
-     * Apply this flag affections to the given octet.
+     * Apply this flag affections to the given UByte.
      */
-    fun applyTo(v: Octet): Octet = v.bitSet(set).bitClear(clear)
+    fun applyTo(v: UByte): UByte = v.bitSet(set).bitClear(clear)
 }
 
 /**
@@ -81,24 +82,24 @@ fun Processor.apply(flags: FlagsAffection) {
 /**
  * Update the flags applying the given function.
  */
-inline fun Processor.updateFlags(fn: (Octet) -> Octet) {
+inline fun Processor.updateFlags(fn: (UByte) -> UByte) {
     regs.f = fn(regs.f)
 }
 
 /**
  * Check if the given flag is active.
  */
-fun Processor.isFlag(flag: Flag): Boolean = regs.f.areBitsSet(flag.mask)
+fun Processor.isFlag(flag: Flag): Boolean = regs.f and flag.mask > 0u
 
 /**
  * Precomputed flags for 8-bit arithmetic.
  */
-object PrecomputedFlags { 
-    private val intrinsic: Array<FlagsAffection> = Array(256) { Octet(it).run {
-        (Flag.S on isNegative()) and 
+object PrecomputedFlags {
+    private val intrinsic: Array<FlagsAffection> = Array(256) { it.toUByte().run {
+        (Flag.S on isNegative()) and
         (Flag.Z on isZero()) and
-        (Flag.F5 on bit(5)) and
-        (Flag.F3 on bit(3))
+        (Flag.F3 on bit(3)) and
+        (Flag.F5 on bit(5))
     }}
 
     // ADD/ADC(a, b) flags for 8-bit operands
@@ -130,56 +131,56 @@ object PrecomputedFlags {
     private val dec = Array(256) { sub[it][1] * Flag.C }
 
     // RLCA/RLA/RRCA/RRA intrinsic flags
-    private val rotA = Array(256) { Octet(it).run {
+    private val rotA = Array(256) { it.toUByte().run {
         (Flag.F5 on bit(5)) and (Flag.F3 on bit(3)) - Flag.H - Flag.N
     }}
 
     /**
-     * Get the intrinsic flags of the given octet.
+     * Get the intrinsic flags of the given UByte.
      * 
      * Intrinsic flags are those that are obtained from the ALU result, such as S (sign), Z (zero),
      * F3 and F5 (copy of bits 3 and 5, respectively). 
      */
-    fun intrinsicOf(v: Octet): FlagsAffection = intrinsic[v.toInt()]
+    fun intrinsicOf(v: UByte): FlagsAffection = intrinsic[v.toInt()]
 
     /**
-     * Get the flags resulting from adding two octets.
+     * Get the flags resulting from adding two UBytes.
      */
-    fun ofAdd(a: Octet, b: Octet): FlagsAffection = add8[a.toInt()][b.toInt()]
+    fun ofAdd(a: UByte, b: UByte): FlagsAffection = add8[a.toInt()][b.toInt()]
 
     /**
-     * Get the flags resulting from adding two words.
+     * Get the flags resulting from adding two UShorts.
      */
-    fun ofAdd(a: Word, b: Word): FlagsAffection {
+    fun ofAdd(a: UShort, b: UShort): FlagsAffection {
         // This is not actually pre-computed. But...         
-        val c = a + b
+        val c = (a + b).toUShort()
         return (Flag.F5 on c.high().bit(5)) and
             (Flag.H on carry(a.toInt(), c.toInt(), 0x0FFF)) and
             (Flag.F3 on c.high().bit(3)) - Flag.N and
-            (Flag.C on carryWord(a.toInt(), c.toInt()))
+            (Flag.C on carryUShort(a.toInt(), c.toInt()))
     }
 
     /**
-     * Get the flags resulting from subtracting two octets.
+     * Get the flags resulting from subtracting two UBytes.
      */
-    fun ofSub(a: Octet, b: Octet): FlagsAffection = sub[a.toInt()][b.toInt()]
+    fun ofSub(a: UByte, b: UByte): FlagsAffection = sub[a.toInt()][b.toInt()]
 
     /**
-     * Get the flags resulting from incrementing an octet.
+     * Get the flags resulting from incrementing an UByte.
      */
-    fun ofInc(a: Octet): FlagsAffection = inc[a.toInt()]
+    fun ofInc(a: UByte): FlagsAffection = inc[a.toInt()]
 
     /**
-     * Get the flags resulting from decrementing an octet.
+     * Get the flags resulting from decrementing an UByte.
      */
-    fun ofDec(a: Octet): FlagsAffection = dec[a.toInt()]
+    fun ofDec(a: UByte): FlagsAffection = dec[a.toInt()]
 
     /**
      * Get the flags resulting from a rotation of A register
      * 
      * This function receives the result as argument. Take this into account while calling.
      */
-    fun ofRotateA(c: Octet, carry: Boolean): FlagsAffection = rotA[c.toInt()] and (Flag.C on carry)
+    fun ofRotateA(c: UByte, carry: Boolean): FlagsAffection = rotA[c.toInt()] and (Flag.C on carry)
 
     private fun carryNibble(a: Int, c: Int): Boolean = carry(a, c, 0x0F)
     
@@ -189,9 +190,9 @@ object PrecomputedFlags {
 
     private fun borrowByte(a: Int, c: Int): Boolean = borrow(a, c, 0xFF)
 
-    private fun carryWord(a: Int, c: Int): Boolean = carry(a, c, 0xFFFF)
+    private fun carryUShort(a: Int, c: Int): Boolean = carry(a, c, 0xFFFF)
 
-    private fun borrowWord(a: Int, c: Int): Boolean = borrow(a, c, 0xFFFF)
+    private fun borrowUShort(a: Int, c: Int): Boolean = borrow(a, c, 0xFFFF)
 
     private fun carry(a: Int, c: Int, mask: Int) = (a and mask) > (c and mask)
 

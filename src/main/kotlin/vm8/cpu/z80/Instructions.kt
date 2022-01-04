@@ -1,5 +1,10 @@
 package vm8.cpu.z80
 
+import vm8.data.increment
+import vm8.data.isZero
+import vm8.data.rotateLeft
+import vm8.data.rotateRight
+
 /**
  * An instruction that can be executed by a Z80 processor.
  */
@@ -20,14 +25,14 @@ suspend fun Processor.run(inst: Inst): Int = with(inst) { exec() }
 /**
  * ADD instruction for 16-bit operands.
  */
-data class Add16(val dst: DestOp16, val src: SrcOp16, val cycles: Int, val size: Int) : Inst {
+data class Add16(val dst: DestOp16, val src: SrcOp16, val cycles: Int, val size: UByte) : Inst {
     override suspend fun Processor.exec(): Int {
         val a = load16(src)
         val b = load16(dst)
-        val c = a + b
+        val c = (a + b).toUShort()
         store16(dst, c)
         apply(PrecomputedFlags.ofAdd(a, b))
-        regs.pc += size
+        regs.pc = regs.pc.increment(size)
         return cycles
     }
 }
@@ -35,13 +40,13 @@ data class Add16(val dst: DestOp16, val src: SrcOp16, val cycles: Int, val size:
 /**
  * DEC instruction for 8-bit operands
  */
-data class Dec8(val dest: DestOp8, val cycles: Int, val size: Int) : Inst {
+data class Dec8(val dest: DestOp8, val cycles: Int, val size: UByte) : Inst {
     override suspend fun Processor.exec(): Int {
         val a = load8(dest)
         val c = a.dec()
         store8(dest, c)
         apply(PrecomputedFlags.ofDec(a))
-        regs.pc += size
+        regs.pc = regs.pc.increment(size)
         return cycles
     }
 }
@@ -49,12 +54,12 @@ data class Dec8(val dest: DestOp8, val cycles: Int, val size: Int) : Inst {
 /**
  * DEC instruction for 16-bit operands
  */
-data class Dec16(val dst: DestOp16, val cycles: Int, val size: Int) : Inst {
+data class Dec16(val dst: DestOp16, val cycles: Int, val size: UByte) : Inst {
     override suspend fun Processor.exec(): Int {
         val a = load16(dst)
         val c = a.dec()
         store16(dst, c)
-        regs.pc += size
+        regs.pc = regs.pc.increment(size)
         return cycles
     }
 }
@@ -62,13 +67,13 @@ data class Dec16(val dst: DestOp16, val cycles: Int, val size: Int) : Inst {
 /**
  * EX instruction
  */
-data class Ex(val a: DestOp16, val b: DestOp16, val cycles: Int, val size: Int) : Inst {
+data class Ex(val a: DestOp16, val b: DestOp16, val cycles: Int, val size: UByte) : Inst {
     override suspend fun Processor.exec(): Int {
         var va = load16(a)
         var vb = load16(b)
         store16(a, vb)
         store16(b, va)
-        regs.pc += size
+        regs.pc = regs.pc.increment(size)
         return cycles
     }
 }
@@ -76,13 +81,13 @@ data class Ex(val a: DestOp16, val b: DestOp16, val cycles: Int, val size: Int) 
 /**
  * INC instruction for 8-bit operands
  */
-data class Inc8(val dest: DestOp8, val cycles: Int, val size: Int) : Inst {
+data class Inc8(val dest: DestOp8, val cycles: Int, val size: UByte) : Inst {
     override suspend fun Processor.exec(): Int {
         val a = load8(dest)
         val c = a.inc()
         store8(dest, c)
         apply(PrecomputedFlags.ofInc(a))
-        regs.pc += size
+        regs.pc = regs.pc.increment(size)
         return cycles
     }
 }
@@ -90,12 +95,12 @@ data class Inc8(val dest: DestOp8, val cycles: Int, val size: Int) : Inst {
 /**
  * INC instruction for 16-bit operands
  */
-data class Inc16(val dest: DestOp16, val cycles: Int, val size: Int) : Inst {
+data class Inc16(val dest: DestOp16, val cycles: Int, val size: UByte) : Inst {
     override suspend fun Processor.exec(): Int {
         var v = load16(dest)
         v++
         store16(dest, v)
-        regs.pc += size
+        regs.pc = regs.pc.increment(size)
         return cycles
     }
 }
@@ -113,11 +118,11 @@ data class Jp(val addr: SrcOp16) : Inst {
 /**
  * LOAD instruction for 8-bit operands
  */
-data class Ld8(val dest: DestOp8, val src: SrcOp8, val cycles: Int, val size: Int): Inst {
+data class Ld8(val dest: DestOp8, val src: SrcOp8, val cycles: Int, val size: UByte): Inst {
     override suspend fun Processor.exec(): Int {
         val v = load8(src)
         store8(dest, v)
-        regs.pc += size
+        regs.pc = regs.pc.increment(size)
         return cycles
     }
 }
@@ -125,11 +130,11 @@ data class Ld8(val dest: DestOp8, val src: SrcOp8, val cycles: Int, val size: In
 /**
  * LOAD instruction for 16-bit operands
  */
-data class Ld16(val dest: DestOp16, val src: SrcOp16, val cycles: Int, val size: Int): Inst {
+data class Ld16(val dest: DestOp16, val src: SrcOp16, val cycles: Int, val size: UByte): Inst {
     override suspend fun Processor.exec(): Int {
         val v = load16(src)
         store16(dest, v)
-        regs.pc += size
+        regs.pc = regs.pc.increment(size)
         return cycles
     }
 }
@@ -147,12 +152,12 @@ object Nop : Inst {
 /**
  * RLCA instruction
  */
-data class Rlca(val cycles: Int, val size: Int) : Inst {
+data class Rlca(val cycles: Int, val size: UByte) : Inst {
     override suspend fun Processor.exec(): Int {
         val (v, carry) = regs.a.rotateLeft()
         regs.a = v
         apply(PrecomputedFlags.ofRotateA(v, carry))        
-        regs.pc += size
+        regs.pc = regs.pc.increment(size)
         return cycles
     }
 }
@@ -160,12 +165,12 @@ data class Rlca(val cycles: Int, val size: Int) : Inst {
 /**
  * RRCA instruction
  */
-data class Rrca(val cycles: Int, val size: Int) : Inst {
+data class Rrca(val cycles: Int, val size: UByte) : Inst {
     override suspend fun Processor.exec(): Int {
         val (v, carry) = regs.a.rotateRight()
         regs.a = v
         apply(PrecomputedFlags.ofRotateA(v, carry))        
-        regs.pc += size
+        regs.pc = regs.pc.increment(size)
         return cycles
     }
 }

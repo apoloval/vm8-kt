@@ -1,47 +1,46 @@
 package vm8.cpu.z80
 
-import vm8.byteorder.*
 import vm8.data.*
 
 class RegsBank {
-    var af: Word = Word(0x0000)
-    var bc: Word = Word(0x0000)
-    var de: Word = Word(0x0000)
-    var hl: Word = Word(0x0000)
-    var pc: Word = Word(0x0000)
-    var sp: Word = Word(0x0000)
+    var af: UShort = 0x0000u
+    var bc: UShort = 0x0000u
+    var de: UShort = 0x0000u
+    var hl: UShort = 0x0000u
+    var pc: UShort = 0x0000u
+    var sp: UShort = 0x0000u
 
-    var `af'`: Word = Word(0x0000)
+    var `af'`: UShort = 0x0000u
 
-    var a: Octet 
+    var a: UByte 
         inline get() = af.high()
         inline set(v) { af = af.setHigh(v) }
 
-    var f: Octet 
+    var f: UByte 
         inline get() = af.low()
         inline set(v) { af = af.setLow(v) }
 
-    var b: Octet 
+    var b: UByte 
         inline get() = bc.high()
         inline set(v) { bc = bc.setHigh(v) }
 
-    var c: Octet 
+    var c: UByte 
         inline get() = bc.low()
         inline set(v) { bc = bc.setLow(v) }
 
-    var d: Octet 
+    var d: UByte 
         inline get() = de.high()
         inline set(v) { de = de.setHigh(v) }
 
-    var e: Octet 
+    var e: UByte 
         inline get() = de.low()
         inline set(v) { de = de.setLow(v) }
 
-    var h: Octet 
+    var h: UByte 
         inline get() = hl.high()
         inline set(v) { hl = hl.setHigh(v) }
 
-    var l: Octet 
+    var l: UByte 
         inline get() = hl.low()
         inline set(v) { hl = hl.setLow(v) }
 }

@@ -21,8 +21,8 @@ fun main() {
     }
 
     val bus = object : vm8.cpu.z80.Bus {
-        override suspend fun read(addr: Addr): Octet = Octet(mem[addr.toInt()].toInt())
-        override suspend fun write(addr: Addr, v: Octet) { mem[addr.toInt()] = v.toByte() }
+        override suspend fun read(addr: Addr): UByte = mem[addr.toInt()].toUByte()
+        override suspend fun write(addr: Addr, v: UByte) { mem[addr.toInt()] = v.toByte() }
     }
     val cpu = Processor(bus)
 

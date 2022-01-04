@@ -1,19 +1,16 @@
 package vm8.byteorder
 
-import io.kotest.core.spec.style.*
-import io.kotest.matchers.*
-
-import vm8.byteorder.*
-import vm8.data.*
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
 
 class ByteOrderTest : FunSpec({
     test("decode word") {
-        ByteOrder.BIG_ENDIAN.decode(Octet(0xAB), Octet(0xCD)) shouldBe Word(0xABCD)
-        ByteOrder.LITTLE_ENDIAN.decode(Octet(0xAB), Octet(0xCD)) shouldBe Word(0xCDAB)
+        ByteOrder.BIG_ENDIAN.decode(0xABu, 0xCDu) shouldBe 0xABCDu.toUShort()
+        ByteOrder.LITTLE_ENDIAN.decode(0xABu, 0xCDu) shouldBe 0xCDABu.toUShort()
     }
 
     test("encode word") {
-        ByteOrder.BIG_ENDIAN.encode(Word(0xABCD)) shouldBe Pair(Octet(0xAB), Octet(0xCD))
-        ByteOrder.LITTLE_ENDIAN.encode(Word(0xABCD)) shouldBe Pair(Octet(0xCD), Octet(0xAB))
+        ByteOrder.BIG_ENDIAN.encode(0xABCDu) shouldBe Pair(0xABu.toUByte(), 0xCDu.toUByte())
+        ByteOrder.LITTLE_ENDIAN.encode(0xABCDu) shouldBe Pair(0xCDu.toUByte(), 0xABu.toUByte())
     }
 })

@@ -1,53 +1,48 @@
 package vm8.cpu.z80
 
-import io.kotest.assertions.*
-import io.kotest.core.spec.style.*
-import io.kotest.data.row
-import io.kotest.data.forAll as forAllData
-import io.kotest.matchers.*
-import io.kotest.property.*
-import io.kotest.property.arbitrary.boolean
-
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.property.checkAll
 import vm8.data.*
 
 class ProcessorTest : FunSpec({
 
     test("NOP") { behavesLike { flags ->
         whenProcessorRuns { NOP }
-        expect(cycles = 4, pc = Word(0x0001), flags)
+        expect(cycles = 4, pc = 0x0001u, flags)
     }}
 
     test("LD BC, NN") { behavesLike { flags ->
         whenProcessorRuns { LD(BC, 0xABCD) }
-        expect(cycles = 10, pc = Word(0x0003), flags) { regs.bc shouldBe Word(0xABCD) }
+        expect(cycles = 10, pc = 0x0003u, flags) { regs.bc shouldBe 0xABCDu }
     }}
 
-    test("LD (BC), A") { behavesLike { value: Octet, flags ->
+    test("LD (BC), A") { behavesLike { value: UByte, flags ->
         given { 
             regs.a = value 
-            regs.bc = Word(0x8000)
+            regs.bc = 0x8000u
         }
         whenProcessorRuns { LD(!BC, A) }
-        expect(cycles = 7, pc = Word(0x0001), flags) {
+        expect(cycles = 7, pc = 0x0001u, flags) {
             mem[0x8000] shouldBe value.toByte()
         }
     }}
 
-    test("INC BC") { behavesLike { value: Word, flags ->
+    test("INC BC") { behavesLike { value: UShort, flags ->
         given { regs.bc = value }
         whenProcessorRuns { INC(BC) }
-        expect(cycles = 6, pc = Word(0x0001), flags) {
+        expect(cycles = 6, pc = 0x0001u, flags) {
             regs.bc shouldBe value.inc()
         }
     }}
 
-    test("INC B") { behavesLike { value: Octet, flags ->
+    test("INC B") { behavesLike { value: UByte, flags ->
         given { regs.b = value }
         whenProcessorRuns { INC(B) }
         expectInc(value, regs.b, flags)
     }}
 
-    test("DEC B") { behavesLike { value: Octet, flags ->
+    test("DEC B") { behavesLike { value: UByte, flags ->
         given { regs.b = value }
         whenProcessorRuns { DEC(B) }
         expectDec(value, regs.b, flags)
@@ -55,12 +50,12 @@ class ProcessorTest : FunSpec({
 
     test("LD B, N") { behavesLike { flags ->
         whenProcessorRuns { LD(B, 0x42) }
-        expect(cycles = 7, pc = Word(0x0002), flags) {
-            regs.b shouldBe Octet(0x42)
+        expect(cycles = 7, pc = 0x0002u, flags) {
+            regs.b shouldBe 0x42u
         }
     }}
 
-    test("RLCA") { behavesLike { value: Octet, flags ->
+    test("RLCA") { behavesLike { value: UByte, flags ->
         given { regs.a = value }
         whenProcessorRuns { RLCA }
         var (xval, carry) = value.rotateLeft()
@@ -69,17 +64,17 @@ class ProcessorTest : FunSpec({
 
     test("EX AF, AF'") { behavesLike { _ -> 
         given {
-            regs.af = Word(0xABCD)
-            regs.`af'` = Word(0x1234)
+            regs.af = 0xABCDu
+            regs.`af'` = 0x1234u
         }
         whenProcessorRuns { EX(AF, `AF'`) }
-        expect(cycles = 4, pc = Word(0x0001)) {
-            regs.af shouldBe Word(0x1234)
-            regs.`af'` shouldBe Word(0xABCD)
+        expect(cycles = 4, pc = 0x0001u) {
+            regs.af shouldBe 0x1234u
+            regs.`af'` shouldBe 0xABCDu
         }
     }}
 
-    test("ADD HL, BC") { behavesLike { a: Word, b: Word, flags ->
+    test("ADD HL, BC") { behavesLike { a: UShort, b: UShort, flags ->
         given {
             regs.hl = a
             regs.bc = b
@@ -90,30 +85,30 @@ class ProcessorTest : FunSpec({
 
     test("LD A, (BC)") { behavesLike { flags -> 
         given {
-            regs.bc = Word(0xABCD)
+            regs.bc = 0xABCDu
             mem[0xABCD] = 0x42.toByte()
         }
         whenProcessorRuns { LD(A, !BC) }
-        expect(cycles = 7, pc = Word(0x0001), flags) {
-            regs.a shouldBe Octet(0x42)
+        expect(cycles = 7, pc = 0x0001u, flags) {
+            regs.a shouldBe 0x42u
         }
     }}
 
-    test("DEC BC") { behavesLike { value: Word, flags -> 
+    test("DEC BC") { behavesLike { value: UShort, flags -> 
         given { regs.bc = value }
         whenProcessorRuns { DEC(BC) }
-        expect(cycles = 6, pc = Word(0x0001), flags) {
+        expect(cycles = 6, pc = 0x0001u, flags) {
             regs.bc shouldBe value.dec()
         }
     }}
 
-    test("INC C") { behavesLike { value: Octet, flags -> 
+    test("INC C") { behavesLike { value: UByte, flags -> 
         given { regs.c = value }
         whenProcessorRuns { INC(C) }
         expectInc(value, regs.c, flags)
     }}
 
-    test("DEC C") { behavesLike { value: Octet, flags -> 
+    test("DEC C") { behavesLike { value: UByte, flags -> 
         given { regs.c = value }
         whenProcessorRuns { DEC(C) }
         expectDec(value, regs.c, flags)
@@ -121,12 +116,12 @@ class ProcessorTest : FunSpec({
 
     test("LD C, N") { behavesLike { flags ->
         whenProcessorRuns { LD(C, 0x42) }
-        expect(cycles = 7, pc = Word(0x0002), flags) {
-            regs.c shouldBe Octet(0x42)
+        expect(cycles = 7, pc = 0x0002u, flags) {
+            regs.c shouldBe 0x42u
         }
     }}
 
-    test("RRCA") { behavesLike { value: Octet, flags ->
+    test("RRCA") { behavesLike { value: UByte, flags ->
         given { regs.a = value }
         whenProcessorRuns { RRCA }
         var (xval, carry) = value.rotateRight()
@@ -140,27 +135,24 @@ suspend fun behavesLike(f: suspend ProcessorBehavior.() -> Unit) {
     b.f()
 }
 
-suspend fun behavesLike(f: suspend ProcessorBehavior.(flags: Octet) -> Unit) {
-    checkAll(OctetArb) { flags -> 
+suspend fun behavesLike(f: suspend ProcessorBehavior.(flags: UByte) -> Unit) {
+    checkAll<UByte> { flags ->
         val b = ProcessorBehavior()
         b.cpu.regs.f = flags
         b.f(flags)
     }
 }
 
-inline suspend fun<reified T> behavesLike(crossinline f: suspend ProcessorBehavior.(a: T, flags: Octet) -> Unit) {
-    val gen = generatorForClass<T>(T::class)
-    checkAll(gen, OctetArb) { a, flags -> 
+inline suspend fun<reified T> behavesLike(crossinline f: suspend ProcessorBehavior.(a: T, flags: UByte) -> Unit) {
+    checkAll<T, UByte> { a, flags ->
         val b = ProcessorBehavior()
         b.cpu.regs.f = flags
         b.f(a, flags)
     }
 }
 
-inline suspend fun<reified T1, reified T2> behavesLike(crossinline f: suspend ProcessorBehavior.(a: T1, b: T2, flags: Octet) -> Unit) {
-    val gen1 = generatorForClass<T1>(T1::class)
-    val gen2 = generatorForClass<T2>(T2::class)
-    checkAll(gen1, gen2, OctetArb) { a, b, flags -> 
+inline suspend fun<reified T1, reified T2> behavesLike(crossinline f: suspend ProcessorBehavior.(a: T1, b: T2, flags: UByte) -> Unit) {
+    checkAll<T1, T2, UByte> { a, b, flags ->
         val behav = ProcessorBehavior()
         behav.cpu.regs.f = flags
         behav.f(a, b, flags)
@@ -185,7 +177,7 @@ class ProcessorBehavior {
         this.f()
     }
 
-    fun expect(cycles: Int? = null, pc: Word? = null, flags: Octet? = null, f: ProcessorBehavior.() -> Unit = {}) {
+    fun expect(cycles: Int? = null, pc: Addr? = null, flags: UByte? = null, f: ProcessorBehavior.() -> Unit = {}) {
         if (cycles != null)
             givenCycles shouldBe cycles
         if (pc != null) 
@@ -195,8 +187,8 @@ class ProcessorBehavior {
         this.f()
     }
 
-    fun expectAdd16(xval: Word, a: Word, b: Word, flags: Octet) = expect(cycles = 11, pc = Word(0x0001)) {
-        xval shouldBe a + b
+    fun expectAdd16(xval: UShort, a: UShort, b: UShort, flags: UByte) = expect(cycles = 11, pc = 0x0001u) {
+        xval shouldBe (a + b).toUShort()
 
         regs.f.bit(0) shouldBe flagActiveOnCarry(a, xval, 0xFFFF)
         regs.f.bit(1) shouldBe false
@@ -208,7 +200,7 @@ class ProcessorBehavior {
         regs.f.bit(7) shouldBe flags.bit(7)
     }
 
-    fun expectInc(from: Octet, to: Octet, flags: Octet) = expect(cycles = 4, pc = Word(0x0001)) {
+    fun expectInc(from: UByte, to: UByte, flags: UByte) = expect(cycles = 4, pc = 0x0001u) {
         to shouldBe from.inc()
 
         regs.f.bit(0) shouldBe flags.bit(0)
@@ -221,7 +213,7 @@ class ProcessorBehavior {
         regs.f.bit(7) shouldBe to.isNegative()
     }
 
-    fun expectDec(from: Octet, to: Octet, flags: Octet) = expect(cycles = 4, pc = Word(0x0001)) {
+    fun expectDec(from: UByte, to: UByte, flags: UByte) = expect(cycles = 4, pc = 0x0001u) {
         to shouldBe from.dec()
 
         regs.f.bit(0) shouldBe flags.bit(0)
@@ -234,7 +226,7 @@ class ProcessorBehavior {
         regs.f.bit(7) shouldBe to.isNegative()
     }
 
-    fun expectRotate(xval: Octet, carry: Boolean, flags: Octet) = expect(cycles = 4, pc = Word(0x0001)) {
+    fun expectRotate(xval: UByte, carry: Boolean, flags: UByte) = expect(cycles = 4, pc = 0x0001u) {
         regs.a shouldBe xval
 
         regs.f.bit(0) shouldBe carry
@@ -252,22 +244,22 @@ class ProcessorBehavior {
         return ((a xor b xor 0x80) and (b xor c) and 0x80) != 0
     }
     
-    fun flagActiveOnOverflow(a: Octet, b: Octet) = flagActiveOnOverflow(a.toInt(), b.toInt())
+    fun flagActiveOnOverflow(a: UByte, b: UByte) = flagActiveOnOverflow(a.toInt(), b.toInt())
 
     fun flagActiveOnUnderflow(a: Int, c: Int): Boolean {
         val b = a - c
         return ((a xor b) and ((a xor c) and 0x80)) != 0
     }
     
-    fun flagActiveOnUnderflow(a: Octet, b: Octet) = flagActiveOnUnderflow(a.toInt(), b.toInt())
+    fun flagActiveOnUnderflow(a: UByte, b: UByte) = flagActiveOnUnderflow(a.toInt(), b.toInt())
 
     fun flagActiveOnCarry(a: Int, c: Int, mask: Int): Boolean = (a and mask) > (c and mask)
 
-    fun flagActiveOnCarry(a: Octet, c: Octet, mask: Int): Boolean = flagActiveOnCarry(a.toInt(), c.toInt(), mask)
+    fun flagActiveOnCarry(a: UByte, c: UByte, mask: Int): Boolean = flagActiveOnCarry(a.toInt(), c.toInt(), mask)
 
-    fun flagActiveOnCarry(a: Word, c: Word, mask: Int): Boolean = flagActiveOnCarry(a.toInt(), c.toInt(), mask)
+    fun flagActiveOnCarry(a: UShort, c: UShort, mask: Int): Boolean = flagActiveOnCarry(a.toInt(), c.toInt(), mask)
 
     fun flagActiveOnBorrow(a: Int, c: Int, mask: Int): Boolean = (a and mask) < (c and mask)
 
-    fun flagActiveOnBorrow(a: Octet, c: Octet, mask: Int): Boolean = flagActiveOnBorrow(a.toInt(), c.toInt(), mask)
+    fun flagActiveOnBorrow(a: UByte, c: UByte, mask: Int): Boolean = flagActiveOnBorrow(a.toInt(), c.toInt(), mask)
 }

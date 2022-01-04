@@ -1,107 +1,105 @@
 package vm8.cpu.z80
 
-import vm8.data.*
-
 sealed interface SrcOp8 {
-    suspend fun Processor.get(): Octet
+    suspend fun Processor.get(): UByte
 }
 
 sealed interface DestOp8 : SrcOp8 {
-    suspend fun Processor.set(v: Octet)
+    suspend fun Processor.set(v: UByte)
 }
 
-inline suspend fun Processor.load8(op: SrcOp8): Octet = with(op) { get() }
+inline suspend fun Processor.load8(op: SrcOp8): UByte = with(op) { get() }
 
-inline suspend fun Processor.store8(op: DestOp8, v: Octet) { with(op) { set(v) } }
+inline suspend fun Processor.store8(op: DestOp8, v: UByte) { with(op) { set(v) } }
 
 enum class Reg8 : DestOp8 {
     A {
-        override suspend fun Processor.get(): Octet = regs.a
-        override suspend fun Processor.set(v: Octet) { regs.a = v }
+        override suspend fun Processor.get(): UByte = regs.a
+        override suspend fun Processor.set(v: UByte) { regs.a = v }
     }, 
     F {
-        override suspend fun Processor.get(): Octet = regs.f
-        override suspend fun Processor.set(v: Octet) { regs.f = v }
+        override suspend fun Processor.get(): UByte = regs.f
+        override suspend fun Processor.set(v: UByte) { regs.f = v }
     }, 
     B {
-        override suspend fun Processor.get(): Octet = regs.b
-        override suspend fun Processor.set(v: Octet) { regs.b = v }
+        override suspend fun Processor.get(): UByte = regs.b
+        override suspend fun Processor.set(v: UByte) { regs.b = v }
     }, 
     C {
-        override suspend fun Processor.get(): Octet = regs.c
-        override suspend fun Processor.set(v: Octet) { regs.c = v }
+        override suspend fun Processor.get(): UByte = regs.c
+        override suspend fun Processor.set(v: UByte) { regs.c = v }
     },
     D {
-        override suspend fun Processor.get(): Octet = regs.d
-        override suspend fun Processor.set(v: Octet) { regs.d = v }
+        override suspend fun Processor.get(): UByte = regs.d
+        override suspend fun Processor.set(v: UByte) { regs.d = v }
     },    
     E {
-        override suspend fun Processor.get(): Octet = regs.e
-        override suspend fun Processor.set(v: Octet) { regs.e = v }
+        override suspend fun Processor.get(): UByte = regs.e
+        override suspend fun Processor.set(v: UByte) { regs.e = v }
     },    
     H {
-        override suspend fun Processor.get(): Octet = regs.h
-        override suspend fun Processor.set(v: Octet) { regs.h = v }
+        override suspend fun Processor.get(): UByte = regs.h
+        override suspend fun Processor.set(v: UByte) { regs.h = v }
     },    
     L {
-        override suspend fun Processor.get(): Octet = regs.l
-        override suspend fun Processor.set(v: Octet) { regs.l = v }
+        override suspend fun Processor.get(): UByte = regs.l
+        override suspend fun Processor.set(v: UByte) { regs.l = v }
     },    
 }
 
 object Imm8 : SrcOp8 {
-    override suspend fun Processor.get(): Octet = bus.read(regs.pc.inc())
+    override suspend fun Processor.get(): UByte = bus.read(regs.pc.inc())
 }
 
 data class Ind8(val addr: SrcOp16) : DestOp8 {
-    override suspend fun Processor.get(): Octet = bus.read(load16(addr))
+    override suspend fun Processor.get(): UByte = bus.read(load16(addr))
 
-    override suspend fun Processor.set(v: Octet) { bus.write(load16(addr), v) }
+    override suspend fun Processor.set(v: UByte) { bus.write(load16(addr), v) }
 }
 
 sealed interface SrcOp16 {
-    suspend fun Processor.get(): Word
+    suspend fun Processor.get(): UShort
 }
 
 sealed interface DestOp16 : SrcOp16 {
-    suspend fun Processor.set(v: Word)
+    suspend fun Processor.set(v: UShort)
 }
 
-inline suspend fun Processor.load16(op: SrcOp16): Word = with(op) { get() }
+inline suspend fun Processor.load16(op: SrcOp16): UShort = with(op) { get() }
 
-inline suspend fun Processor.store16(op: DestOp16, v: Word) { with(op) { set(v) } }
+inline suspend fun Processor.store16(op: DestOp16, v: UShort) { with(op) { set(v) } }
 
 enum class Reg16 : DestOp16 {
     AF {
-        override suspend fun Processor.get(): Word = regs.af
-        override suspend fun Processor.set(v: Word) { regs.af = v }
+        override suspend fun Processor.get(): UShort = regs.af
+        override suspend fun Processor.set(v: UShort) { regs.af = v }
     }, 
     `AF'` {
-        override suspend fun Processor.get(): Word = regs.`af'`
-        override suspend fun Processor.set(v: Word) { regs.`af'` = v }
+        override suspend fun Processor.get(): UShort = regs.`af'`
+        override suspend fun Processor.set(v: UShort) { regs.`af'` = v }
     }, 
     BC {
-        override suspend fun Processor.get(): Word = regs.bc
-        override suspend fun Processor.set(v: Word) { regs.bc = v }
+        override suspend fun Processor.get(): UShort = regs.bc
+        override suspend fun Processor.set(v: UShort) { regs.bc = v }
     }, 
     DE {
-        override suspend fun Processor.get(): Word = regs.de
-        override suspend fun Processor.set(v: Word) { regs.de = v }
+        override suspend fun Processor.get(): UShort = regs.de
+        override suspend fun Processor.set(v: UShort) { regs.de = v }
     }, 
     HL {
-        override suspend fun Processor.get(): Word = regs.hl
-        override suspend fun Processor.set(v: Word) { regs.hl = v }
+        override suspend fun Processor.get(): UShort = regs.hl
+        override suspend fun Processor.set(v: UShort) { regs.hl = v }
     }, 
     PC {
-        override suspend fun Processor.get(): Word = regs.pc
-        override suspend fun Processor.set(v: Word) { regs.pc = v }
+        override suspend fun Processor.get(): UShort = regs.pc
+        override suspend fun Processor.set(v: UShort) { regs.pc = v }
     },
     SP {
-        override suspend fun Processor.get(): Word = regs.sp
-        override suspend fun Processor.set(v: Word) { regs.sp = v }
+        override suspend fun Processor.get(): UShort = regs.sp
+        override suspend fun Processor.set(v: UShort) { regs.sp = v }
     },
 }
 
 object Imm16 : SrcOp16 {
-    override suspend fun Processor.get(): Word = bus.readWord(regs.pc.inc())
+    override suspend fun Processor.get(): UShort = bus.readWord(regs.pc.inc())
 }
