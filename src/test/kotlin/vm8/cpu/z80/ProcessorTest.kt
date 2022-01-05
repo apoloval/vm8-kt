@@ -312,7 +312,16 @@ class ProcessorTest : FunSpec({
                         regs.bc = 0x8000u
                         mem[0x8000] = it.toByte()
                         mem.asm { LD(A, !BC) }
-                    }
+                    },
+                    "LD A, (DE)" to TestCase(
+                        cycles = 7,
+                        size = 1,
+                        result = { regs.a },
+                    ) {
+                        regs.de = 0x8000u
+                        mem[0x8000] = it.toByte()
+                        mem.asm { LD(A, !DE) }
+                    },
                 )
             ) { (cycles, size, result, prepare) -> behavesLike { value: UByte, flags ->
                 prepare(value)

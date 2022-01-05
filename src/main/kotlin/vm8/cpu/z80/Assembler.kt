@@ -113,6 +113,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun LD(dst: Reg8, src: Ind8) {
         when(Pair(dst, src)) {
             Pair(Reg8.A, Ind8(Reg16.BC)) -> DB(OpCodes.`LD A, (BC)`)
+            Pair(Reg8.A, Ind8(Reg16.DE)) -> DB(OpCodes.`LD A, (DE)`)
             else -> throw IllegalArgumentException("invalid instruction: LD $dst, $src")
         }
     }
