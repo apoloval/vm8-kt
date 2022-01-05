@@ -11,6 +11,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     val A = Reg8.A
     val B = Reg8.B
     val C = Reg8.C
+    val D = Reg8.D
 
     val AF = Reg16.AF
     val `AF'` = Reg16.`AF'`
