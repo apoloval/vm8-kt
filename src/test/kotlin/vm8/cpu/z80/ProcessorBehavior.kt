@@ -61,19 +61,6 @@ class ProcessorBehavior {
         this.f()
     }
 
-    fun expectAdd16(xval: UShort, a: UShort, b: UShort, flags: UByte) = expect(cycles = 11, pc = 0x0001u) {
-        xval shouldBe (a + b).toUShort()
-
-        regs.f.bit(0) shouldBe flagActiveOnCarry(a, xval, 0xFFFF)
-        regs.f.bit(1) shouldBe false
-        regs.f.bit(2) shouldBe flags.bit(2)
-        regs.f.bit(3) shouldBe xval.high().bit(3)
-        regs.f.bit(4) shouldBe flagActiveOnCarry(a, xval, 0x0FFF)
-        regs.f.bit(5) shouldBe xval.high().bit(5)
-        regs.f.bit(6) shouldBe flags.bit(6)
-        regs.f.bit(7) shouldBe flags.bit(7)
-    }
-
     fun expectRotate(xval: UByte, carry: Boolean, flags: UByte) = expect(cycles = 4, pc = 0x0001u) {
         regs.a shouldBe xval
 

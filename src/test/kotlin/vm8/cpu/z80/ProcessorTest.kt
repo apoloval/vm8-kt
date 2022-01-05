@@ -15,14 +15,50 @@ class ProcessorTest : FunSpec({
     }
 
     context("Arithmetic and logic") {
-        test("ADD HL, BC") { behavesLike { a: UShort, b: UShort, flags ->
-            given {
-                regs.hl = a
-                regs.bc = b
-            }
-            whenProcessorRuns { ADD(HL, BC) }
-            expectAdd16(regs.hl, a, b, flags)
-        }}
+        context("ADD 16-bit") {
+            data class TestCase(
+                val cycles: Int,
+                val size: Int,
+                val result: ProcessorBehavior.() -> UShort,
+                val prepare: ProcessorBehavior.(UShort, UShort) -> Unit,
+            )
+
+            withData(mapOf(
+                "ADD HL, BC" to TestCase(
+                    cycles = 11,
+                    size = 1,
+                    result = { regs.hl },
+                ) { a, b ->
+                    regs.hl = a
+                    regs.bc = b
+                    mem.asm { ADD(HL, BC) }
+                },
+                "ADD HL, DE" to TestCase(
+                    cycles = 11,
+                    size = 1,
+                    result = { regs.hl },
+                ) { a, b ->
+                    regs.hl = a
+                    regs.de = b
+                    mem.asm { ADD(HL, DE) }
+                },
+            )) { (cycles, size, result, prepare) -> behavesLike { a: UShort, b: UShort, flags ->
+                prepare(a, b)
+                whenProcessorRuns()
+                expect(cycles, pc = size.toUShort()) {
+                    result() shouldBe (a + b).toUShort()
+
+                    regs.f.bit(0) shouldBe flagActiveOnCarry(a, result(), 0xFFFF)
+                    regs.f.bit(1) shouldBe false
+                    regs.f.bit(2) shouldBe flags.bit(2)
+                    regs.f.bit(3) shouldBe result().high().bit(3)
+                    regs.f.bit(4) shouldBe flagActiveOnCarry(a, result(), 0x0FFF)
+                    regs.f.bit(5) shouldBe result().high().bit(5)
+                    regs.f.bit(6) shouldBe flags.bit(6)
+                    regs.f.bit(7) shouldBe flags.bit(7)
+                }
+            }}
+        }
 
         context("DEC 8-bit") {
             data class TestCase(

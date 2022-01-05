@@ -45,6 +45,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
 
     fun ADD(dst: Reg16, src: Reg16) = when(Pair(dst, src)) {
         Pair(Reg16.HL, Reg16.BC) -> DB(OpCodes.`ADD HL, BC`)
+        Pair(Reg16.HL, Reg16.DE) -> DB(OpCodes.`ADD HL, DE`)
         else -> throw IllegalArgumentException("invalid instruction: ADD $dst, $src")
     }
 
