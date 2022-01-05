@@ -131,6 +131,8 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
 
     val NOP: Unit get() = DB(OpCodes.NOP)
 
+    val RLA: Unit get() { DB(OpCodes.RLA) }
+
     val RLCA: Unit get() { DB(OpCodes.RLCA) }
 
     val RRCA: Unit get() { DB(OpCodes.RRCA) }

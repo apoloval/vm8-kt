@@ -18,11 +18,6 @@ sealed interface Inst {
 }
 
 /**
- * Run the given instruction over the Z80 processor.
- */
-suspend fun Processor.run(inst: Inst): Int = with(inst) { exec() }
-
-/**
  * ADD instruction for 16-bit operands.
  */
 data class Add16(val dst: DestOp16, val src: SrcOp16, val cycles: Int, val size: UByte) : Inst {
@@ -87,8 +82,8 @@ data class Djnz(val dst: DestOp8, val relj: SrcOp8, val jcycles: Int, val njcycl
  */
 data class Ex(val a: DestOp16, val b: DestOp16, val cycles: Int, val size: UByte) : Inst {
     override suspend fun Processor.exec(): Int {
-        var va = load16(a)
-        var vb = load16(b)
+        val va = load16(a)
+        val vb = load16(b)
         store16(a, vb)
         store16(b, va)
         regs.pc = regs.pc.increment(size)
@@ -168,13 +163,26 @@ object Nop : Inst {
 }
 
 /**
+ * RLA instruction
+ */
+data class Rla(val cycles: Int, val size: UByte) : Inst {
+    override suspend fun Processor.exec(): Int {
+        val (v, carry) = regs.a.rotateLeft(isFlag(Flag.C))
+        regs.a = v
+        apply(PrecomputedFlags.ofRotateA(v, carry))        
+        regs.pc = regs.pc.increment(size)
+        return cycles
+    }
+}
+
+/**
  * RLCA instruction
  */
 data class Rlca(val cycles: Int, val size: UByte) : Inst {
     override suspend fun Processor.exec(): Int {
         val (v, carry) = regs.a.rotateLeft()
         regs.a = v
-        apply(PrecomputedFlags.ofRotateA(v, carry))        
+        apply(PrecomputedFlags.ofRotateA(v, carry))
         regs.pc = regs.pc.increment(size)
         return cycles
     }

@@ -18,12 +18,17 @@ enum class Flag(val mask: UByte) {
     C (0b00000001u);
 
     /**
-     * Convert this flag into a [FlagAffection] by requesting this flag to be set
+     * Check if the flag is set in the given value.
+     */
+    fun isSet(v: UByte): Boolean = v and mask > 0u
+
+    /**
+     * Convert this flag into a [FlagsAffection] by requesting this flag to be set
      */
     operator fun unaryPlus(): FlagsAffection = FlagsAffection() + this
 
     /**
-     * Convert this flag into a [FlagAffection] by requesting this flag to be clear
+     * Convert this flag into a [FlagsAffection] by requesting this flag to be clear
      */
     operator fun unaryMinus(): FlagsAffection = FlagsAffection() - this
 
