@@ -198,6 +198,11 @@ class ProcessorTest : FunSpec({
     }
 
     context("Jump, call and return") {
+        test("JR N") { behavesLike { value: Byte, flags ->
+            whenProcessorRuns { JR(value) }
+            expect(cycles = 12, pc = 0x0000u.toUShort().increment(value), flags)
+        }}
+
         test("DJNZ") { behavesLike { value: UByte, flags ->
             given { regs.b = value }
             whenProcessorRuns { DJNZ(0x42) }

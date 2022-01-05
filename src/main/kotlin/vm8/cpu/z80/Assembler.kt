@@ -129,6 +129,11 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
         DW(addr)
     }
 
+    fun JR(rel: Byte) {
+        DB(OpCodes.`JR N`)
+        DB(rel.toUByte())
+    }
+
     val NOP: Unit get() = DB(OpCodes.NOP)
 
     val RLA: Unit get() { DB(OpCodes.RLA) }

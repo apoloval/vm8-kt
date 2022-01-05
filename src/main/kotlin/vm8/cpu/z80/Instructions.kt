@@ -92,6 +92,21 @@ data class Ex(val a: DestOp16, val b: DestOp16, val cycles: Int, val size: UByte
 }
 
 /**
+ * JR instruction
+ */
+data class Jr(val cond: RegsBank.() -> Boolean, val relj: SrcOp8, val jcycles: Int, val njcycles: Int, val size: UByte) : Inst {
+    override suspend fun Processor.exec(): Int {
+        if (!regs.cond()) {
+            regs.pc = regs.pc.increment(size)
+            return njcycles
+        } else {
+            regs.pc = regs.pc.increment(load8(relj).toByte())
+            return jcycles
+        }
+    }
+}
+
+/**
  * INC instruction for 8-bit operands
  */
 data class Inc8(val dest: DestOp8, val cycles: Int, val size: UByte) : Inst {
