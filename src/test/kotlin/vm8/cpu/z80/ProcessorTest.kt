@@ -267,6 +267,14 @@ class ProcessorTest : FunSpec({
             expectRotate(xval, carry, flags)
         }}
 
+        test("RRA") { behavesLike { value: UByte, flags ->
+            val inCarry = Flag.C.isSet(flags)
+            given { regs.a = value }
+            whenProcessorRuns { RRA }
+            val (xval, outCarry) = value.rotateRight(inCarry)
+            expectRotate(xval, outCarry, flags)
+        }}
+
         test("RRCA") { behavesLike { value: UByte, flags ->
             given { regs.a = value }
             whenProcessorRuns { RRCA }

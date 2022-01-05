@@ -204,13 +204,26 @@ data class Rlca(val cycles: Int, val size: UByte) : Inst {
 }
 
 /**
+ * RRA instruction
+ */
+data class Rra(val cycles: Int, val size: UByte) : Inst {
+    override suspend fun Processor.exec(): Int {
+        val (v, carry) = regs.a.rotateRight(isFlag(Flag.C))
+        regs.a = v
+        apply(PrecomputedFlags.ofRotateA(v, carry))        
+        regs.pc = regs.pc.increment(size)
+        return cycles
+    }
+}
+
+/**
  * RRCA instruction
  */
 data class Rrca(val cycles: Int, val size: UByte) : Inst {
     override suspend fun Processor.exec(): Int {
         val (v, carry) = regs.a.rotateRight()
         regs.a = v
-        apply(PrecomputedFlags.ofRotateA(v, carry))        
+        apply(PrecomputedFlags.ofRotateA(v, carry))
         regs.pc = regs.pc.increment(size)
         return cycles
     }
