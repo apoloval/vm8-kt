@@ -62,6 +62,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
 
     fun DEC(r: Reg16) = when(r) {
         Reg16.BC -> DB(OpCodes.`DEC BC`)
+        Reg16.DE -> DB(OpCodes.`DEC DE`)
         else -> throw IllegalArgumentException("invalid instruction: DEC $r")
     }
 

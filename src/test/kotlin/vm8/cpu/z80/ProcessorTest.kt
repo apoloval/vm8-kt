@@ -113,13 +113,39 @@ class ProcessorTest : FunSpec({
             }}
         }
 
-        test("DEC BC") { behavesLike { value: UShort, flags ->
-            given { regs.bc = value }
-            whenProcessorRuns { DEC(BC) }
-            expect(cycles = 6, pc = 0x0001u, flags) {
-                regs.bc shouldBe value.dec()
-            }
-        }}
+        context("INC 16-bit") {
+            data class TestCase(
+                val cycles: Int,
+                val size: Int,
+                val result: ProcessorBehavior.() -> UShort,
+                val prepare: ProcessorBehavior.(UShort) -> Unit,
+            )
+
+            withData(mapOf(
+                "DEC BC" to TestCase(
+                    cycles = 6,
+                    size = 1,
+                    result = { regs.bc }
+                ) {
+                    regs.bc = it
+                    mem.asm { DEC(BC) }
+                },
+                "DEC DE" to TestCase(
+                    cycles = 6,
+                    size = 1,
+                    result = { regs.de }
+                ) {
+                    regs.de = it
+                    mem.asm { DEC(DE) }
+                },
+            )) { (cycles, size, result, prepare) -> behavesLike { value: UShort, flags ->
+                prepare(value)
+                whenProcessorRuns()
+                expect(cycles, pc = size.toUShort(), flags) {
+                    result() shouldBe value.dec()
+                }
+            }}
+        }
 
         context("INC 8-bit") {
             data class TestCase(
