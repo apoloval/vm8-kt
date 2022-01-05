@@ -66,6 +66,7 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
         OpCodes.`LD DE, NN` -> Ld16(Reg16.DE, Imm16, cycles = 10, size = 3u)
         OpCodes.`INC DE` -> Inc16(Reg16.DE, cycles = 6, size = 1u)
         OpCodes.`INC D` -> Inc8(Reg8.D, cycles = 4, size = 1u)
+        OpCodes.`DEC D` -> Dec8(Reg8.D, cycles = 4, size = 1u)
 
         OpCodes.`JP NN` -> Jp(Imm16)
         else -> Illegal
