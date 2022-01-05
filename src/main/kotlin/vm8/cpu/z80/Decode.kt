@@ -30,7 +30,6 @@ object OpCodes {
     const val `ADD HL, DE`  : Int = 0x19
     const val `LD A, (DE)`  : Int = 0x1A
     const val `DEC DE`      : Int = 0x1B
-
     const val `INC E`       : Int = 0x1C
     const val `DEC E`       : Int = 0x1D
 
@@ -79,6 +78,7 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
         OpCodes.`ADD HL, DE` -> Add16(Reg16.HL, Reg16.DE, cycles = 11, size = 1u)
         OpCodes.`LD A, (DE)` -> Ld8(Reg8.A, Ind8(Reg16.DE), cycles = 7, size = 1u)
         OpCodes.`DEC DE` -> Dec16(Reg16.DE, cycles = 6, size = 1u)
+        OpCodes.`INC E` -> Inc8(Reg8.E, cycles = 4, size = 1u)
 
         OpCodes.`JP NN` -> Jp(Imm16)
         else -> Illegal
