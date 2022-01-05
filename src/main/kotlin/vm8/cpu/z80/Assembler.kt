@@ -2,6 +2,7 @@ package vm8.cpu.z80
 
 import vm8.byteorder.ByteOrder
 
+@OptIn(ExperimentalUnsignedTypes::class)
 class Assembler(private val buffer: ByteArray, org: Int = 0) {
     var pointer: Int = org
     val symbols: MutableMap<String, Int> = mutableMapOf()
@@ -17,6 +18,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     val AF = Reg16.AF
     val `AF'` = Reg16.`AF'`
     val BC = Reg16.BC
+    val DE = Reg16.DE
     val HL = Reg16.HL
 
     operator fun String.unaryPlus(): Int = symbols.getValue(this)
@@ -25,23 +27,23 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
 
     fun LABEL(name: String) = symbols.put(name, pointer)
 
-    fun DB(vararg bytes: Int) {
+    fun DB(vararg bytes: Int) = DB(*bytes.map { it.toUByte() }.toUByteArray())
+
+    fun DB(vararg bytes: UByte) {
         for (b in bytes) {
             buffer[pointer++] = b.toByte()
         }
     }
 
-    fun DW(vararg bytes: Int) {
+    fun DW(vararg bytes: Int) = DW(*bytes.map { it.toUShort() }.toUShortArray())
+
+    fun DW(vararg labels: String) = DW(*labels.map { symbols.getValue(it) }.toIntArray())
+
+    fun DW(vararg bytes: UShort) {
         for (b in bytes) {
-            val (v0, v1) = ByteOrder.LITTLE_ENDIAN.encode(b.toUShort())
+            val (v0, v1) = ByteOrder.LITTLE_ENDIAN.encode(b)
             buffer[pointer++] = v0.toByte()
             buffer[pointer++] = v1.toByte()
-        }
-    }
-
-    fun DW(vararg labels: String) {
-        for (l in labels) {
-            DW(symbols.getValue(l))
         }
     }
 
@@ -50,7 +52,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
         else -> throw IllegalArgumentException("invalid instruction: ADD $dst, $src")
     }
 
-    fun DEC(r: Reg8) = when(r) { 
+    fun DEC(r: Reg8) = when(r) {
         Reg8.A -> DB(OpCodes.`DEC A`)
         Reg8.B -> DB(OpCodes.`DEC B`)
         Reg8.C -> DB(OpCodes.`DEC C`)
@@ -61,7 +63,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
         else -> throw IllegalArgumentException("invalid instruction: DEC $r")
     }
 
-    fun DEC(r: Reg16) = when(r) { 
+    fun DEC(r: Reg16) = when(r) {
         Reg16.BC -> DB(OpCodes.`DEC BC`)
         else -> throw IllegalArgumentException("invalid instruction: DEC $r")
     }
@@ -76,7 +78,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
         else -> throw IllegalArgumentException("invalid instruction: EX $a, $b")
     }
 
-    fun INC(r: Reg8) = when(r) { 
+    fun INC(r: Reg8) = when(r) {
         Reg8.A -> DB(OpCodes.`INC A`)
         Reg8.B -> DB(OpCodes.`INC B`)
         Reg8.C -> DB(OpCodes.`INC C`)
@@ -92,20 +94,21 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
         else -> throw IllegalArgumentException("invalid instruction: INC $r")
     }
 
-    fun LD(r: Reg16, v: Int) {
-        when(r) {
-            Reg16.BC -> DB(OpCodes.`LD BC, NN`)
-            else -> throw IllegalArgumentException("invalid instruction: LD $r")
-        }
-        DW(v)
-    }
-
-    fun LD(dst: Reg8, src: Int) {
+    fun LD(dst: Reg8, src: UByte) {
         when(dst) {
             Reg8.B -> { DB(OpCodes.`LD B, N`); DB(src) }
             Reg8.C -> { DB(OpCodes.`LD C, N`); DB(src) }
             else -> throw IllegalArgumentException("invalid instruction: LD $dst, $src")
         }
+    }
+
+    fun LD(r: Reg16, v: UShort) {
+        when(r) {
+            Reg16.BC -> DB(OpCodes.`LD BC, NN`)
+            Reg16.DE -> DB(OpCodes.`LD DE, NN`)
+            else -> throw IllegalArgumentException("invalid instruction: LD $r")
+        }
+        DW(v)
     }
 
     fun LD(dst: Reg8, src: Ind8) {
@@ -130,7 +133,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     val NOP: Unit get() = DB(OpCodes.NOP)
 
     val RLCA: Unit get() { DB(OpCodes.RLCA) }
-    
+
     val RRCA: Unit get() { DB(OpCodes.RRCA) }
 }
 
