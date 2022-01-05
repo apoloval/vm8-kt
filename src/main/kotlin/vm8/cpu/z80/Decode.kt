@@ -17,8 +17,9 @@ object OpCodes {
     const val `DEC C`       : Int = 0x0D
     const val `LD C, N`     : Int = 0x0E
     const val `RRCA`        : Int = 0x0F
+    const val `DJNZ N`      : Int = 0x10
   
-    const val `LD DE, NN`   : Int = 0x10
+    const val `LD DE, NN`   : Int = 0x11
 
     const val `INC D`       : Int = 0x14
     const val `DEC D`       : Int = 0x15
@@ -63,6 +64,7 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
         OpCodes.`DEC C` -> Dec8(Reg8.C, cycles = 4, size = 1u)
         OpCodes.`LD C, N` -> Ld8(Reg8.C, Imm8, cycles = 7, size = 2u)
         OpCodes.`RRCA` -> Rrca(cycles = 4, size = 1u)
+        OpCodes.`DJNZ N` -> Djnz(Reg8.B, Imm8, jcycles = 13, njcycles = 8, size = 2u)
 
         OpCodes.`JP NN` -> Jp(Imm16)
         else -> Illegal

@@ -65,6 +65,24 @@ data class Dec16(val dst: DestOp16, val cycles: Int, val size: UByte) : Inst {
 }
 
 /**
+ * DJNZ instruction.
+ */
+data class Djnz(val dst: DestOp8, val relj: SrcOp8, val jcycles: Int, val njcycles: Int, val size: UByte) : Inst {
+    override suspend fun Processor.exec(): Int {
+        val a = load8(dst)
+        val c = a.dec()
+        store8(dst, c)
+        if (c.isZero()) {
+            regs.pc = regs.pc.increment(size)
+            return njcycles
+        } else {
+            regs.pc = regs.pc.increment(load8(relj).toByte())
+            return jcycles
+        }
+    }
+}
+
+/**
  * EX instruction
  */
 data class Ex(val a: DestOp16, val b: DestOp16, val cycles: Int, val size: UByte) : Inst {

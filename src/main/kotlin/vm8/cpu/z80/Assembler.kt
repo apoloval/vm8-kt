@@ -1,7 +1,6 @@
 package vm8.cpu.z80
 
-import vm8.byteorder.*
-import vm8.data.*
+import vm8.byteorder.ByteOrder
 
 class Assembler(private val buffer: ByteArray, org: Int = 0) {
     var pointer: Int = org
@@ -65,6 +64,11 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun DEC(r: Reg16) = when(r) { 
         Reg16.BC -> DB(OpCodes.`DEC BC`)
         else -> throw IllegalArgumentException("invalid instruction: DEC $r")
+    }
+
+    fun DJNZ(v: Int) {
+        DB(OpCodes.`DJNZ N`)
+        DB(v)
     }
 
     fun EX(a: Reg16, b: Reg16) = when(Pair(a, b)) {

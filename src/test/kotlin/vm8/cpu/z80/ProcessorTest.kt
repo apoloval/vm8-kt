@@ -124,10 +124,23 @@ class ProcessorTest : FunSpec({
     test("RRCA") { behavesLike { value: UByte, flags ->
         given { regs.a = value }
         whenProcessorRuns { RRCA }
-        var (xval, carry) = value.rotateRight()
+        val (xval, carry) = value.rotateRight()
         expectRotate(xval, carry, flags)
     }}
 
+    test("DJNZ") { behavesLike { value: UByte, flags ->
+        given { regs.b = value }
+        whenProcessorRuns { DJNZ(0x42) }
+        if (value == 1u.toUByte()) {
+            expect(cycles = 8, pc = 0x0002u, flags) {
+                regs.b shouldBe 0x00u
+            }
+        } else {
+            expect(cycles = 13, pc = 0x0042u, flags) {
+                regs.b shouldBe value.dec()
+            }
+        }
+    }}
 })
 
 suspend fun behavesLike(f: suspend ProcessorBehavior.() -> Unit) {
