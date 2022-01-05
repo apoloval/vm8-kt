@@ -77,14 +77,6 @@ class ProcessorTest : FunSpec({
             }
         }}
 
-        test("INC BC") { behavesLike { value: UShort, flags ->
-            given { regs.bc = value }
-            whenProcessorRuns { INC(BC) }
-            expect(cycles = 6, pc = 0x0001u, flags) {
-                regs.bc shouldBe value.inc()
-            }
-        }}
-
         context("INC 8-bit") {
             data class TestCase(
                 val cycles: Int,
@@ -126,6 +118,40 @@ class ProcessorTest : FunSpec({
                     regs.f.bit(5) shouldBe result().bit(5)
                     regs.f.bit(6) shouldBe result().isZero()
                     regs.f.bit(7) shouldBe result().isNegative()
+                }
+            }}
+        }
+
+        context("INC 16-bit") {
+            data class TestCase(
+                val cycles: Int,
+                val size: Int,
+                val result: ProcessorBehavior.() -> UShort,
+                val prepare: ProcessorBehavior.(UShort) -> Unit,
+            )
+
+            withData(mapOf(
+                "INC BC" to TestCase(
+                    cycles = 6,
+                    size = 1,
+                    result = { regs.bc }
+                ) {
+                    regs.bc = it
+                    mem.asm { INC(BC) }
+                },
+                "INC DE" to TestCase(
+                    cycles = 6,
+                    size = 1,
+                    result = { regs.de }
+                ) {
+                    regs.de = it
+                    mem.asm { INC(DE) }
+                },
+            )) { (cycles, size, result, prepare) -> behavesLike { value: UShort, flags ->
+                prepare(value)
+                whenProcessorRuns()
+                expect(cycles, pc = size.toUShort(), flags) {
+                    result() shouldBe value.inc()
                 }
             }}
         }

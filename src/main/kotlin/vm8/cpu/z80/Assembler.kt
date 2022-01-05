@@ -86,6 +86,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
 
     fun INC(r: Reg16) = when(r) {
         Reg16.BC -> DB(OpCodes.`INC BC`)
+        Reg16.DE -> DB(OpCodes.`INC DE`)
         else -> throw IllegalArgumentException("invalid instruction: INC $r")
     }
 
