@@ -2,6 +2,7 @@ package vm8.cpu.z80
 
 import vm8.byteorder.ByteOrder
 
+@Suppress("EXPERIMENTAL_IS_NOT_ENABLED")
 @OptIn(ExperimentalUnsignedTypes::class)
 class Assembler(private val buffer: ByteArray, org: Int = 0) {
     var pointer: Int = org
@@ -10,10 +11,6 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     val A = Reg8.A
     val B = Reg8.B
     val C = Reg8.C
-    val D = Reg8.D
-    val E = Reg8.E
-    val H = Reg8.H
-    val L = Reg8.L
 
     val AF = Reg16.AF
     val `AF'` = Reg16.`AF'`
@@ -36,8 +33,6 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     }
 
     fun DW(vararg bytes: Int) = DW(*bytes.map { it.toUShort() }.toUShortArray())
-
-    fun DW(vararg labels: String) = DW(*labels.map { symbols.getValue(it) }.toIntArray())
 
     fun DW(vararg bytes: UShort) {
         for (b in bytes) {
@@ -121,6 +116,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun LD(dst: Ind8, src: Reg8) {
         when(Pair(dst, src)) {
             Pair(Ind8(Reg16.BC), Reg8.A) -> DB(OpCodes.`LD (BC), A`)
+            Pair(Ind8(Reg16.DE), Reg8.A) -> DB(OpCodes.`LD (DE), A`)
             else -> throw IllegalArgumentException("invalid instruction: LD $dst, $src")
         }
     }

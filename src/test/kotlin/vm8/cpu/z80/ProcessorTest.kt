@@ -3,7 +3,6 @@ package vm8.cpu.z80
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.datatest.withData
 import io.kotest.matchers.shouldBe
-import io.kotest.property.checkAll
 import vm8.data.*
 
 class ProcessorTest : FunSpec({
@@ -164,7 +163,7 @@ class ProcessorTest : FunSpec({
         }}
     }
 
-    context("load and exchange group") {
+    context("Load and exchange") {
         context("LD 8-bit") {
             data class TestCase(
                 val cycles: Int,
@@ -197,6 +196,15 @@ class ProcessorTest : FunSpec({
                         regs.a = it
                         regs.bc = 0x8000u
                         mem.asm { LD(!BC, A) }
+                    },
+                    "LD (DE), A" to TestCase(
+                        cycles = 7,
+                        size = 1,
+                        result = { mem[0x8000].toUByte() }
+                    ) {
+                        regs.a = it
+                        regs.de = 0x8000u
+                        mem.asm { LD(!DE, A) }
                     },
                     "LD A, (BC)" to TestCase(
                         cycles = 7,
@@ -263,135 +271,3 @@ class ProcessorTest : FunSpec({
     }
 })
 
-suspend fun behavesLike(f: suspend ProcessorBehavior.(flags: UByte) -> Unit) {
-    checkAll<UByte> { flags ->
-        val b = ProcessorBehavior()
-        b.cpu.regs.f = flags
-        b.f(flags)
-    }
-}
-
-suspend inline fun<reified T> behavesLike(crossinline f: suspend ProcessorBehavior.(a: T, flags: UByte) -> Unit) {
-    checkAll<T, UByte> { a, flags ->
-        val b = ProcessorBehavior()
-        b.cpu.regs.f = flags
-        b.f(a, flags)
-    }
-}
-
-suspend inline fun<reified T1, reified T2> behavesLike(crossinline f: suspend ProcessorBehavior.(a: T1, b: T2, flags: UByte) -> Unit) {
-    checkAll<T1, T2, UByte> { a, b, flags ->
-        val behav = ProcessorBehavior()
-        behav.cpu.regs.f = flags
-        behav.f(a, b, flags)
-    }
-}
-
-class ProcessorBehavior {
-    private val sys = MinimalSystem()
-    val cpu = Processor(sys)
-
-    val regs by cpu::regs
-    val mem by sys::memory
-
-    private var givenCycles: Int = 0
-
-    suspend fun whenProcessorRuns() {
-        givenCycles = cpu.run()
-    }
-
-    suspend fun whenProcessorRuns(org: Int = 0x0000, f: Assembler.() -> Unit) {
-        sys.memory.asm(org, f)
-        givenCycles = cpu.run()
-    }
-
-    fun given(f: ProcessorBehavior.() -> Unit) {
-        this.f()
-    }
-
-    fun expect(cycles: Int? = null, pc: Addr? = null, flags: UByte? = null, f: ProcessorBehavior.() -> Unit = {}) {
-        if (cycles != null)
-            givenCycles shouldBe cycles
-        if (pc != null) 
-            cpu.regs.pc shouldBe pc
-        if (flags != null)
-            cpu.regs.f shouldBe flags
-        this.f()
-    }
-
-    fun expectAdd16(xval: UShort, a: UShort, b: UShort, flags: UByte) = expect(cycles = 11, pc = 0x0001u) {
-        xval shouldBe (a + b).toUShort()
-
-        regs.f.bit(0) shouldBe flagActiveOnCarry(a, xval, 0xFFFF)
-        regs.f.bit(1) shouldBe false
-        regs.f.bit(2) shouldBe flags.bit(2)
-        regs.f.bit(3) shouldBe xval.high().bit(3)
-        regs.f.bit(4) shouldBe flagActiveOnCarry(a, xval, 0x0FFF)
-        regs.f.bit(5) shouldBe xval.high().bit(5)
-        regs.f.bit(6) shouldBe flags.bit(6)
-        regs.f.bit(7) shouldBe flags.bit(7)
-    }
-
-    fun expectInc(from: UByte, to: UByte, flags: UByte) = expect(cycles = 4, pc = 0x0001u) {
-        to shouldBe from.inc()
-
-        regs.f.bit(0) shouldBe flags.bit(0)
-        regs.f.bit(1) shouldBe false
-        regs.f.bit(2) shouldBe flagActiveOnOverflow(from, to)
-        regs.f.bit(3) shouldBe to.bit(3)
-        regs.f.bit(4) shouldBe flagActiveOnCarry(from, to, mask = 0x0F)
-        regs.f.bit(5) shouldBe to.bit(5)
-        regs.f.bit(6) shouldBe to.isZero()
-        regs.f.bit(7) shouldBe to.isNegative()
-    }
-
-    fun expectDec(from: UByte, to: UByte, flags: UByte) = expect(cycles = 4, pc = 0x0001u) {
-        to shouldBe from.dec()
-
-        regs.f.bit(0) shouldBe flags.bit(0)
-        regs.f.bit(1) shouldBe true
-        regs.f.bit(2) shouldBe flagActiveOnUnderflow(from, to)
-        regs.f.bit(3) shouldBe to.bit(3)
-        regs.f.bit(4) shouldBe flagActiveOnBorrow(from, to, mask = 0x0F)
-        regs.f.bit(5) shouldBe to.bit(5)
-        regs.f.bit(6) shouldBe to.isZero()
-        regs.f.bit(7) shouldBe to.isNegative()
-    }
-
-    fun expectRotate(xval: UByte, carry: Boolean, flags: UByte) = expect(cycles = 4, pc = 0x0001u) {
-        regs.a shouldBe xval
-
-        regs.f.bit(0) shouldBe carry
-        regs.f.bit(1) shouldBe false
-        regs.f.bit(2) shouldBe flags.bit(2)
-        regs.f.bit(3) shouldBe xval.bit(3)
-        regs.f.bit(4) shouldBe false
-        regs.f.bit(5) shouldBe xval.bit(5)
-        regs.f.bit(6) shouldBe flags.bit(6)
-        regs.f.bit(7) shouldBe flags.bit(7)
-    }
-
-    fun flagActiveOnOverflow(a: Int, c: Int): Boolean {
-        val b = c - a
-        return ((a xor b xor 0x80) and (b xor c) and 0x80) != 0
-    }
-
-    fun flagActiveOnOverflow(a: UByte, b: UByte) = flagActiveOnOverflow(a.toInt(), b.toInt())
-
-    fun flagActiveOnUnderflow(a: Int, c: Int): Boolean {
-        val b = a - c
-        return ((a xor b) and ((a xor c) and 0x80)) != 0
-    }
-
-    fun flagActiveOnUnderflow(a: UByte, b: UByte) = flagActiveOnUnderflow(a.toInt(), b.toInt())
-
-    fun flagActiveOnCarry(a: Int, c: Int, mask: Int): Boolean = (a and mask) > (c and mask)
-
-    fun flagActiveOnCarry(a: UByte, c: UByte, mask: Int): Boolean = flagActiveOnCarry(a.toInt(), c.toInt(), mask)
-
-    fun flagActiveOnCarry(a: UShort, c: UShort, mask: Int): Boolean = flagActiveOnCarry(a.toInt(), c.toInt(), mask)
-
-    fun flagActiveOnBorrow(a: Int, c: Int, mask: Int): Boolean = (a and mask) < (c and mask)
-
-    fun flagActiveOnBorrow(a: UByte, c: UByte, mask: Int): Boolean = flagActiveOnBorrow(a.toInt(), c.toInt(), mask)
-}

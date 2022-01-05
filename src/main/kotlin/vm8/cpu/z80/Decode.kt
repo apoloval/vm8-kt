@@ -19,6 +19,7 @@ object OpCodes {
     const val `RRCA`        : Int = 0x0F
     const val `DJNZ N`      : Int = 0x10
     const val `LD DE, NN`   : Int = 0x11
+    const val `LD (DE), A`  : Int = 0x12
 
     const val `INC D`       : Int = 0x14
     const val `DEC D`       : Int = 0x15
@@ -26,18 +27,11 @@ object OpCodes {
     const val `INC E`       : Int = 0x1C
     const val `DEC E`       : Int = 0x1D
 
-    const val `LD HL, NN`   : Int = 0x20
-
     const val `INC H`       : Int = 0x24
     const val `DEC H`       : Int = 0x25
 
     const val `INC L`       : Int = 0x2C
     const val `DEC L`       : Int = 0x2D
-
-    const val `LD SP, NN`   : Int = 0x30
-
-    const val `INC (HL)`    : Int = 0x34
-    const val `DEC (HL)`    : Int = 0x35
 
     const val `INC A`       : Int = 0x3C
     const val `DEC A`       : Int = 0x3D
@@ -64,6 +58,7 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
         OpCodes.`DEC C` -> Dec8(Reg8.C, cycles = 4, size = 1u)
         OpCodes.`LD C, N` -> Ld8(Reg8.C, Imm8, cycles = 7, size = 2u)
         OpCodes.`RRCA` -> Rrca(cycles = 4, size = 1u)
+        OpCodes.`LD (DE), A` -> Ld8(Ind8(Reg16.DE), Reg8.A, cycles = 7, size = 1u)
 
         // From 0x10 to 0x1F
         OpCodes.`DJNZ N` -> Djnz(Reg8.B, Imm8, jcycles = 13, njcycles = 8, size = 2u)
