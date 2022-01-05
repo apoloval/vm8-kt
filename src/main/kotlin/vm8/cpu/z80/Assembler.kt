@@ -99,6 +99,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
             Reg8.B -> { DB(OpCodes.`LD B, N`); DB(src) }
             Reg8.C -> { DB(OpCodes.`LD C, N`); DB(src) }
             Reg8.D -> { DB(OpCodes.`LD D, N`); DB(src) }
+            Reg8.E -> { DB(OpCodes.`LD E, N`); DB(src) }
             else -> throw IllegalArgumentException("invalid instruction: LD $dst, $src")
         }
     }
