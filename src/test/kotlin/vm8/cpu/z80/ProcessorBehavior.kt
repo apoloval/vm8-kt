@@ -3,7 +3,6 @@ package vm8.cpu.z80
 import io.kotest.matchers.shouldBe
 import io.kotest.property.checkAll
 import vm8.data.bit
-import vm8.data.high
 
 suspend fun behavesLike(f: suspend ProcessorBehavior.(flags: UByte) -> Unit) {
     checkAll<UByte> { flags ->
@@ -34,6 +33,7 @@ class ProcessorBehavior {
     val cpu = Processor(sys)
 
     val regs by cpu::regs
+    val bus by cpu::bus
     val mem by sys::memory
 
     private var givenCycles: Int = 0
@@ -51,7 +51,7 @@ class ProcessorBehavior {
         this.f()
     }
 
-    fun expect(cycles: Int? = null, pc: Addr? = null, flags: UByte? = null, f: ProcessorBehavior.() -> Unit = {}) {
+    suspend fun expect(cycles: Int? = null, pc: Addr? = null, flags: UByte? = null, f: suspend ProcessorBehavior.() -> Unit = {}) {
         if (cycles != null)
             givenCycles shouldBe cycles
         if (pc != null)
@@ -61,7 +61,7 @@ class ProcessorBehavior {
         this.f()
     }
 
-    fun expectRotate(xval: UByte, carry: Boolean, flags: UByte) = expect(cycles = 4, pc = 0x0001u) {
+    suspend fun expectRotate(xval: UByte, carry: Boolean, flags: UByte) = expect(cycles = 4, pc = 0x0001u) {
         regs.a shouldBe xval
 
         regs.f.bit(0) shouldBe carry

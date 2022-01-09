@@ -103,3 +103,9 @@ enum class Reg16 : DestOp16 {
 object Imm16 : SrcOp16 {
     override suspend fun Processor.get(): UShort = bus.readWord(regs.pc.inc())
 }
+
+data class Ind16(val addr: SrcOp16) : DestOp16 {
+    override suspend fun Processor.get(): UShort = bus.readWord(load16(addr))
+
+    override suspend fun Processor.set(v: UShort) { bus.writeWord(load16(addr), v) }
+}

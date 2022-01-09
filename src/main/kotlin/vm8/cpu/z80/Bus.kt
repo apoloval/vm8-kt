@@ -1,7 +1,6 @@
 package vm8.cpu.z80
 
-import vm8.byteorder.*
-import vm8.data.*
+import vm8.byteorder.ByteOrder
 
 typealias Addr = UShort
 
@@ -19,6 +18,12 @@ interface Bus {
         read(addr), 
         read(addr.inc()),
     )
+
+    suspend fun writeWord(addr: Addr, v: UShort) {
+        val (v0, v1) = ByteOrder.LITTLE_ENDIAN.encode(v)
+        write(addr, v0)
+        write(addr.inc(), v1)
+    }
 }
 
 /**

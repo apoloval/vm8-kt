@@ -169,4 +169,25 @@ internal class OperandsTest : FunSpec({
             sys.memory[0xA800] shouldBe 0x42.toByte()
         }
     }
+
+    context("16-bit indirect") {
+        test("as source operand") {
+            cpu.regs.hl = 0xA800u
+            sys.memory[0xA800] = 0xCD.toByte()
+            sys.memory[0xA801] = 0xAB.toByte()
+
+            cpu.load16(Ind16(Reg16.HL)) shouldBe 0xABCDu
+        }
+
+        test("as dest operand") {
+            cpu.regs.hl = 0xA800u
+            sys.memory[0xA800] = 0x00.toByte()
+            sys.memory[0xA801] = 0x0.toByte()
+
+            cpu.store16(Ind16(Reg16.HL), 0xABCDu)
+
+            sys.memory[0xA800] shouldBe 0xCD.toByte()
+            sys.memory[0xA801] shouldBe 0xAB.toByte()
+        }
+    }
 })

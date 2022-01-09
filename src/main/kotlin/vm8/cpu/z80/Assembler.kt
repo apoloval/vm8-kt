@@ -26,6 +26,10 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
 
     operator fun Reg16.not() = Ind8(this)
 
+    data class IndLiteral(val literal: UShort)
+
+    operator fun UShort.not() = IndLiteral(this)
+
     fun LABEL(name: String) = symbols.put(name, pointer)
 
     fun DB(vararg bytes: Int) = DB(*bytes.map { it.toUByte() }.toUByteArray())
@@ -130,6 +134,14 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
             Pair(Ind8(Reg16.DE), Reg8.A) -> DB(OpCodes.`LD (DE), A`)
             else -> throw IllegalArgumentException("invalid instruction: LD $dst, $src")
         }
+    }
+
+    fun LD(dst: IndLiteral, src: Reg16) {
+        when(src) {
+            Reg16.HL -> { DB(OpCodes.`LD (NN), HL`) }
+            else -> throw IllegalArgumentException("invalid instruction: LD $dst, $src")
+        }
+        DW(dst.literal)
     }
 
     fun JP(addr: Int) {
