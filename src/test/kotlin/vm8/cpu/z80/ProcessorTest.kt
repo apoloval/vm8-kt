@@ -432,6 +432,13 @@ class ProcessorTest : FunSpec({
                     ) {
                         mem.asm { LD(DE, it) }
                     },
+                    "LD HL, NN" to TestCase(
+                        cycles = 10,
+                        size = 3,
+                        result = { regs.hl },
+                    ) {
+                        mem.asm { LD(HL, it) }
+                    },
                 )
             ) { (cycles, size, result, prepare) -> behavesLike { value: UShort, flags ->
                 given { prepare(value) }

@@ -110,6 +110,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
         when(r) {
             Reg16.BC -> DB(OpCodes.`LD BC, NN`)
             Reg16.DE -> DB(OpCodes.`LD DE, NN`)
+            Reg16.HL -> DB(OpCodes.`LD HL, NN`)
             else -> throw IllegalArgumentException("invalid instruction: LD $r")
         }
         DW(v)
