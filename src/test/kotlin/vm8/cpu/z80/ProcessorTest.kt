@@ -284,10 +284,29 @@ class ProcessorTest : FunSpec({
     }
 
     context("Jump, call and return") {
-        test("JR N") { behavesLike { value: Byte, flags ->
-            whenProcessorRuns { JR(value) }
-            expect(cycles = 12, pc = 0x0000u.toUShort().increment(value), flags)
-        }}
+        context("Relative jump") {
+            data class TestCase(
+                val cond: ProcessorBehavior.() -> Boolean,
+                val prepare: ProcessorBehavior.(Byte) -> Unit,
+            )
+
+            withData(mapOf(
+                "JR N" to TestCase(cond = { true }) {
+                    mem.asm { JR(it)}
+                },
+                "JR NZ, N" to TestCase(cond = { !regs.f.bit(6) }) {
+                    mem.asm { JR(NZ, it)}
+                },
+            )) { (cond, prepare) -> behavesLike { n: Byte, flags ->
+                prepare(n)
+                whenProcessorRuns()
+                if (cond()) {
+                    expect(cycles = 12, pc = 0x0000.toUShort().increment(n), flags)
+                } else {
+                    expect(cycles = 7, pc = 0x0002u, flags)
+                }
+            }}
+        }
 
         test("DJNZ") { behavesLike { value: UByte, flags ->
             given { regs.b = value }

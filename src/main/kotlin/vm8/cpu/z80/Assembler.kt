@@ -20,6 +20,8 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     val DE = Reg16.DE
     val HL = Reg16.HL
 
+    val NZ = JumpCond.NZ
+
     operator fun String.unaryPlus(): Int = symbols.getValue(this)
 
     operator fun Reg16.not() = Ind8(this)
@@ -136,6 +138,14 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
 
     fun JR(rel: Byte) {
         DB(OpCodes.`JR N`)
+        DB(rel.toUByte())
+    }
+
+    fun JR(cond: JumpCond, rel: Byte) {
+        when (cond) {
+            JumpCond.NZ -> DB(OpCodes.`JR NZ, N`)
+            else -> throw IllegalArgumentException("invalid instruction: JR $cond, $rel")
+        }
         DB(rel.toUByte())
     }
 

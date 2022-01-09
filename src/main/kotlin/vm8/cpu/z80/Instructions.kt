@@ -92,21 +92,6 @@ data class Ex(val a: DestOp16, val b: DestOp16, val cycles: Int, val size: UByte
 }
 
 /**
- * JR instruction
- */
-data class Jr(val cond: RegsBank.() -> Boolean, val relj: SrcOp8, val jcycles: Int, val njcycles: Int, val size: UByte) : Inst {
-    override suspend fun Processor.exec(): Int {
-        if (!regs.cond()) {
-            regs.pc = regs.pc.increment(size)
-            return njcycles
-        } else {
-            regs.pc = regs.pc.increment(load8(relj).toByte())
-            return jcycles
-        }
-    }
-}
-
-/**
  * INC instruction for 8-bit operands
  */
 data class Inc8(val dest: DestOp8, val cycles: Int, val size: UByte) : Inst {
@@ -140,6 +125,31 @@ data class Jp(val addr: SrcOp16) : Inst {
     override suspend fun Processor.exec(): Int {
         regs.pc = load16(addr)
         return 10
+    }
+}
+
+/**
+ * Describes the condition for a jump action to take place.
+ */
+enum class JumpCond {
+    ALWAYS {  override fun matches(flags: UByte) = true },
+    NZ { override fun matches(flags: UByte) = !Flag.Z.isSet(flags) };
+
+    abstract fun matches(flags: UByte): Boolean;
+}
+
+/**
+ * JR instruction
+ */
+data class Jr(val cond: JumpCond, val relj: SrcOp8, val jcycles: Int, val njcycles: Int, val size: UByte) : Inst {
+    override suspend fun Processor.exec(): Int {
+        if (cond.matches(regs.f)) {
+            regs.pc = regs.pc.increment(load8(relj).toByte())
+            return jcycles
+        } else {
+            regs.pc = regs.pc.increment(size)
+            return njcycles
+        }
     }
 }
 

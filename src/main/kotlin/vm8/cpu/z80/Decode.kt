@@ -35,6 +35,8 @@ object OpCodes {
     const val `LD E, N`     : Int = 0x1E
     const val `RRA`         : Int = 0x1F
 
+    const val `JR NZ, N`    : Int = 0x20
+
     const val `INC H`       : Int = 0x24
     const val `DEC H`       : Int = 0x25
 
@@ -76,7 +78,7 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
         OpCodes.`DEC D` -> Dec8(Reg8.D, cycles = 4, size = 1u)
         OpCodes.`LD D, N` -> Ld8(Reg8.D, Imm8, cycles = 7, size = 2u)
         OpCodes.`RLA` -> Rla(cycles = 4, size = 1u)
-        OpCodes.`JR N` -> Jr({ true }, Imm8, jcycles = 12, njcycles = 12, size = 2u)
+        OpCodes.`JR N` -> Jr(JumpCond.ALWAYS, Imm8, jcycles = 12, njcycles = 12, size = 2u)
         OpCodes.`ADD HL, DE` -> Add16(Reg16.HL, Reg16.DE, cycles = 11, size = 1u)
         OpCodes.`LD A, (DE)` -> Ld8(Reg8.A, Ind8(Reg16.DE), cycles = 7, size = 1u)
         OpCodes.`DEC DE` -> Dec16(Reg16.DE, cycles = 6, size = 1u)
@@ -84,6 +86,9 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
         OpCodes.`DEC E` -> Dec8(Reg8.E, cycles = 4, size = 1u)
         OpCodes.`LD E, N` -> Ld8(Reg8.E, Imm8, cycles = 7, size = 2u)
         OpCodes.`RRA` -> Rra(cycles = 4, size = 1u)
+
+        // From 0x20 to 2F
+        OpCodes.`JR NZ, N` -> Jr(JumpCond.NZ, Imm8, jcycles = 12, njcycles = 7, size = 2u)
 
         OpCodes.`JP NN` -> Jp(Imm16)
         else -> Illegal
