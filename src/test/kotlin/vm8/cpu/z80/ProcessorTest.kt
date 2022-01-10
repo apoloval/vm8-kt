@@ -3,6 +3,8 @@ package vm8.cpu.z80
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.datatest.withData
 import io.kotest.matchers.shouldBe
+
+import vm8.cpu.z80.Assembler.*
 import vm8.data.*
 
 class ProcessorTest : FunSpec({

@@ -2,33 +2,36 @@ package vm8.cpu.z80
 
 import vm8.byteorder.ByteOrder
 
-@Suppress("EXPERIMENTAL_IS_NOT_ENABLED")
+@Suppress("EXPERIMENTAL_IS_NOT_ENABLED", "UNUSED_PARAMETER")
 @OptIn(ExperimentalUnsignedTypes::class)
 class Assembler(private val buffer: ByteArray, org: Int = 0) {
-    var pointer: Int = org
-    val symbols: MutableMap<String, Int> = mutableMapOf()
+    private var pointer: Int = org
+    private val symbols: MutableMap<String, Int> = mutableMapOf()
 
-    val A = Reg8.A
-    val B = Reg8.B
-    val C = Reg8.C
-    val D = Reg8.D
-    val E = Reg8.E
+    // Register names
+    object A
+    object B
+    object C
+    object D
+    object E
+    object AF
+    object `AF'`
+    object BC { operator fun not() = `(BC)` }
+    object DE { operator fun not() = `(DE)` }
+    object HL
 
-    val AF = Reg16.AF
-    val `AF'` = Reg16.`AF'`
-    val BC = Reg16.BC
-    val DE = Reg16.DE
-    val HL = Reg16.HL
+    // Indirect registers
+    object `(BC)`
+    object `(DE)`
 
-    val NZ = JumpCond.NZ
+    // Jump conditions
+    object NZ
 
-    operator fun String.unaryPlus(): Int = symbols.getValue(this)
+    data class Indirect<T>(val expr: T)
 
-    operator fun Reg16.not() = Ind8(this)
+    operator fun UShort.not()= Indirect(this)
 
-    data class IndLiteral(val literal: UShort)
-
-    operator fun UShort.not() = IndLiteral(this)
+    operator fun String.unaryPlus(): UShort = symbols.getValue(this).toUShort()
 
     fun LABEL(name: String) = symbols.put(name, pointer)
 
@@ -50,117 +53,44 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
         }
     }
 
-    fun ADD(dst: Reg16, src: Reg16) = when(Pair(dst, src)) {
-        Pair(Reg16.HL, Reg16.BC) -> DB(OpCodes.`ADD HL, BC`)
-        Pair(Reg16.HL, Reg16.DE) -> DB(OpCodes.`ADD HL, DE`)
-        else -> throw IllegalArgumentException("invalid instruction: ADD $dst, $src")
-    }
+    fun ADD(dst: HL, src: BC) = DB(OpCodes.`ADD HL, BC`)
+    fun ADD(dst: HL, src: DE) = DB(OpCodes.`ADD HL, DE`)
 
-    fun DEC(r: Reg8) = when(r) {
-        Reg8.A -> DB(OpCodes.`DEC A`)
-        Reg8.B -> DB(OpCodes.`DEC B`)
-        Reg8.C -> DB(OpCodes.`DEC C`)
-        Reg8.D -> DB(OpCodes.`DEC D`)
-        Reg8.E -> DB(OpCodes.`DEC E`)
-        Reg8.H -> DB(OpCodes.`DEC H`)
-        Reg8.L -> DB(OpCodes.`DEC L`)
-        else -> throw IllegalArgumentException("invalid instruction: DEC $r")
-    }
+    fun DEC(dst: B) = DB(OpCodes.`DEC B`)
+    fun DEC(dst: C) = DB(OpCodes.`DEC C`)
+    fun DEC(dst: D) = DB(OpCodes.`DEC D`)
+    fun DEC(dst: E) = DB(OpCodes.`DEC E`)
+    fun DEC(dst: BC) = DB(OpCodes.`DEC BC`)
+    fun DEC(dst: DE) = DB(OpCodes.`DEC DE`)
 
-    fun DEC(r: Reg16) = when(r) {
-        Reg16.BC -> DB(OpCodes.`DEC BC`)
-        Reg16.DE -> DB(OpCodes.`DEC DE`)
-        else -> throw IllegalArgumentException("invalid instruction: DEC $r")
-    }
+    fun DJNZ(n: Int) { DB(OpCodes.`DJNZ N`); DB(n) }
 
-    fun DJNZ(v: Int) {
-        DB(OpCodes.`DJNZ N`)
-        DB(v)
-    }
+    fun EX(a: AF, b: `AF'`) = DB(OpCodes.`EX AF, AF'`)
 
-    fun EX(a: Reg16, b: Reg16) = when(Pair(a, b)) {
-        Pair(Reg16.AF, Reg16.`AF'`) -> DB(OpCodes.`EX AF, AF'`)
-        else -> throw IllegalArgumentException("invalid instruction: EX $a, $b")
-    }
+    fun INC(dst: B) = DB(OpCodes.`INC B`)
+    fun INC(dst: C) = DB(OpCodes.`INC C`)
+    fun INC(dst: D) = DB(OpCodes.`INC D`)
+    fun INC(dst: E) = DB(OpCodes.`INC E`)
+    fun INC(dst: BC) = DB(OpCodes.`INC BC`)
+    fun INC(dst: DE) = DB(OpCodes.`INC DE`)
 
-    fun INC(r: Reg8) = when(r) {
-        Reg8.A -> DB(OpCodes.`INC A`)
-        Reg8.B -> DB(OpCodes.`INC B`)
-        Reg8.C -> DB(OpCodes.`INC C`)
-        Reg8.D -> DB(OpCodes.`INC D`)
-        Reg8.E -> DB(OpCodes.`INC E`)
-        Reg8.H -> DB(OpCodes.`INC H`)
-        Reg8.L -> DB(OpCodes.`INC L`)
-        else -> throw IllegalArgumentException("invalid instruction: INC $r")
-    }
+    fun LD(dst: B, src: UByte) { DB(OpCodes.`LD B, N`); DB(src) }
+    fun LD(dst: C, src: UByte) { DB(OpCodes.`LD C, N`); DB(src) }
+    fun LD(dst: D, src: UByte) { DB(OpCodes.`LD D, N`); DB(src) }
+    fun LD(dst: E, src: UByte) { DB(OpCodes.`LD E, N`); DB(src) }
+    fun LD(dst: BC, src: UShort) { DB(OpCodes.`LD BC, NN`); DW(src) }
+    fun LD(dst: DE, src: UShort) { DB(OpCodes.`LD DE, NN`); DW(src) }
+    fun LD(dst: HL, src: UShort) { DB(OpCodes.`LD HL, NN`); DW(src) }
+    fun LD(dst: A, src: `(BC)`) { DB(OpCodes.`LD A, (BC)`) }
+    fun LD(dst: A, src: `(DE)`) { DB(OpCodes.`LD A, (DE)`) }
+    fun LD(dst: `(BC)`, src: A) { DB(OpCodes.`LD (BC), A`) }
+    fun LD(dst: `(DE)`, src: A) { DB(OpCodes.`LD (DE), A`) }
+    fun LD(dst: Indirect<UShort>, src: HL) { DB(OpCodes.`LD (NN), HL`); DW(dst.expr) }
 
-    fun INC(r: Reg16) = when(r) {
-        Reg16.BC -> DB(OpCodes.`INC BC`)
-        Reg16.DE -> DB(OpCodes.`INC DE`)
-        else -> throw IllegalArgumentException("invalid instruction: INC $r")
-    }
+    fun JP(addr: UShort) { DB(OpCodes.`JP NN`); DW(addr) }
 
-    fun LD(dst: Reg8, src: UByte) {
-        when(dst) {
-            Reg8.B -> { DB(OpCodes.`LD B, N`); DB(src) }
-            Reg8.C -> { DB(OpCodes.`LD C, N`); DB(src) }
-            Reg8.D -> { DB(OpCodes.`LD D, N`); DB(src) }
-            Reg8.E -> { DB(OpCodes.`LD E, N`); DB(src) }
-            else -> throw IllegalArgumentException("invalid instruction: LD $dst, $src")
-        }
-    }
-
-    fun LD(r: Reg16, v: UShort) {
-        when(r) {
-            Reg16.BC -> DB(OpCodes.`LD BC, NN`)
-            Reg16.DE -> DB(OpCodes.`LD DE, NN`)
-            Reg16.HL -> DB(OpCodes.`LD HL, NN`)
-            else -> throw IllegalArgumentException("invalid instruction: LD $r")
-        }
-        DW(v)
-    }
-
-    fun LD(dst: Reg8, src: Ind8) {
-        when(Pair(dst, src)) {
-            Pair(Reg8.A, Ind8(Reg16.BC)) -> DB(OpCodes.`LD A, (BC)`)
-            Pair(Reg8.A, Ind8(Reg16.DE)) -> DB(OpCodes.`LD A, (DE)`)
-            else -> throw IllegalArgumentException("invalid instruction: LD $dst, $src")
-        }
-    }
-
-    fun LD(dst: Ind8, src: Reg8) {
-        when(Pair(dst, src)) {
-            Pair(Ind8(Reg16.BC), Reg8.A) -> DB(OpCodes.`LD (BC), A`)
-            Pair(Ind8(Reg16.DE), Reg8.A) -> DB(OpCodes.`LD (DE), A`)
-            else -> throw IllegalArgumentException("invalid instruction: LD $dst, $src")
-        }
-    }
-
-    fun LD(dst: IndLiteral, src: Reg16) {
-        when(src) {
-            Reg16.HL -> { DB(OpCodes.`LD (NN), HL`) }
-            else -> throw IllegalArgumentException("invalid instruction: LD $dst, $src")
-        }
-        DW(dst.literal)
-    }
-
-    fun JP(addr: Int) {
-        DB(OpCodes.`JP NN`)
-        DW(addr)
-    }
-
-    fun JR(rel: Byte) {
-        DB(OpCodes.`JR N`)
-        DB(rel.toUByte())
-    }
-
-    fun JR(cond: JumpCond, rel: Byte) {
-        when (cond) {
-            JumpCond.NZ -> DB(OpCodes.`JR NZ, N`)
-            else -> throw IllegalArgumentException("invalid instruction: JR $cond, $rel")
-        }
-        DB(rel.toUByte())
-    }
+    fun JR(rel: Byte) { DB(OpCodes.`JR N`); DB(rel.toUByte()) }
+    fun JR(cond: NZ, n: Byte) { DB(OpCodes.`JR NZ, N`); DB(n.toUByte()) }
 
     val NOP: Unit get() = DB(OpCodes.NOP)
 
