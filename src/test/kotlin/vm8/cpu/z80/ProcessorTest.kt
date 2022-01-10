@@ -123,7 +123,7 @@ class ProcessorTest : FunSpec({
             }}
         }
 
-        context("INC 16-bit") {
+        context("DEC 16-bit") {
             data class TestCase(
                 val cycles: Int,
                 val size: Int,
@@ -242,6 +242,14 @@ class ProcessorTest : FunSpec({
                 ) {
                     regs.de = it
                     mem.asm { INC(DE) }
+                },
+                "INC HL" to TestCase(
+                    cycles = 6,
+                    size = 1,
+                    result = { regs.hl }
+                ) {
+                    regs.hl = it
+                    mem.asm { INC(HL) }
                 },
             )) { (cycles, size, result, prepare) -> behavesLike { value: UShort, flags ->
                 prepare(value)
