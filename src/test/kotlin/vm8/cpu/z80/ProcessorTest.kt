@@ -52,7 +52,7 @@ class ProcessorTest : FunSpec({
                     size = 1,
                     sameOperand = true,
                     result = { regs.hl },
-                ) { a, b ->
+                ) { a, _ ->
                     regs.hl = a
                     mem.asm { ADD(HL, HL) }
                 },
@@ -471,6 +471,13 @@ class ProcessorTest : FunSpec({
                         result = { regs.h })
                     {
                         mem.asm { LD(H, it) }
+                    },
+                    "LD L, N" to TestCase(
+                        cycles = 7,
+                        size = 2,
+                        result = { regs.l })
+                    {
+                        mem.asm { LD(L, it) }
                     },
                     "LD (BC), A" to TestCase(
                         cycles = 7,
