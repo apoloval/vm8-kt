@@ -15,6 +15,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     object D
     object E
     object H
+    object L
     object AF
     object `AF'`
     object BC { operator fun not() = `(BC)` }
@@ -79,6 +80,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun INC(dst: D) = DB(OpCodes.`INC D`)
     fun INC(dst: E) = DB(OpCodes.`INC E`)
     fun INC(dst: H) = DB(OpCodes.`INC H`)
+    fun INC(dst: L) = DB(OpCodes.`INC L`)
     fun INC(dst: BC) = DB(OpCodes.`INC BC`)
     fun INC(dst: DE) = DB(OpCodes.`INC DE`)
     fun INC(dst: HL) = DB(OpCodes.`INC HL`)
