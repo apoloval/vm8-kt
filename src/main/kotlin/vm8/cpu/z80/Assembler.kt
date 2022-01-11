@@ -95,6 +95,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun LD(dst: `(BC)`, src: A) { DB(OpCodes.`LD (BC), A`) }
     fun LD(dst: `(DE)`, src: A) { DB(OpCodes.`LD (DE), A`) }
     fun LD(dst: Indirect<UShort>, src: HL) { DB(OpCodes.`LD (NN), HL`); DW(dst.expr) }
+    fun LD(dst: HL, src: Indirect<UShort>) { DB(OpCodes.`LD HL, (NN)`); DW(src.expr) }
 
     fun JP(addr: UShort) { DB(OpCodes.`JP NN`); DW(addr) }
 

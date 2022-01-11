@@ -499,7 +499,7 @@ class ProcessorTest : FunSpec({
                 val cycles: Int,
                 val size: Int,
                 val result: suspend ProcessorBehavior.() -> UShort,
-                val prepare: ProcessorBehavior.(UShort) -> Unit,
+                val prepare: suspend ProcessorBehavior.(UShort) -> Unit,
             )
 
             withData(
@@ -535,9 +535,19 @@ class ProcessorTest : FunSpec({
                             LD(!0x8000u.toUShort(), HL)
                         }
                     },
+                    "LD HL, (NN)" to TestCase(
+                        cycles = 16,
+                        size = 3,
+                        result = { regs.hl },
+                    ) {
+                        bus.writeWord(0x8000u, it)
+                        mem.asm {
+                            LD(HL, !0x8000u.toUShort())
+                        }
+                    },
                 )
             ) { (cycles, size, result, prepare) -> behavesLike { value: UShort, flags ->
-                given { prepare(value) }
+                prepare(value)
                 whenProcessorRuns()
                 expect(cycles, pc = size.toUShort(), flags) { result() shouldBe value }
             } }
