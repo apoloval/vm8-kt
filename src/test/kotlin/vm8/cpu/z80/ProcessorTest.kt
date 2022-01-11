@@ -199,6 +199,14 @@ class ProcessorTest : FunSpec({
                         regs.e = it
                         mem.asm { INC(E) }
                     },
+                    "INC H" to TestCase(
+                        cycles = 4,
+                        size = 1,
+                        result = { regs.h }
+                    ) {
+                        regs.h = it
+                        mem.asm { INC(H) }
+                    },
                 )
             ) { (cycles, size, result, prepare) -> behavesLike { value: UByte, flags ->
                 prepare(value)
