@@ -23,6 +23,7 @@ class ProcessorTest : FunSpec({
             data class TestCase(
                 val cycles: Int,
                 val size: Int,
+                val sameOperand: Boolean = false,
                 val result: ProcessorBehavior.() -> UShort,
                 val prepare: ProcessorBehavior.(UShort, UShort) -> Unit,
             )
@@ -46,11 +47,21 @@ class ProcessorTest : FunSpec({
                     regs.de = b
                     mem.asm { ADD(HL, DE) }
                 },
-            )) { (cycles, size, result, prepare) -> behavesLike { a: UShort, b: UShort, flags ->
+                "ADD HL, HL" to TestCase(
+                    cycles = 11,
+                    size = 1,
+                    sameOperand = true,
+                    result = { regs.hl },
+                ) { a, b ->
+                    regs.hl = a
+                    mem.asm { ADD(HL, HL) }
+                },
+            )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UShort, b: UShort, flags ->
                 prepare(a, b)
                 whenProcessorRuns()
                 expect(cycles, pc = size.toUShort()) {
-                    result() shouldBe (a + b).toUShort()
+                    if (sameOperand) { result() shouldBe (a + a).toUShort() }
+                    else { result() shouldBe (a + b).toUShort() }
 
                     regs.f.bit(0) shouldBe flagActiveOnCarry(a, result(), 0xFFFF)
                     regs.f.bit(1) shouldBe false
