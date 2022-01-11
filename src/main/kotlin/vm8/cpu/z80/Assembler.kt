@@ -26,6 +26,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     object `(DE)`
 
     // Jump conditions
+    object Z
     object NZ
 
     data class Indirect<T>(val expr: T)
@@ -98,6 +99,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
 
     fun JR(rel: Byte) { DB(OpCodes.`JR N`); DB(rel.toUByte()) }
     fun JR(cond: NZ, n: Byte) { DB(OpCodes.`JR NZ, N`); DB(n.toUByte()) }
+    fun JR(cond: Z, n: Byte) { DB(OpCodes.`JR Z, N`); DB(n.toUByte()) }
 
     val NOP: Unit get() = DB(OpCodes.NOP)
 

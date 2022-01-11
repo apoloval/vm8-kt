@@ -36,7 +36,7 @@ data class Daa(val cycles: Int, val size: UByte) : Inst {
     override suspend fun Processor.exec(): Int {
         var hasHalfCarry = false
         var hasCarry = false
-        if (Flag.N.isClear(regs.f)) {
+        if (Flag.N.isReset(regs.f)) {
             if (regs.a.low() > 9u || Flag.H.isSet(regs.f)) {
                 regs.a = regs.a.increment(0x06)
                 hasHalfCarry = true
@@ -172,7 +172,8 @@ data class Jp(val addr: SrcOp16) : Inst {
  */
 enum class JumpCond {
     ALWAYS {  override fun matches(flags: UByte) = true },
-    NZ { override fun matches(flags: UByte) = !Flag.Z.isSet(flags) };
+    Z { override fun matches(flags: UByte) = Flag.Z.isSet(flags) },
+    NZ { override fun matches(flags: UByte) = Flag.Z.isReset(flags) };
 
     abstract fun matches(flags: UByte): Boolean;
 }
