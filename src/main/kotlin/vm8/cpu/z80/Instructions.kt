@@ -1,9 +1,6 @@
 package vm8.cpu.z80
 
-import vm8.data.increment
-import vm8.data.isZero
-import vm8.data.rotateLeft
-import vm8.data.rotateRight
+import vm8.data.*
 
 /**
  * An instruction that can be executed by a Z80 processor.
@@ -27,6 +24,48 @@ data class Add16(val dst: DestOp16, val src: SrcOp16, val cycles: Int, val size:
         val c = (a + b).toUShort()
         store16(dst, c)
         apply(PrecomputedFlags.ofAdd(a, b))
+        regs.pc = regs.pc.increment(size)
+        return cycles
+    }
+}
+
+/**
+ * DAA instruction.
+ */
+data class Daa(val cycles: Int, val size: UByte) : Inst {
+    override suspend fun Processor.exec(): Int {
+        var hasHalfCarry = false
+        var hasCarry = false
+        if (Flag.N.isClear(regs.f)) {
+            if (regs.a.low() > 9u || Flag.H.isSet(regs.f)) {
+                regs.a = regs.a.increment(0x06)
+                hasHalfCarry = true
+            }
+            if (regs.a.high() > 9u || Flag.C.isSet(regs.f)) {
+                regs.a = regs.a.increment(0x60)
+                hasCarry = true
+            }
+        } else {
+            if (regs.a.low() > 9u || Flag.H.isSet(regs.f)) {
+                regs.a = regs.a.increment(-0x06)
+                hasHalfCarry = true
+            }
+            if (regs.a.high() > 9u || Flag.C.isSet(regs.f)) {
+                regs.a = regs.a.increment(-0x60)
+                hasCarry = true
+            }
+        }
+
+        apply(
+            (Flag.C on hasCarry) and
+            (Flag.P on regs.a.parity()) and
+            (Flag.F3 on regs.a.bit(3)) and
+            (Flag.H on hasHalfCarry) and
+            (Flag.F5 on regs.a.bit(5)) and
+            (Flag.Z on regs.a.isZero()) and
+            (Flag.S on regs.a.isNegative())
+        )
+
         regs.pc = regs.pc.increment(size)
         return cycles
     }

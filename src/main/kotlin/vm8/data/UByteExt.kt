@@ -1,6 +1,21 @@
 package vm8.data
 
 /**
+ * Obtain the low (less significant) nibble of this [UByte] value.
+ */
+fun UByte.low(): UByte = (this.toUInt() and 0x0Fu).toUByte()
+
+/**
+ * Obtain the high (most significant) nibble of this [UByte] value.
+ */
+fun UByte.high(): UByte = (this.toUInt() shr 4).toUByte()
+
+/**
+ * Check if this [UByte] has a valid BCD representation.
+ */
+fun UByte.isBCD(): Boolean = this.low() < 10u && this.high() < 10u
+
+/**
  * Set (assign 1 to) the bits of this [UByte] indicated by the given mask value.
  *
  * If the mask indicates 0 for a bit, it will not be touched. If it indicates 1, the bit will be set.
@@ -68,3 +83,23 @@ fun UByte.rotateRight(carry: Boolean): Pair<UByte, Boolean> = Pair(
     ((this.toUInt() shr 1) or (if (carry) 0x80u else 0x00u)).toUByte(),
     this and 0x01u > 0u,
 )
+
+/**
+ * Obtain the increment of this [UByte] by the given value.
+ */
+fun UByte.increment(v: UByte): UByte =  (this + v).toUByte()
+
+/**
+ * Obtain the increment of this [UByte] by the given value.
+ */
+fun UByte.increment(v: Byte): UByte =  (this.toByte() + v).toUByte()
+
+/**
+ * Return true if even number of bits is set.
+ */
+fun UByte.parity(): Boolean = this.countOneBits() % 2 == 0
+
+/**
+ * Convert this [UByte] into an hexadecimal string
+ */
+fun UByte.toHexString(): String = String.format("0x%02X", this.toInt())

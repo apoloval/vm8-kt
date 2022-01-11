@@ -1,8 +1,14 @@
 package vm8.cpu.z80
 
 import io.kotest.matchers.shouldBe
+import io.kotest.property.Arb
+import io.kotest.property.arbitrary.filter
+import io.kotest.property.arbitrary.uByte
 import io.kotest.property.checkAll
 import vm8.data.bit
+import vm8.data.isBCD
+
+fun Arb.Companion.bcd() = Arb.uByte().filter { it.isBCD() }
 
 suspend fun behavesLike(f: suspend ProcessorBehavior.(flags: UByte) -> Unit) {
     checkAll<UByte> { flags ->
@@ -22,6 +28,14 @@ suspend inline fun<reified T> behavesLike(crossinline f: suspend ProcessorBehavi
 
 suspend inline fun<reified T1, reified T2> behavesLike(crossinline f: suspend ProcessorBehavior.(a: T1, b: T2, flags: UByte) -> Unit) {
     checkAll<T1, T2, UByte> { a, b, flags ->
+        val behav = ProcessorBehavior()
+        behav.cpu.regs.f = flags
+        behav.f(a, b, flags)
+    }
+}
+
+suspend inline fun<reified T1, reified T2> behavesLike(arbA: Arb<T1>, arbB: Arb<T2>, crossinline f: suspend ProcessorBehavior.(a: T1, b: T2, flags: UByte) -> Unit) {
+    checkAll(arbA, arbB, Arb.uByte()) { a, b, flags ->
         val behav = ProcessorBehavior()
         behav.cpu.regs.f = flags
         behav.f(a, b, flags)

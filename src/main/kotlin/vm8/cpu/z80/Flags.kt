@@ -23,6 +23,11 @@ enum class Flag(val mask: UByte) {
     fun isSet(v: UByte): Boolean = v and mask > 0u
 
     /**
+     * Check if the flag is clear in the given value.
+     */
+    fun isClear(v: UByte) = !isSet(v)
+
+    /**
      * Convert this flag into a [FlagsAffection] by requesting this flag to be set
      */
     operator fun unaryPlus(): FlagsAffection = FlagsAffection() + this

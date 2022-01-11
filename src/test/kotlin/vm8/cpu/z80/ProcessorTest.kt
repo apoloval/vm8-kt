@@ -2,8 +2,10 @@ package vm8.cpu.z80
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.datatest.withData
+import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
-
+import io.kotest.matchers.shouldNotBe
+import io.kotest.property.Arb
 import vm8.cpu.z80.Assembler.*
 import vm8.data.*
 
@@ -58,6 +60,43 @@ class ProcessorTest : FunSpec({
                     regs.f.bit(5) shouldBe result().high().bit(5)
                     regs.f.bit(6) shouldBe flags.bit(6)
                     regs.f.bit(7) shouldBe flags.bit(7)
+                }
+            }}
+        }
+
+        context("DAA") {
+            data class TestCase(val prepare: ProcessorBehavior.(UByte, UByte) -> Unit)
+
+            withData(mapOf(
+                "after ADD" to TestCase { a, b ->
+                    regs.a = (a+b).toUByte()
+                    cpu.apply(PrecomputedFlags.ofAdd(a, b))
+                },
+                "after SUB" to TestCase { a, b ->
+                    regs.a = (a-b).toUByte()
+                    cpu.apply(PrecomputedFlags.ofSub(a, b))
+                },
+            )) { (prepare) -> behavesLike(Arb.bcd(), Arb.bcd()) { a: UByte, b: UByte, _ ->
+                prepare(a, b)
+                val value = regs.a
+                val flags = regs.f
+                whenProcessorRuns { DAA }
+                expect(cycles = 4, pc = 0x0001u) {
+                    regs.a.low() shouldBeLessThan 10u
+                    regs.a.high() shouldBeLessThan 10u
+
+                    if (regs.f.bit(0)) {
+                        value.high() shouldNotBe regs.a.high()
+                    }
+                    regs.f.bit(1) shouldBe flags.bit(1)
+                    regs.f.bit(2) shouldBe regs.a.parity()
+                    regs.f.bit(3) shouldBe regs.a.bit(3)
+                    if (regs.f.bit(4)) {
+                        value.low() shouldNotBe regs.a.low()
+                    }
+                    regs.f.bit(5) shouldBe regs.a.bit(5)
+                    regs.f.bit(6) shouldBe regs.a.isZero()
+                    regs.f.bit(7) shouldBe regs.a.isNegative()
                 }
             }}
         }
