@@ -75,6 +75,23 @@ class ProcessorTest : FunSpec({
             }}
         }
 
+        test("CPL") { behavesLike { a: UByte, flags ->
+            given { regs.a = a }
+            whenProcessorRuns { CPL }
+            expect(cycles = 4, pc = 0x0001u) {
+                regs.a shouldBe a.inv()
+
+                regs.f.bit(0) shouldBe flags.bit(0)
+                regs.f.bit(1) shouldBe true
+                regs.f.bit(2) shouldBe flags.bit(2)
+                regs.f.bit(3) shouldBe regs.a.bit(3)
+                regs.f.bit(4) shouldBe true
+                regs.f.bit(5) shouldBe regs.a.bit(5)
+                regs.f.bit(6) shouldBe flags.bit(6)
+                regs.f.bit(7) shouldBe flags.bit(7)
+            }
+        }}
+
         context("DAA") {
             data class TestCase(val prepare: ProcessorBehavior.(UByte, UByte) -> Unit)
 

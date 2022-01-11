@@ -30,6 +30,21 @@ data class Add16(val dst: DestOp16, val src: SrcOp16, val cycles: Int, val size:
 }
 
 /**
+ * CPL instruction.
+ */
+data class Cpl(val cycles: Int, val size: UByte) : Inst {
+    override suspend fun Processor.exec(): Int {
+        regs.a = regs.a.inv()
+        apply(
+            (Flag.F3 on regs.a.bit(3)) and
+            (Flag.F5 on regs.a.bit(5)) + Flag.N + Flag.H
+        )
+        regs.pc = regs.pc.increment(size)
+        return cycles
+    }
+}
+
+/**
  * DAA instruction.
  */
 data class Daa(val cycles: Int, val size: UByte) : Inst {
