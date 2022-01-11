@@ -67,6 +67,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun DEC(dst: D) = DB(OpCodes.`DEC D`)
     fun DEC(dst: E) = DB(OpCodes.`DEC E`)
     fun DEC(dst: H) = DB(OpCodes.`DEC H`)
+    fun DEC(dst: L) = DB(OpCodes.`DEC L`)
     fun DEC(dst: BC) = DB(OpCodes.`DEC BC`)
     fun DEC(dst: DE) = DB(OpCodes.`DEC DE`)
     fun DEC(dst: HL) = DB(OpCodes.`DEC HL`)
