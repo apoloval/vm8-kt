@@ -82,6 +82,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun LD(dst: C, src: UByte) { DB(OpCodes.`LD C, N`); DB(src) }
     fun LD(dst: D, src: UByte) { DB(OpCodes.`LD D, N`); DB(src) }
     fun LD(dst: E, src: UByte) { DB(OpCodes.`LD E, N`); DB(src) }
+    fun LD(dst: H, src: UByte) { DB(OpCodes.`LD H, N`); DB(src) }
     fun LD(dst: BC, src: UShort) { DB(OpCodes.`LD BC, NN`); DW(src) }
     fun LD(dst: DE, src: UShort) { DB(OpCodes.`LD DE, NN`); DW(src) }
     fun LD(dst: HL, src: UShort) { DB(OpCodes.`LD HL, NN`); DW(src) }
