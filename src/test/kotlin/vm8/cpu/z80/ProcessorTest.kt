@@ -293,6 +293,14 @@ class ProcessorTest : FunSpec({
 
             withData(
                 mapOf(
+                    "INC A" to TestCase(
+                        cycles = 4,
+                        size = 1,
+                        result = { regs.a }
+                    ) {
+                        regs.a = it
+                        mem.asm { INC(A) }
+                    },
                     "INC B" to TestCase(
                         cycles = 4,
                         size = 1,

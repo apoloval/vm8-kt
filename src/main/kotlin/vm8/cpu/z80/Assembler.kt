@@ -86,6 +86,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
 
     fun EX(a: AF, b: `AF'`) = DB(OpCodes.`EX AF, AF'`)
 
+    fun INC(dst: A) = DB(OpCodes.`INC A`)
     fun INC(dst: B) = DB(OpCodes.`INC B`)
     fun INC(dst: C) = DB(OpCodes.`INC C`)
     fun INC(dst: D) = DB(OpCodes.`INC D`)
