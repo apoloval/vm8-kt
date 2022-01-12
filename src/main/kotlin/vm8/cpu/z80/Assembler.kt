@@ -27,6 +27,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     object `(DE)`
 
     // Jump conditions
+    object NC
     object Z
     object NZ
 
@@ -107,8 +108,9 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun JP(addr: UShort) { DB(OpCodes.`JP NN`); DW(addr) }
 
     fun JR(rel: Byte) { DB(OpCodes.`JR N`); DB(rel.toUByte()) }
-    fun JR(cond: NZ, n: Byte) { DB(OpCodes.`JR NZ, N`); DB(n.toUByte()) }
     fun JR(cond: Z, n: Byte) { DB(OpCodes.`JR Z, N`); DB(n.toUByte()) }
+    fun JR(cond: NZ, n: Byte) { DB(OpCodes.`JR NZ, N`); DB(n.toUByte()) }
+    fun JR(cond: NC, n: Byte) { DB(OpCodes.`JR NC, N`); DB(n.toUByte()) }
 
     val NOP: Unit get() = DB(OpCodes.NOP)
 

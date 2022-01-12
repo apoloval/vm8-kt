@@ -188,7 +188,8 @@ data class Jp(val addr: SrcOp16) : Inst {
 enum class JumpCond {
     ALWAYS {  override fun matches(flags: UByte) = true },
     Z { override fun matches(flags: UByte) = Flag.Z.isSet(flags) },
-    NZ { override fun matches(flags: UByte) = Flag.Z.isReset(flags) };
+    NZ { override fun matches(flags: UByte) = Flag.Z.isReset(flags) },
+    NC { override fun matches(flags: UByte) = Flag.C.isReset(flags) };
 
     abstract fun matches(flags: UByte): Boolean;
 }

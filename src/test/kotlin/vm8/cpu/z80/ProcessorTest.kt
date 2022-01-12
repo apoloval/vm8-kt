@@ -417,6 +417,9 @@ class ProcessorTest : FunSpec({
                 "JR NZ, N" to TestCase(cond = { !regs.f.bit(6) }) {
                     mem.asm { JR(NZ, it)}
                 },
+                "JR NC, N" to TestCase(cond = { !regs.f.bit(0) }) {
+                    mem.asm { JR(NC, it)}
+                },
             )) { (cond, prepare) -> behavesLike { n: Byte, flags ->
                 prepare(n)
                 whenProcessorRuns()
