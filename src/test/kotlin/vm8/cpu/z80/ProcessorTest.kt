@@ -69,6 +69,15 @@ class ProcessorTest : FunSpec({
                     regs.hl = a
                     mem.asm { ADD(HL, HL) }
                 },
+                "ADD HL, SP" to TestCase(
+                    cycles = 11,
+                    size = 1,
+                    result = { regs.hl },
+                ) { a, b ->
+                    regs.hl = a
+                    regs.sp = b
+                    mem.asm { ADD(HL, SP) }
+                },
             )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UShort, b: UShort, prevFlags ->
                 prepare(a, b)
                 whenProcessorRuns()
