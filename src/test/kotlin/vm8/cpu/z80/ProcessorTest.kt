@@ -584,6 +584,14 @@ class ProcessorTest : FunSpec({
                         mem[0x8000] = it.toByte()
                         mem.asm { LD(A, !DE) }
                     },
+                    "LD A, (NN)" to TestCase(
+                        cycles = 13,
+                        size = 3,
+                        result = { regs.a },
+                    ) {
+                        mem[0x8000] = it.toByte()
+                        mem.asm { LD(A, !0x8000u) }
+                    },
                     "LD (NN), A" to TestCase(
                         cycles = 13,
                         size = 3,
