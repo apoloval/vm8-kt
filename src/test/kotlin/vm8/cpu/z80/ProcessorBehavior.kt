@@ -144,34 +144,34 @@ class ProcessorBehavior {
     }
 
     fun flagIsSet(flag: Flag) = object : Matcher<UByte> {
-        override fun test(f: UByte) = MatcherResult(
-            flag.isSet(f),
-            failureMessageFn = { "expected flag $flag to be set in ${f.toBinString()}" },
-            negatedFailureMessageFn = { "expected flag $flag to be reset in ${f.toBinString()}" },
+        override fun test(value: UByte) = MatcherResult(
+            flag.isSet(value),
+            failureMessageFn = { "expected flag $flag to be set in ${value.toBinString()}" },
+            negatedFailureMessageFn = { "expected flag $flag to be reset in ${value.toBinString()}" },
         )
     }
 
     fun flagIsReset(flag: Flag) = flagIsSet(flag).invert()
 
     fun flagCopiedFrom(flag: Flag, v: UByte) = object : Matcher<UByte> {
-        override fun test(f: UByte) = MatcherResult(
-            flag.isSet(f) == flag.isSet(v),
+        override fun test(value: UByte) = MatcherResult(
+            flag.isSet(value) == flag.isSet(v),
             failureMessageFn = { "expected flag $flag to be copied from ${v.toBinString()}" },
             negatedFailureMessageFn = { "expected flag $flag not to be copied from ${v.toBinString()}" },
         )
     }
 
     fun flagIsSetOn(flag: Flag, cond: Condition) = object : Matcher<UByte> {
-        override fun test(f: UByte) = MatcherResult(
-            flag.isSet(f) == cond.eval(),
+        override fun test(value: UByte) = MatcherResult(
+            flag.isSet(value) == cond.eval(),
             failureMessageFn = { "expected flag $flag to be set when ${cond.description}" },
             negatedFailureMessageFn = { "expected flag $flag to be reset when ${cond.description}" },
         )
     }
 
     fun whenFlagIsSetThen(flag: Flag, cond: Condition) = object : Matcher<UByte> {
-        override fun test(f: UByte): MatcherResult {
-            val passed = if (flag.isSet(f)) cond.eval() else true
+        override fun test(value: UByte): MatcherResult {
+            val passed = if (flag.isSet(value)) cond.eval() else true
             return MatcherResult(
                 passed,
                 failureMessageFn = { "expecting ${cond.description} to happen when flag $flag is set" },

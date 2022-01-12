@@ -454,6 +454,9 @@ class ProcessorTest : FunSpec({
                 "JR NZ, N" to TestCase(cond = { !regs.f.bit(6) }) {
                     mem.asm { JR(NZ, it)}
                 },
+                "JR C, N" to TestCase(cond = { regs.f.bit(0) }) {
+                    mem.asm { JR(C, it)}
+                },
                 "JR NC, N" to TestCase(cond = { !regs.f.bit(0) }) {
                     mem.asm { JR(NC, it)}
                 },

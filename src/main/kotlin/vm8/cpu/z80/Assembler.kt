@@ -11,7 +11,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     // Register names
     object A
     object B
-    object C
+    object C // can also be a flag condition
     object D
     object E
     object H
@@ -122,6 +122,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun JR(rel: Byte) { DB(OpCodes.`JR N`); DB(rel.toUByte()) }
     fun JR(cond: Z, n: Byte) { DB(OpCodes.`JR Z, N`); DB(n.toUByte()) }
     fun JR(cond: NZ, n: Byte) { DB(OpCodes.`JR NZ, N`); DB(n.toUByte()) }
+    fun JR(cond: C, n: Byte) { DB(OpCodes.`JR C, N`); DB(n.toUByte()) }
     fun JR(cond: NC, n: Byte) { DB(OpCodes.`JR NC, N`); DB(n.toUByte()) }
 
     val NOP: Unit get() = DB(OpCodes.NOP)

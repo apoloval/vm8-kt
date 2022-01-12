@@ -189,6 +189,7 @@ enum class JumpCond {
     ALWAYS {  override fun matches(flags: UByte) = true },
     Z { override fun matches(flags: UByte) = Flag.Z.isSet(flags) },
     NZ { override fun matches(flags: UByte) = Flag.Z.isReset(flags) },
+    C { override fun matches(flags: UByte) = Flag.C.isSet(flags) },
     NC { override fun matches(flags: UByte) = Flag.C.isReset(flags) };
 
     abstract fun matches(flags: UByte): Boolean;
