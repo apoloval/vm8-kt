@@ -53,6 +53,7 @@ object OpCodes {
     const val `CPL`         : Int = 0x2F
 
     const val `JR NC, N`    : Int = 0x30
+    const val `LD SP, NN`   : Int = 0x31
 
     const val `JP NN`       : Int = 0xC3
 }
@@ -115,6 +116,7 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
 
         // From 0x30 to 0x3F
         OpCodes.`JR NC, N` -> Jr(JumpCond.NC, Imm8, jcycles = 12, njcycles = 7, size = 2u)
+        OpCodes.`LD SP, NN` -> Ld16(Reg16.SP, Imm16, cycles = 10, size = 3u)
 
         OpCodes.`JP NN` -> Jp(Imm16)
         else -> Illegal

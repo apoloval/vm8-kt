@@ -576,6 +576,13 @@ class ProcessorTest : FunSpec({
                     ) {
                         mem.asm { LD(HL, it) }
                     },
+                    "LD SP, NN" to TestCase(
+                        cycles = 10,
+                        size = 3,
+                        result = { regs.sp },
+                    ) {
+                        mem.asm { LD(SP, it) }
+                    },
                     "LD (NN), HL" to TestCase(
                         cycles = 16,
                         size = 3,

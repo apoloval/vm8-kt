@@ -21,6 +21,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     object BC { operator fun not() = `(BC)` }
     object DE { operator fun not() = `(DE)` }
     object HL
+    object SP
 
     // Indirect registers
     object `(BC)`
@@ -98,6 +99,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun LD(dst: BC, src: UShort) { DB(OpCodes.`LD BC, NN`); DW(src) }
     fun LD(dst: DE, src: UShort) { DB(OpCodes.`LD DE, NN`); DW(src) }
     fun LD(dst: HL, src: UShort) { DB(OpCodes.`LD HL, NN`); DW(src) }
+    fun LD(dst: SP, src: UShort) { DB(OpCodes.`LD SP, NN`); DW(src) }
     fun LD(dst: A, src: `(BC)`) { DB(OpCodes.`LD A, (BC)`) }
     fun LD(dst: A, src: `(DE)`) { DB(OpCodes.`LD A, (DE)`) }
     fun LD(dst: `(BC)`, src: A) { DB(OpCodes.`LD (BC), A`) }
