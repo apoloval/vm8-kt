@@ -266,6 +266,14 @@ class ProcessorTest : FunSpec({
                     regs.hl = it
                     mem.asm { DEC(HL) }
                 },
+                "DEC SP" to TestCase(
+                    cycles = 6,
+                    size = 1,
+                    result = { regs.sp }
+                ) {
+                    regs.sp = it
+                    mem.asm { DEC(SP) }
+                },
             )) { (cycles, size, result, prepare) -> behavesLike { value: UShort, prevFlags ->
                 prepare(value)
                 whenProcessorRuns()
