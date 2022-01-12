@@ -569,6 +569,14 @@ class ProcessorTest : FunSpec({
                         regs.a = it
                         mem.asm { LD(!0x8000u, A) }
                     },
+                    "LD (HL), N" to TestCase(
+                        cycles = 10,
+                        size = 2,
+                        result = { bus.read(0x8000u) },
+                    ) {
+                        regs.hl = 0x8000u
+                        mem.asm { LD(!HL, it) }
+                    },
                 )
             ) { (cycles, size, result, prepare) -> behavesLike { value: UByte, flags ->
                 prepare(value)
