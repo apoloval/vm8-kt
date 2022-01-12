@@ -12,8 +12,8 @@ enum class Flag(val mask: UByte) {
     H (0b00010000u),
     F3(0b00001000u),
     PV(0b00000100u),
-    P (0b00000100u),
-    V (0b00000100u),
+    //P (0b00000100u),
+    //V (0b00000100u),
     N (0b00000010u),
     C (0b00000001u);
 
@@ -41,6 +41,11 @@ enum class Flag(val mask: UByte) {
      * Convert this flag into a [FlagsAffection] by requesting this flag to be set/clear depending on a condition.
      */
     infix fun on(b: Boolean): FlagsAffection = if (b) +this else -this
+
+    companion object {
+        val P = PV
+        val V = PV
+    }
 }
 
 /**

@@ -133,6 +133,8 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     val RRA: Unit get() { DB(OpCodes.RRA) }
 
     val RRCA: Unit get() { DB(OpCodes.RRCA) }
+
+    val SCF: Unit get() { DB(OpCodes.SCF) }
 }
 
 fun ByteArray.asm(org: Int = 0, f: Assembler.() -> Unit): ByteArray {

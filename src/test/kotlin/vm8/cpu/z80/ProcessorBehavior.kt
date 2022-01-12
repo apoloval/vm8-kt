@@ -1,12 +1,13 @@
 package vm8.cpu.z80
 
+import io.kotest.matchers.Matcher
+import io.kotest.matchers.MatcherResult
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.filter
 import io.kotest.property.arbitrary.uByte
 import io.kotest.property.checkAll
-import vm8.data.bit
-import vm8.data.isBCD
+import vm8.data.*
 
 fun Arb.Companion.bcd() = Arb.uByte().filter { it.isBCD() }
 
@@ -88,27 +89,94 @@ class ProcessorBehavior {
         regs.f.bit(7) shouldBe flags.bit(7)
     }
 
-    fun flagActiveOnOverflow(a: Int, c: Int): Boolean {
+    data class Condition(val description: String, val eval: () -> Boolean)
+
+    fun overflow(a: Int, c: Int) = Condition("Overflow from $a to $c") {
         val b = c - a
-        return ((a xor b xor 0x80) and (b xor c) and 0x80) != 0
+        ((a xor b xor 0x80) and (b xor c) and 0x80) != 0
     }
 
-    fun flagActiveOnOverflow(a: UByte, b: UByte) = flagActiveOnOverflow(a.toInt(), b.toInt())
+    fun overflow(a: UByte, b: UByte) = overflow(a.toInt(), b.toInt())
 
-    fun flagActiveOnUnderflow(a: Int, c: Int): Boolean {
+    fun underflow(a: Int, c: Int) = Condition("underflow from $a to $c") {
         val b = a - c
-        return ((a xor b) and ((a xor c) and 0x80)) != 0
+        ((a xor b) and ((a xor c) and 0x80)) != 0
     }
 
-    fun flagActiveOnUnderflow(a: UByte, b: UByte) = flagActiveOnUnderflow(a.toInt(), b.toInt())
+    fun underflow(a: UByte, b: UByte) = underflow(a.toInt(), b.toInt())
 
-    fun flagActiveOnCarry(a: Int, c: Int, mask: Int): Boolean = (a and mask) > (c and mask)
+    fun carry(a: Int, c: Int, mask: Int) = Condition("carry from $a to $c respect mask $mask") {
+        (a and mask) > (c and mask)
+    }
 
-    fun flagActiveOnCarry(a: UByte, c: UByte, mask: Int): Boolean = flagActiveOnCarry(a.toInt(), c.toInt(), mask)
+    fun carry(a: UByte, c: UByte) = carry(a.toInt(), c.toInt(), 0xFF)
 
-    fun flagActiveOnCarry(a: UShort, c: UShort, mask: Int): Boolean = flagActiveOnCarry(a.toInt(), c.toInt(), mask)
+    fun halfCarry(a: UByte, c: UByte) = carry(a.toInt(), c.toInt(), 0x0F)
 
-    fun flagActiveOnBorrow(a: Int, c: Int, mask: Int): Boolean = (a and mask) < (c and mask)
+    fun carry(a: UShort, c: UShort) = carry(a.toInt(), c.toInt(), 0xFFFF)
 
-    fun flagActiveOnBorrow(a: UByte, c: UByte, mask: Int): Boolean = flagActiveOnBorrow(a.toInt(), c.toInt(), mask)
+    fun halfCarry(a: UShort, c: UShort) = carry(a.toInt(), c.toInt(), 0x0FFF)
+
+    fun borrow(a: Int, c: Int, mask: Int) = Condition("borrow from $a to $c respect mask $mask") {
+        (a and mask) < (c and mask)
+    }
+
+    fun borrow(a: UByte, c: UByte) = borrow(a.toInt(), c.toInt(), 0xFF)
+
+    fun halfBorrow(a: UByte, c: UByte) = borrow(a.toInt(), c.toInt(), 0x0F)
+
+    fun isZero(v: UByte) = Condition("value ${v.toHexString()} is zero") { v.isZero() }
+
+    fun isNegative(v: UByte) = Condition("value ${v.toHexString()} is negative") { v.isNegative() }
+
+    fun hasEvenParity(v: UByte) = Condition("value ${v.toHexString()} has even parity") { v.parity() }
+
+    fun areNotEqual(a: UByte, b: UByte) = Condition(
+        "value ${a.toHexString()} and ${b.toHexString()} are not equal"
+    ) {
+        a != b
+    }
+
+    suspend fun expectFlags(matcherFn: suspend (Flag) -> Matcher<UByte>) {
+        Flag.values().forEach { flag ->
+                regs.f shouldBe matcherFn(flag)
+        }
+    }
+
+    fun flagIsSet(flag: Flag) = object : Matcher<UByte> {
+        override fun test(f: UByte) = MatcherResult(
+            flag.isSet(f),
+            failureMessageFn = { "expected flag $flag to be set in ${f.toBinString()}" },
+            negatedFailureMessageFn = { "expected flag $flag to be reset in ${f.toBinString()}" },
+        )
+    }
+
+    fun flagIsReset(flag: Flag) = flagIsSet(flag).invert()
+
+    fun flagCopiedFrom(flag: Flag, v: UByte) = object : Matcher<UByte> {
+        override fun test(f: UByte) = MatcherResult(
+            flag.isSet(f) == flag.isSet(v),
+            failureMessageFn = { "expected flag $flag to be copied from ${v.toBinString()}" },
+            negatedFailureMessageFn = { "expected flag $flag not to be copied from ${v.toBinString()}" },
+        )
+    }
+
+    fun flagIsSetOn(flag: Flag, cond: Condition) = object : Matcher<UByte> {
+        override fun test(f: UByte) = MatcherResult(
+            flag.isSet(f) == cond.eval(),
+            failureMessageFn = { "expected flag $flag to be set when ${cond.description}" },
+            negatedFailureMessageFn = { "expected flag $flag to be reset when ${cond.description}" },
+        )
+    }
+
+    fun whenFlagIsSetThen(flag: Flag, cond: Condition) = object : Matcher<UByte> {
+        override fun test(f: UByte): MatcherResult {
+            val passed = if (flag.isSet(f)) cond.eval() else true
+            return MatcherResult(
+                passed,
+                failureMessageFn = { "expecting ${cond.description} to happen when flag $flag is set" },
+                negatedFailureMessageFn = { "expecting ${cond.description} not to happen when flag $flag is set" },
+            )
+        }
+    }
 }

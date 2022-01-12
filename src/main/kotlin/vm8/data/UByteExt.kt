@@ -45,6 +45,13 @@ fun UByte.isNegative(): Boolean = (this.toByte() < 0)
 fun UByte.bit(n: Int): Boolean = (this.toUInt() shr n) and 0x01u > 0u
 
 /**
+ * Return the bits of this [UByte] as an iterable sequence of booleans.
+ *
+ * The returned iterable starts with the less significant bit.
+ */
+fun UByte.bits(): Iterable<Boolean> = (0..7).map { bit(it) }
+
+/**
  * Obtain the Rotation of this [UByte] one bit left, including its carry.
  *
  * The bit 7 is copied to bit 0, and also returned as carry.
@@ -100,6 +107,14 @@ fun UByte.increment(v: Byte): UByte =  (this.toByte() + v).toUByte()
 fun UByte.parity(): Boolean = this.countOneBits() % 2 == 0
 
 /**
- * Convert this [UByte] into an hexadecimal string
+ * Convert this [UByte] into a hexadecimal string
  */
 fun UByte.toHexString(): String = String.format("0x%02X", this.toInt())
+
+/**
+ * Convert this [UByte] into a binary string.
+ */
+fun UByte.toBinString(): String = String.format(
+    "0b%8s",
+    Integer.toBinaryString(this.toInt()).replace(' ', '0'),
+)

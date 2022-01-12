@@ -296,6 +296,20 @@ data class Rrca(val cycles: Int, val size: UByte) : Inst {
 }
 
 /**
+ * SCF instruction.
+ */
+data class Scf(val cycles: Int, val size: UByte) : Inst {
+    override suspend fun Processor.exec(): Int {
+        apply(
+            (Flag.F3 on regs.a.bit(3)) and
+            (Flag.F5 on regs.a.bit(5)) + Flag.C - Flag.N - Flag.H
+        )
+        regs.pc = regs.pc.increment(size)
+        return cycles
+    }
+}
+
+/**
  * Illegal pseudo-instruction to refer to an illegal opcode.
  */
 object Illegal : Inst {

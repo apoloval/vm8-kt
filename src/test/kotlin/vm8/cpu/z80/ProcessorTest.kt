@@ -12,9 +12,22 @@ import vm8.data.*
 class ProcessorTest : FunSpec({
 
     context("General purpose arithmetic and CPU control") {
-        test("NOP") { behavesLike { flags ->
+        test("NOP") { behavesLike { prevFlags ->
             whenProcessorRuns { NOP }
-            expect(cycles = 4, pc = 0x0001u, flags)
+            expect(cycles = 4, pc = 0x0001u, flags = prevFlags)
+        }}
+
+        test("SCF") { behavesLike { a: UByte, prevFlags ->
+            given { regs.a = a }
+            whenProcessorRuns { SCF }
+            expect(cycles = 4, pc = 0x0001u) {
+                expectFlags { flag -> when(flag) {
+                    Flag.C -> flagIsSet(flag)
+                    Flag.N, Flag.H -> flagIsReset(flag)
+                    Flag.F3, Flag.F5 -> flagCopiedFrom(flag, regs.a)
+                    else -> flagCopiedFrom(flag, prevFlags)
+                }}
+            }
         }}
     }
 
@@ -56,39 +69,36 @@ class ProcessorTest : FunSpec({
                     regs.hl = a
                     mem.asm { ADD(HL, HL) }
                 },
-            )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UShort, b: UShort, flags ->
+            )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UShort, b: UShort, prevFlags ->
                 prepare(a, b)
                 whenProcessorRuns()
                 expect(cycles, pc = size.toUShort()) {
                     if (sameOperand) { result() shouldBe (a + a).toUShort() }
                     else { result() shouldBe (a + b).toUShort() }
 
-                    regs.f.bit(0) shouldBe flagActiveOnCarry(a, result(), 0xFFFF)
-                    regs.f.bit(1) shouldBe false
-                    regs.f.bit(2) shouldBe flags.bit(2)
-                    regs.f.bit(3) shouldBe result().high().bit(3)
-                    regs.f.bit(4) shouldBe flagActiveOnCarry(a, result(), 0x0FFF)
-                    regs.f.bit(5) shouldBe result().high().bit(5)
-                    regs.f.bit(6) shouldBe flags.bit(6)
-                    regs.f.bit(7) shouldBe flags.bit(7)
+                    expectFlags { flag -> when(flag) {
+                        Flag.C -> flagIsSetOn(flag, carry(a, result()))
+                        Flag.N -> flagIsReset(flag)
+                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result().high())
+                        Flag.H -> flagIsSetOn(flag, halfCarry(a, result()))
+                        Flag.V, Flag.Z, Flag.S -> flagCopiedFrom(flag, prevFlags)
+                        else -> flagCopiedFrom(flag, prevFlags)
+                    }}
                 }
             }}
         }
 
-        test("CPL") { behavesLike { a: UByte, flags ->
+        test("CPL") { behavesLike { a: UByte, prevFlags ->
             given { regs.a = a }
             whenProcessorRuns { CPL }
             expect(cycles = 4, pc = 0x0001u) {
                 regs.a shouldBe a.inv()
 
-                regs.f.bit(0) shouldBe flags.bit(0)
-                regs.f.bit(1) shouldBe true
-                regs.f.bit(2) shouldBe flags.bit(2)
-                regs.f.bit(3) shouldBe regs.a.bit(3)
-                regs.f.bit(4) shouldBe true
-                regs.f.bit(5) shouldBe regs.a.bit(5)
-                regs.f.bit(6) shouldBe flags.bit(6)
-                regs.f.bit(7) shouldBe flags.bit(7)
+                expectFlags { flag -> when(flag) {
+                    Flag.C, Flag.PV, Flag.Z, Flag.S -> flagCopiedFrom(flag, prevFlags)
+                    Flag.N, Flag.H -> flagIsSet(flag)
+                    Flag.F3, Flag.F5 -> flagCopiedFrom(flag, regs.a)
+                }}
             }
         }}
 
@@ -107,24 +117,21 @@ class ProcessorTest : FunSpec({
             )) { (prepare) -> behavesLike(Arb.bcd(), Arb.bcd()) { a: UByte, b: UByte, _ ->
                 prepare(a, b)
                 val value = regs.a
-                val flags = regs.f
+                val prevFlags = regs.f
                 whenProcessorRuns { DAA }
                 expect(cycles = 4, pc = 0x0001u) {
                     regs.a.low() shouldBeLessThan 10u
                     regs.a.high() shouldBeLessThan 10u
 
-                    if (regs.f.bit(0)) {
-                        value.high() shouldNotBe regs.a.high()
-                    }
-                    regs.f.bit(1) shouldBe flags.bit(1)
-                    regs.f.bit(2) shouldBe regs.a.parity()
-                    regs.f.bit(3) shouldBe regs.a.bit(3)
-                    if (regs.f.bit(4)) {
-                        value.low() shouldNotBe regs.a.low()
-                    }
-                    regs.f.bit(5) shouldBe regs.a.bit(5)
-                    regs.f.bit(6) shouldBe regs.a.isZero()
-                    regs.f.bit(7) shouldBe regs.a.isNegative()
+                    expectFlags { flag -> when(flag) {
+                        Flag.C -> whenFlagIsSetThen(flag, areNotEqual(value.high(), regs.a.high()))
+                        Flag.N -> flagCopiedFrom(flag, prevFlags)
+                        Flag.PV -> flagIsSetOn(flag, hasEvenParity(regs.a))
+                        Flag.H -> whenFlagIsSetThen(flag, areNotEqual(value.low(), regs.a.low()))
+                        Flag.Z -> flagIsSetOn(flag, isZero(regs.a))
+                        Flag.S -> flagIsSetOn(flag, isNegative(regs.a))
+                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, regs.a)
+                    }}
                 }
             }}
         }
@@ -197,20 +204,22 @@ class ProcessorTest : FunSpec({
                         mem.asm { DEC(!HL) }
                     },
                 )
-            ) { (cycles, size, result, prepare) -> behavesLike { value: UByte, flags ->
+            ) { (cycles, size, result, prepare) -> behavesLike { value: UByte, prevFlags ->
                 prepare(value)
                 whenProcessorRuns()
 
                 expect(cycles, pc = size.toUShort()) {
                     result() shouldBe value.dec()
-                    regs.f.bit(0) shouldBe flags.bit(0)
-                    regs.f.bit(1) shouldBe true
-                    regs.f.bit(2) shouldBe flagActiveOnUnderflow(value, result())
-                    regs.f.bit(3) shouldBe result().bit(3)
-                    regs.f.bit(4) shouldBe flagActiveOnBorrow(value, result(), mask = 0x0F)
-                    regs.f.bit(5) shouldBe result().bit(5)
-                    regs.f.bit(6) shouldBe result().isZero()
-                    regs.f.bit(7) shouldBe result().isNegative()
+
+                    expectFlags { flag -> when(flag) {
+                        Flag.C -> flagCopiedFrom(flag, prevFlags)
+                        Flag.N -> flagIsSet(flag)
+                        Flag.PV -> flagIsSetOn(flag, underflow(value, result()))
+                        Flag.H -> flagIsSetOn(flag, halfBorrow(value, result()))
+                        Flag.Z -> flagIsSetOn(flag, isZero(result()))
+                        Flag.S -> flagIsSetOn(flag, isNegative(result()))
+                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
+                    }}
                 }
             }}
         }
@@ -248,10 +257,10 @@ class ProcessorTest : FunSpec({
                     regs.hl = it
                     mem.asm { DEC(HL) }
                 },
-            )) { (cycles, size, result, prepare) -> behavesLike { value: UShort, flags ->
+            )) { (cycles, size, result, prepare) -> behavesLike { value: UShort, prevFlags ->
                 prepare(value)
                 whenProcessorRuns()
-                expect(cycles, pc = size.toUShort(), flags) {
+                expect(cycles, pc = size.toUShort(), prevFlags) {
                     result() shouldBe value.dec()
                 }
             }}
@@ -325,20 +334,22 @@ class ProcessorTest : FunSpec({
                         mem.asm { INC(!HL) }
                     },
                 )
-            ) { (cycles, size, result, prepare) -> behavesLike { value: UByte, flags ->
+            ) { (cycles, size, result, prepare) -> behavesLike { value: UByte, prevFlags ->
                 prepare(value)
                 whenProcessorRuns()
 
                 expect(cycles, pc = size.toUShort()) {
                     result() shouldBe value.inc()
-                    regs.f.bit(0) shouldBe flags.bit(0)
-                    regs.f.bit(1) shouldBe false
-                    regs.f.bit(2) shouldBe flagActiveOnOverflow(value, result())
-                    regs.f.bit(3) shouldBe result().bit(3)
-                    regs.f.bit(4) shouldBe flagActiveOnCarry(value, result(), mask = 0x0F)
-                    regs.f.bit(5) shouldBe result().bit(5)
-                    regs.f.bit(6) shouldBe result().isZero()
-                    regs.f.bit(7) shouldBe result().isNegative()
+
+                    expectFlags { flag -> when(flag) {
+                        Flag.C -> flagCopiedFrom(flag, prevFlags)
+                        Flag.N -> flagIsReset(flag)
+                        Flag.PV -> flagIsSetOn(flag, overflow(value, result()))
+                        Flag.H -> flagIsSetOn(flag, halfCarry(value, result()))
+                        Flag.Z -> flagIsSetOn(flag, isZero(result()))
+                        Flag.S -> flagIsSetOn(flag, isNegative(result()))
+                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
+                    }}
                 }
             }}
         }
@@ -384,10 +395,10 @@ class ProcessorTest : FunSpec({
                     regs.sp = it
                     mem.asm { INC(SP) }
                 },
-            )) { (cycles, size, result, prepare) -> behavesLike { value: UShort, flags ->
+            )) { (cycles, size, result, prepare) -> behavesLike { value: UShort, prevFlags ->
                 prepare(value)
                 whenProcessorRuns()
-                expect(cycles, pc = size.toUShort(), flags) {
+                expect(cycles, pc = size.toUShort(), prevFlags) {
                     result() shouldBe value.inc()
                 }
             }}
@@ -395,34 +406,34 @@ class ProcessorTest : FunSpec({
     }
 
     context("Rotate and shift") {
-        test("RLA") { behavesLike { value: UByte, flags ->
-            val inCarry = Flag.C.isSet(flags)
+        test("RLA") { behavesLike { value: UByte, prevFlags ->
+            val inCarry = Flag.C.isSet(prevFlags)
             given { regs.a = value }
             whenProcessorRuns { RLA }
             val (xval, outCarry) = value.rotateLeft(inCarry)
-            expectRotate(xval, outCarry, flags)
+            expectRotate(xval, outCarry, prevFlags)
         }}
 
-        test("RLCA") { behavesLike { value: UByte, flags ->
+        test("RLCA") { behavesLike { value: UByte, prevFlags ->
             given { regs.a = value }
             whenProcessorRuns { RLCA }
             val (xval, carry) = value.rotateLeft()
-            expectRotate(xval, carry, flags)
+            expectRotate(xval, carry, prevFlags)
         }}
 
-        test("RRA") { behavesLike { value: UByte, flags ->
-            val inCarry = Flag.C.isSet(flags)
+        test("RRA") { behavesLike { value: UByte, prevFlags ->
+            val inCarry = Flag.C.isSet(prevFlags)
             given { regs.a = value }
             whenProcessorRuns { RRA }
             val (xval, outCarry) = value.rotateRight(inCarry)
-            expectRotate(xval, outCarry, flags)
+            expectRotate(xval, outCarry, prevFlags)
         }}
 
-        test("RRCA") { behavesLike { value: UByte, flags ->
+        test("RRCA") { behavesLike { value: UByte, prevFlags ->
             given { regs.a = value }
             whenProcessorRuns { RRCA }
             val (xval, carry) = value.rotateRight()
-            expectRotate(xval, carry, flags)
+            expectRotate(xval, carry, prevFlags)
         }}
     }
 
@@ -446,26 +457,26 @@ class ProcessorTest : FunSpec({
                 "JR NC, N" to TestCase(cond = { !regs.f.bit(0) }) {
                     mem.asm { JR(NC, it)}
                 },
-            )) { (cond, prepare) -> behavesLike { n: Byte, flags ->
+            )) { (cond, prepare) -> behavesLike { n: Byte, prevFlags ->
                 prepare(n)
                 whenProcessorRuns()
                 if (cond()) {
-                    expect(cycles = 12, pc = 0x0000.toUShort().increment(n), flags)
+                    expect(cycles = 12, pc = 0x0000.toUShort().increment(n), prevFlags)
                 } else {
-                    expect(cycles = 7, pc = 0x0002u, flags)
+                    expect(cycles = 7, pc = 0x0002u, prevFlags)
                 }
             }}
         }
 
-        test("DJNZ") { behavesLike { value: UByte, flags ->
+        test("DJNZ") { behavesLike { value: UByte, prevFlags ->
             given { regs.b = value }
             whenProcessorRuns { DJNZ(0x42) }
             if (value == 1u.toUByte()) {
-                expect(cycles = 8, pc = 0x0002u, flags) {
+                expect(cycles = 8, pc = 0x0002u, prevFlags) {
                     regs.b shouldBe 0x00u
                 }
             } else {
-                expect(cycles = 13, pc = 0x0042u, flags) {
+                expect(cycles = 13, pc = 0x0042u, prevFlags) {
                     regs.b shouldBe value.dec()
                 }
             }
@@ -578,10 +589,10 @@ class ProcessorTest : FunSpec({
                         mem.asm { LD(!HL, it) }
                     },
                 )
-            ) { (cycles, size, result, prepare) -> behavesLike { value: UByte, flags ->
+            ) { (cycles, size, result, prepare) -> behavesLike { value: UByte, prevFlags ->
                 prepare(value)
                 whenProcessorRuns()
-                expect(cycles, pc = size.toUShort(), flags) {
+                expect(cycles, pc = size.toUShort(), prevFlags) {
                     result() shouldBe value
                 }
             } }
@@ -646,10 +657,10 @@ class ProcessorTest : FunSpec({
                         }
                     },
                 )
-            ) { (cycles, size, result, prepare) -> behavesLike { value: UShort, flags ->
+            ) { (cycles, size, result, prepare) -> behavesLike { value: UShort, prevFlags ->
                 prepare(value)
                 whenProcessorRuns()
-                expect(cycles, pc = size.toUShort(), flags) { result() shouldBe value }
+                expect(cycles, pc = size.toUShort(), prevFlags) { result() shouldBe value }
             } }
         }
 
