@@ -101,6 +101,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun INC(dst: HL) = DB(OpCodes.`INC HL`)
     fun INC(dst: SP) = DB(OpCodes.`INC SP`)
 
+    fun LD(dst: A, src: UByte) { DB(OpCodes.`LD A, N`); DB(src) }
     fun LD(dst: B, src: UByte) { DB(OpCodes.`LD B, N`); DB(src) }
     fun LD(dst: C, src: UByte) { DB(OpCodes.`LD C, N`); DB(src) }
     fun LD(dst: D, src: UByte) { DB(OpCodes.`LD D, N`); DB(src) }

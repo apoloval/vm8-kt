@@ -530,6 +530,13 @@ class ProcessorTest : FunSpec({
 
             withData(
                 mapOf(
+                    "LD A, N" to TestCase(
+                        cycles = 7,
+                        size = 2,
+                        result = { regs.a })
+                    {
+                        mem.asm { LD(A, it) }
+                    },
                     "LD B, N" to TestCase(
                         cycles = 7,
                         size = 2,
