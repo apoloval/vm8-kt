@@ -133,8 +133,8 @@ class ProcessorTest : FunSpec({
             data class TestCase(
                 val cycles: Int,
                 val size: Int,
-                val result: ProcessorBehavior.() -> UByte,
-                val prepare: ProcessorBehavior.(UByte) -> Unit
+                val result: suspend ProcessorBehavior.() -> UByte,
+                val prepare: suspend ProcessorBehavior.(UByte) -> Unit
             )
 
             withData(
@@ -186,6 +186,15 @@ class ProcessorTest : FunSpec({
                     ) {
                         regs.l = it
                         mem.asm { DEC(L) }
+                    },
+                    "DEC (HL)" to TestCase(
+                        cycles = 11,
+                        size = 1,
+                        result = { bus.read(0x8000u) },
+                    ) {
+                        regs.hl = 0x8000u
+                        bus.write(0x8000u, it)
+                        mem.asm { DEC(!HL) }
                     },
                 )
             ) { (cycles, size, result, prepare) -> behavesLike { value: UByte, flags ->

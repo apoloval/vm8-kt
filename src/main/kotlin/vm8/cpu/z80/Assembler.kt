@@ -74,6 +74,8 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun DEC(dst: E) = DB(OpCodes.`DEC E`)
     fun DEC(dst: H) = DB(OpCodes.`DEC H`)
     fun DEC(dst: L) = DB(OpCodes.`DEC L`)
+    fun DEC(dst: `(HL)`) = DB(OpCodes.`DEC (HL)`)
+
     fun DEC(dst: BC) = DB(OpCodes.`DEC BC`)
     fun DEC(dst: DE) = DB(OpCodes.`DEC DE`)
     fun DEC(dst: HL) = DB(OpCodes.`DEC HL`)
@@ -88,11 +90,12 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun INC(dst: E) = DB(OpCodes.`INC E`)
     fun INC(dst: H) = DB(OpCodes.`INC H`)
     fun INC(dst: L) = DB(OpCodes.`INC L`)
+    fun INC(dst: `(HL)`) = DB(OpCodes.`INC (HL)`)
+
     fun INC(dst: BC) = DB(OpCodes.`INC BC`)
     fun INC(dst: DE) = DB(OpCodes.`INC DE`)
     fun INC(dst: HL) = DB(OpCodes.`INC HL`)
     fun INC(dst: SP) = DB(OpCodes.`INC SP`)
-    fun INC(dst: `(HL)`) = DB(OpCodes.`INC (HL)`)
 
     fun LD(dst: B, src: UByte) { DB(OpCodes.`LD B, N`); DB(src) }
     fun LD(dst: C, src: UByte) { DB(OpCodes.`LD C, N`); DB(src) }
