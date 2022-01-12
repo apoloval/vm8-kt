@@ -4,3 +4,5 @@
 bin/
 build/
 gradle*
+*.class
+*.kotlin_module
