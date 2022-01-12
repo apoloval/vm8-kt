@@ -34,7 +34,8 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
 
     data class Indirect<T>(val expr: T)
 
-    operator fun UShort.not()= Indirect(this)
+    operator fun UShort.not() = Indirect(this)
+    operator fun UInt.not() = this.toUShort().not()
 
     operator fun String.unaryPlus(): UShort = symbols.getValue(this).toUShort()
 
@@ -104,6 +105,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun LD(dst: A, src: `(DE)`) { DB(OpCodes.`LD A, (DE)`) }
     fun LD(dst: `(BC)`, src: A) { DB(OpCodes.`LD (BC), A`) }
     fun LD(dst: `(DE)`, src: A) { DB(OpCodes.`LD (DE), A`) }
+    fun LD(dst: Indirect<UShort>, src: A) { DB(OpCodes.`LD (NN), A`); DW(dst.expr) }
     fun LD(dst: Indirect<UShort>, src: HL) { DB(OpCodes.`LD (NN), HL`); DW(dst.expr) }
     fun LD(dst: HL, src: Indirect<UShort>) { DB(OpCodes.`LD HL, (NN)`); DW(src.expr) }
 

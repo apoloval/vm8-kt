@@ -451,8 +451,8 @@ class ProcessorTest : FunSpec({
             data class TestCase(
                 val cycles: Int,
                 val size: Int,
-                val result: ProcessorBehavior.() -> UByte,
-                val prepare: ProcessorBehavior.(UByte) -> Unit,
+                val result: suspend ProcessorBehavior.() -> UByte,
+                val prepare: suspend ProcessorBehavior.(UByte) -> Unit,
             )
 
             withData(
@@ -502,7 +502,7 @@ class ProcessorTest : FunSpec({
                     "LD (BC), A" to TestCase(
                         cycles = 7,
                         size = 1,
-                        result = { mem[0x8000].toUByte() }
+                        result = { bus.read(0x8000u) }
                     ) {
                         regs.a = it
                         regs.bc = 0x8000u
@@ -511,7 +511,7 @@ class ProcessorTest : FunSpec({
                     "LD (DE), A" to TestCase(
                         cycles = 7,
                         size = 1,
-                        result = { mem[0x8000].toUByte() }
+                        result = { bus.read(0x8000u) }
                     ) {
                         regs.a = it
                         regs.de = 0x8000u
@@ -534,6 +534,14 @@ class ProcessorTest : FunSpec({
                         regs.de = 0x8000u
                         mem[0x8000] = it.toByte()
                         mem.asm { LD(A, !DE) }
+                    },
+                    "LD (NN), A" to TestCase(
+                        cycles = 13,
+                        size = 3,
+                        result = { bus.read(0x8000u) },
+                    ) {
+                        regs.a = it
+                        mem.asm { LD(!0x8000u, A) }
                     },
                 )
             ) { (cycles, size, result, prepare) -> behavesLike { value: UByte, flags ->
