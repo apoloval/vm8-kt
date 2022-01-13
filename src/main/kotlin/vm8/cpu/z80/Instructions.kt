@@ -326,7 +326,7 @@ data class Or8(val dst: DestOp8, val src: SrcOp8, val cycles: Int, val size: UBy
  */
 data class Pop(val dst: DestOp16, val cycles: Int, val size: UByte) : Inst {
     override suspend fun Processor.exec(): Int {
-        val word = bus.readWord(regs.sp)
+        val word = bus.memReadWord(regs.sp)
         store16(dst, word)
         regs.sp = regs.sp.increment(2u)
         regs.pc = regs.pc.increment(size)
@@ -340,7 +340,7 @@ data class Pop(val dst: DestOp16, val cycles: Int, val size: UByte) : Inst {
 data class Ret(val pred: FlagsPredicate, val jcycles: Int, val njcycles: Int, val size: UByte) : Inst {
     override suspend fun Processor.exec(): Int {
         return if (pred.evaluate(regs.f)) {
-            regs.pc = bus.readWord(regs.sp)
+            regs.pc = bus.memReadWord(regs.sp)
             regs.sp = regs.sp.increment(2u)
             jcycles
         } else {

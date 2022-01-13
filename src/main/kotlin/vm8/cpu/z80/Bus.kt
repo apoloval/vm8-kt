@@ -8,21 +8,31 @@ typealias Addr = UShort
  * A bus where the Z80 processor is connected to.
  */
 interface Bus {
-    // Read a datum at given address from the bus
-    suspend fun read(addr: Addr): UByte
+    /**
+     * Read a byte at given address from the memory using the system bus.
+     */
+    suspend fun memReadByte(addr: Addr): UByte
 
-    // write a datum at given address to the bus
-    suspend fun write(addr: Addr, v: UByte)
+    /**
+     * Write a byte at given address to the memory using the system bus.
+     */
+    suspend fun memWriteByte(addr: Addr, v: UByte)
 
-    suspend fun readWord(addr: Addr): UShort = ByteOrder.LITTLE_ENDIAN.decode(
-        read(addr), 
-        read(addr.inc()),
+    /**
+     * Read a word at given address from the memory using the system bus.
+     */
+    suspend fun memReadWord(addr: Addr): UShort = ByteOrder.LITTLE_ENDIAN.decode(
+        memReadByte(addr),
+        memReadByte(addr.inc()),
     )
 
-    suspend fun writeWord(addr: Addr, v: UShort) {
+    /**
+     * Write a word at given address to the memory using the system bus.
+     */
+    suspend fun memWriteWord(addr: Addr, v: UShort) {
         val (v0, v1) = ByteOrder.LITTLE_ENDIAN.encode(v)
-        write(addr, v0)
-        write(addr.inc(), v1)
+        memWriteByte(addr, v0)
+        memWriteByte(addr.inc(), v1)
     }
 }
 
@@ -30,8 +40,8 @@ interface Bus {
  * A bus that is disconnected from the system.
  */
 object DisconnectedBus : Bus {
-    override suspend fun read(addr: Addr): UByte = 0xFFu
-    override suspend fun write(addr: Addr, v: UByte) {}    
+    override suspend fun memReadByte(addr: Addr): UByte = 0xFFu
+    override suspend fun memWriteByte(addr: Addr, v: UByte) {}
 }
 
 /**
@@ -40,7 +50,7 @@ object DisconnectedBus : Bus {
 class MinimalSystem : Bus {
     val memory = ByteArray(64*1024)
 
-    override suspend fun read(addr: Addr): UByte = memory[addr.toInt()].toUByte()
+    override suspend fun memReadByte(addr: Addr): UByte = memory[addr.toInt()].toUByte()
 
-    override suspend fun write(addr: Addr, v: UByte) { memory[addr.toInt()] = v.toByte() }
+    override suspend fun memWriteByte(addr: Addr, v: UByte) { memory[addr.toInt()] = v.toByte() }
 }

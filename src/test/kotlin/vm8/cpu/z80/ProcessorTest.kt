@@ -130,7 +130,7 @@ class ProcessorTest : FunSpec({
                 ) { a, b ->
                     regs.hl = 0x8000u
                     regs.a = a
-                    bus.write(0x8000u, b)
+                    bus.memWriteByte(0x8000u, b)
                     mem.asm { ADC(A, !HL) }
                 },
             )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UByte, b: UByte, prevFlags ->
@@ -237,7 +237,7 @@ class ProcessorTest : FunSpec({
                 ) { a, b ->
                     regs.hl = 0x8000u
                     regs.a = a
-                    bus.write(0x8000u, b)
+                    bus.memWriteByte(0x8000u, b)
                     mem.asm { ADD(A, !HL) }
                 },
             )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UByte, b: UByte, _ ->
@@ -405,7 +405,7 @@ class ProcessorTest : FunSpec({
                 ) { a, b ->
                     regs.hl = 0x8000u
                     regs.a = a
-                    bus.write(0x8000u, b)
+                    bus.memWriteByte(0x8000u, b)
                     mem.asm { AND(!HL) }
                 },
             )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UByte, b: UByte, _ ->
@@ -498,7 +498,7 @@ class ProcessorTest : FunSpec({
                 ) { a, b ->
                     regs.hl = 0x8000u
                     regs.a = a
-                    bus.write(0x8000u, b)
+                    bus.memWriteByte(0x8000u, b)
                     mem.asm { CP(!HL) }
                 },
             )) { (cycles, size, sameOperand, prepare) -> behavesLike { a: UByte, b: UByte, _ ->
@@ -636,10 +636,10 @@ class ProcessorTest : FunSpec({
                     "DEC (HL)" to TestCase(
                         cycles = 11,
                         size = 1,
-                        result = { bus.read(0x8000u) },
+                        result = { bus.memReadByte(0x8000u) },
                     ) {
                         regs.hl = 0x8000u
-                        bus.write(0x8000u, it)
+                        bus.memWriteByte(0x8000u, it)
                         mem.asm { DEC(!HL) }
                     },
                 )
@@ -782,9 +782,9 @@ class ProcessorTest : FunSpec({
                     "INC (HL)" to TestCase(
                         cycles = 11,
                         size = 1,
-                        result = { bus.read(0x8000u) }
+                        result = { bus.memReadByte(0x8000u) }
                     ) {
-                        bus.write(0x8000u, it)
+                        bus.memWriteByte(0x8000u, it)
                         regs.hl = 0x8000u
                         mem.asm { INC(!HL) }
                     },
@@ -939,7 +939,7 @@ class ProcessorTest : FunSpec({
                 ) { a, b ->
                     regs.hl = 0x8000u
                     regs.a = a
-                    bus.write(0x8000u, b)
+                    bus.memWriteByte(0x8000u, b)
                     mem.asm { OR(!HL) }
                 },
             )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UByte, b: UByte, _ ->
@@ -1040,7 +1040,7 @@ class ProcessorTest : FunSpec({
                 ) { a, b ->
                     regs.hl = 0x8000u
                     regs.a = a
-                    bus.write(0x8000u, b)
+                    bus.memWriteByte(0x8000u, b)
                     mem.asm { SBC(!HL) }
                 },
             )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UByte, b: UByte, prevFlags ->
@@ -1147,7 +1147,7 @@ class ProcessorTest : FunSpec({
                 ) { a, b ->
                     regs.hl = 0x8000u
                     regs.a = a
-                    bus.write(0x8000u, b)
+                    bus.memWriteByte(0x8000u, b)
                     mem.asm { SUB(!HL) }
                 },
             )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UByte, b: UByte, _ ->
@@ -1250,7 +1250,7 @@ class ProcessorTest : FunSpec({
                 ) { a, b ->
                     regs.hl = 0x8000u
                     regs.a = a
-                    bus.write(0x8000u, b)
+                    bus.memWriteByte(0x8000u, b)
                     mem.asm { XOR(!HL) }
                 },
             )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UByte, b: UByte, _ ->
@@ -1395,47 +1395,47 @@ class ProcessorTest : FunSpec({
             withData(mapOf(
                 "RET" to TestCase(jcycles = 10, cond = { true }) {
                     regs.sp = 0xFFFEu
-                    bus.writeWord(0xFFFEu, 0x8000u)
+                    bus.memWriteWord(0xFFFEu, 0x8000u)
                     mem.asm { RET }
                 },
                 "RET NC" to TestCase(jcycles = 11, cond = { !regs.f.bit(0) }) {
                     regs.sp = 0xFFFEu
-                    bus.writeWord(0xFFFEu, 0x8000u)
+                    bus.memWriteWord(0xFFFEu, 0x8000u)
                     mem.asm { RET(NC) }
                 },
                 "RET C" to TestCase(jcycles = 11, cond = { regs.f.bit(0) }) {
                     regs.sp = 0xFFFEu
-                    bus.writeWord(0xFFFEu, 0x8000u)
+                    bus.memWriteWord(0xFFFEu, 0x8000u)
                     mem.asm { RET(C) }
                 },
                 "RET PO" to TestCase(jcycles = 11, cond = { !regs.f.bit(2) }) {
                     regs.sp = 0xFFFEu
-                    bus.writeWord(0xFFFEu, 0x8000u)
+                    bus.memWriteWord(0xFFFEu, 0x8000u)
                     mem.asm { RET(PO) }
                 },
                 "RET PE" to TestCase(jcycles = 11, cond = { regs.f.bit(2) }) {
                     regs.sp = 0xFFFEu
-                    bus.writeWord(0xFFFEu, 0x8000u)
+                    bus.memWriteWord(0xFFFEu, 0x8000u)
                     mem.asm { RET(PE) }
                 },
                 "RET NZ" to TestCase(jcycles = 11, cond = { !regs.f.bit(6) }) {
                     regs.sp = 0xFFFEu
-                    bus.writeWord(0xFFFEu, 0x8000u)
+                    bus.memWriteWord(0xFFFEu, 0x8000u)
                     mem.asm { RET(NZ) }
                 },
                 "RET Z" to TestCase(jcycles = 11, cond = { regs.f.bit(6) }) {
                     regs.sp = 0xFFFEu
-                    bus.writeWord(0xFFFEu, 0x8000u)
+                    bus.memWriteWord(0xFFFEu, 0x8000u)
                     mem.asm { RET(Z) }
                 },
                 "RET P" to TestCase(jcycles = 11, cond = { !regs.f.bit(7) }) {
                     regs.sp = 0xFFFEu
-                    bus.writeWord(0xFFFEu, 0x8000u)
+                    bus.memWriteWord(0xFFFEu, 0x8000u)
                     mem.asm { RET(P) }
                 },
                 "RET M" to TestCase(jcycles = 11, cond = { regs.f.bit(7) }) {
                     regs.sp = 0xFFFEu
-                    bus.writeWord(0xFFFEu, 0x8000u)
+                    bus.memWriteWord(0xFFFEu, 0x8000u)
                     mem.asm { RET(M) }
                 },
             )) { (jcycles, cond, prepare) -> behavesLike { n: Byte, prevFlags ->
@@ -1588,7 +1588,7 @@ class ProcessorTest : FunSpec({
                         result = { regs.a })
                     {
                         regs.hl = 0x8000u
-                        bus.write(0x8000u, it)
+                        bus.memWriteByte(0x8000u, it)
                         mem.asm { LD(A, !HL) }
                     },
                     "LD B, A" to TestCase(
@@ -1653,7 +1653,7 @@ class ProcessorTest : FunSpec({
                         result = { regs.b })
                     {
                         regs.hl = 0x8000u
-                        bus.write(0x8000u, it)
+                        bus.memWriteByte(0x8000u, it)
                         mem.asm { LD(B, !HL) }
                     },
                     "LD C, A" to TestCase(
@@ -1718,7 +1718,7 @@ class ProcessorTest : FunSpec({
                         result = { regs.c })
                     {
                         regs.hl = 0x8000u
-                        bus.write(0x8000u, it)
+                        bus.memWriteByte(0x8000u, it)
                         mem.asm { LD(C, !HL) }
                     },
                     "LD D, A" to TestCase(
@@ -1783,7 +1783,7 @@ class ProcessorTest : FunSpec({
                         result = { regs.d })
                     {
                         regs.hl = 0x8000u
-                        bus.write(0x8000u, it)
+                        bus.memWriteByte(0x8000u, it)
                         mem.asm { LD(D, !HL) }
                     },
                     "LD E, A" to TestCase(
@@ -1848,7 +1848,7 @@ class ProcessorTest : FunSpec({
                         result = { regs.e })
                     {
                         regs.hl = 0x8000u
-                        bus.write(0x8000u, it)
+                        bus.memWriteByte(0x8000u, it)
                         mem.asm { LD(E, !HL) }
                     },
                     "LD H, A" to TestCase(
@@ -1913,7 +1913,7 @@ class ProcessorTest : FunSpec({
                         result = { regs.h })
                     {
                         regs.hl = 0x8000u
-                        bus.write(0x8000u, it)
+                        bus.memWriteByte(0x8000u, it)
                         mem.asm { LD(H, !HL) }
                     },
                     "LD L, A" to TestCase(
@@ -1978,13 +1978,13 @@ class ProcessorTest : FunSpec({
                         result = { regs.l })
                     {
                         regs.hl = 0x8000u
-                        bus.write(0x8000u, it)
+                        bus.memWriteByte(0x8000u, it)
                         mem.asm { LD(L, !HL) }
                     },
                     "LD (BC), A" to TestCase(
                         cycles = 7,
                         size = 1,
-                        result = { bus.read(0x8000u) }
+                        result = { bus.memReadByte(0x8000u) }
                     ) {
                         regs.a = it
                         regs.bc = 0x8000u
@@ -1993,7 +1993,7 @@ class ProcessorTest : FunSpec({
                     "LD (DE), A" to TestCase(
                         cycles = 7,
                         size = 1,
-                        result = { bus.read(0x8000u) }
+                        result = { bus.memReadByte(0x8000u) }
                     ) {
                         regs.a = it
                         regs.de = 0x8000u
@@ -2028,7 +2028,7 @@ class ProcessorTest : FunSpec({
                     "LD (NN), A" to TestCase(
                         cycles = 13,
                         size = 3,
-                        result = { bus.read(0x8000u) },
+                        result = { bus.memReadByte(0x8000u) },
                     ) {
                         regs.a = it
                         mem.asm { LD(!0x8000u, A) }
@@ -2036,7 +2036,7 @@ class ProcessorTest : FunSpec({
                     "LD (HL), N" to TestCase(
                         cycles = 10,
                         size = 2,
-                        result = { bus.read(0x8000u) },
+                        result = { bus.memReadByte(0x8000u) },
                     ) {
                         regs.hl = 0x8000u
                         mem.asm { LD(!HL, it) }
@@ -2044,7 +2044,7 @@ class ProcessorTest : FunSpec({
                     "LD (HL), A" to TestCase(
                         cycles = 7,
                         size = 1,
-                        result = { bus.read(0x8000u) })
+                        result = { bus.memReadByte(0x8000u) })
                     {
                         regs.a = it
                         regs.hl = 0x8000u
@@ -2053,7 +2053,7 @@ class ProcessorTest : FunSpec({
                     "LD (HL), B" to TestCase(
                         cycles = 7,
                         size = 1,
-                        result = { bus.read(0x8000u) })
+                        result = { bus.memReadByte(0x8000u) })
                     {
                         regs.b = it
                         regs.hl = 0x8000u
@@ -2062,7 +2062,7 @@ class ProcessorTest : FunSpec({
                     "LD (HL), C" to TestCase(
                         cycles = 7,
                         size = 1,
-                        result = { bus.read(0x8000u) })
+                        result = { bus.memReadByte(0x8000u) })
                     {
                         regs.c = it
                         regs.hl = 0x8000u
@@ -2071,7 +2071,7 @@ class ProcessorTest : FunSpec({
                     "LD (HL), D" to TestCase(
                         cycles = 7,
                         size = 1,
-                        result = { bus.read(0x8000u) })
+                        result = { bus.memReadByte(0x8000u) })
                     {
                         regs.d = it
                         regs.hl = 0x8000u
@@ -2080,7 +2080,7 @@ class ProcessorTest : FunSpec({
                     "LD (HL), E" to TestCase(
                         cycles = 7,
                         size = 1,
-                        result = { bus.read(0x8000u) })
+                        result = { bus.memReadByte(0x8000u) })
                     {
                         regs.e = it
                         regs.hl = 0x8000u
@@ -2089,7 +2089,7 @@ class ProcessorTest : FunSpec({
                     "LD (HL), H" to TestCase(
                         cycles = 7,
                         size = 1,
-                        result = { bus.read(0x8080u.toUShort().setHigh(it)) })
+                        result = { bus.memReadByte(0x8080u.toUShort().setHigh(it)) })
                     {
                         regs.hl = 0x8080u
                         regs.h = it
@@ -2098,7 +2098,7 @@ class ProcessorTest : FunSpec({
                     "LD (HL), L" to TestCase(
                         cycles = 7,
                         size = 1,
-                        result = { bus.read(0x8080u.toUShort().setLow(it)) })
+                        result = { bus.memReadByte(0x8080u.toUShort().setLow(it)) })
                     {
                         regs.hl = 0x8080u
                         regs.l = it
@@ -2155,7 +2155,7 @@ class ProcessorTest : FunSpec({
                     "LD (NN), HL" to TestCase(
                         cycles = 16,
                         size = 3,
-                        result = { bus.readWord(0x8000u) },
+                        result = { bus.memReadWord(0x8000u) },
                     ) {
                         regs.hl = it
                         mem.asm {
@@ -2167,7 +2167,7 @@ class ProcessorTest : FunSpec({
                         size = 3,
                         result = { regs.hl },
                     ) {
-                        bus.writeWord(0x8000u, it)
+                        bus.memWriteWord(0x8000u, it)
                         mem.asm {
                             LD(HL, !0x8000u.toUShort())
                         }
@@ -2209,7 +2209,7 @@ class ProcessorTest : FunSpec({
                         result = { regs.bc },
                     ) {
                         regs.sp = 0xFFFEu
-                        bus.writeWord(0xFFFEu, it)
+                        bus.memWriteWord(0xFFFEu, it)
                         mem.asm { POP (BC) }
                     },
                     "POP DE" to TestCase(
@@ -2218,7 +2218,7 @@ class ProcessorTest : FunSpec({
                         result = { regs.de },
                     ) {
                         regs.sp = 0xFFFEu
-                        bus.writeWord(0xFFFEu, it)
+                        bus.memWriteWord(0xFFFEu, it)
                         mem.asm { POP (DE) }
                     },
                     "POP HL" to TestCase(
@@ -2227,7 +2227,7 @@ class ProcessorTest : FunSpec({
                         result = { regs.hl },
                     ) {
                         regs.sp = 0xFFFEu
-                        bus.writeWord(0xFFFEu, it)
+                        bus.memWriteWord(0xFFFEu, it)
                         mem.asm { POP (HL) }
                     },
                     "POP AF" to TestCase(
@@ -2237,7 +2237,7 @@ class ProcessorTest : FunSpec({
                         result = { regs.af },
                     ) {
                         regs.sp = 0xFFFEu
-                        bus.writeWord(0xFFFEu, it)
+                        bus.memWriteWord(0xFFFEu, it)
                         mem.asm { POP (AF) }
                     },
                 )

@@ -48,13 +48,13 @@ enum class Reg8 : DestOp8 {
 }
 
 object Imm8 : SrcOp8 {
-    override suspend fun Processor.get(): UByte = bus.read(regs.pc.inc())
+    override suspend fun Processor.get(): UByte = bus.memReadByte(regs.pc.inc())
 }
 
 data class Ind8(val addr: SrcOp16) : DestOp8 {
-    override suspend fun Processor.get(): UByte = bus.read(load16(addr))
+    override suspend fun Processor.get(): UByte = bus.memReadByte(load16(addr))
 
-    override suspend fun Processor.set(v: UByte) { bus.write(load16(addr), v) }
+    override suspend fun Processor.set(v: UByte) { bus.memWriteByte(load16(addr), v) }
 }
 
 sealed interface SrcOp16 {
@@ -101,11 +101,11 @@ enum class Reg16 : DestOp16 {
 }
 
 object Imm16 : SrcOp16 {
-    override suspend fun Processor.get(): UShort = bus.readWord(regs.pc.inc())
+    override suspend fun Processor.get(): UShort = bus.memReadWord(regs.pc.inc())
 }
 
 data class Ind16(val addr: SrcOp16) : DestOp16 {
-    override suspend fun Processor.get(): UShort = bus.readWord(load16(addr))
+    override suspend fun Processor.get(): UShort = bus.memReadWord(load16(addr))
 
-    override suspend fun Processor.set(v: UShort) { bus.writeWord(load16(addr), v) }
+    override suspend fun Processor.set(v: UShort) { bus.memWriteWord(load16(addr), v) }
 }
