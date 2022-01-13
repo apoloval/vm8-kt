@@ -110,6 +110,9 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun LD(dst: E, src: UByte) { DB(OpCodes.`LD E, N`); DB(src) }
     fun LD(dst: H, src: UByte) { DB(OpCodes.`LD H, N`); DB(src) }
     fun LD(dst: L, src: UByte) { DB(OpCodes.`LD L, N`); DB(src) }
+    fun LD(dst: A, src: `(BC)`) { DB(OpCodes.`LD A, (BC)`) }
+    fun LD(dst: A, src: `(DE)`) { DB(OpCodes.`LD A, (DE)`) }
+    fun LD(dst: A, src: Indirect<UShort>) { DB(OpCodes.`LD A, (NN)`); DW(src.expr) }
     fun LD(dst: B, src: A) { DB(OpCodes.`LD B, A`) }
     fun LD(dst: B, src: B) { DB(OpCodes.`LD B, B`) }
     fun LD(dst: B, src: C) { DB(OpCodes.`LD B, C`) }
@@ -118,9 +121,14 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun LD(dst: B, src: H) { DB(OpCodes.`LD B, H`) }
     fun LD(dst: B, src: L) { DB(OpCodes.`LD B, L`) }
     fun LD(dst: B, src: `(HL)`) { DB(OpCodes.`LD B, (HL)`) }
-    fun LD(dst: A, src: `(BC)`) { DB(OpCodes.`LD A, (BC)`) }
-    fun LD(dst: A, src: `(DE)`) { DB(OpCodes.`LD A, (DE)`) }
-    fun LD(dst: A, src: Indirect<UShort>) { DB(OpCodes.`LD A, (NN)`); DW(src.expr) }
+    fun LD(dst: C, src: A) { DB(OpCodes.`LD C, A`) }
+    fun LD(dst: C, src: B) { DB(OpCodes.`LD C, B`) }
+    fun LD(dst: C, src: C) { DB(OpCodes.`LD C, C`) }
+    fun LD(dst: C, src: D) { DB(OpCodes.`LD C, D`) }
+    fun LD(dst: C, src: E) { DB(OpCodes.`LD C, E`) }
+    fun LD(dst: C, src: H) { DB(OpCodes.`LD C, H`) }
+    fun LD(dst: C, src: L) { DB(OpCodes.`LD C, L`) }
+    fun LD(dst: C, src: `(HL)`) { DB(OpCodes.`LD C, (HL)`) }
     fun LD(dst: `(BC)`, src: A) { DB(OpCodes.`LD (BC), A`) }
     fun LD(dst: `(DE)`, src: A) { DB(OpCodes.`LD (DE), A`) }
     fun LD(dst: `(HL)`, src: UByte) { DB(OpCodes.`LD (HL), N`); DB(src) }
