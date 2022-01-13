@@ -126,7 +126,7 @@ object OpCodes {
     const val `LD (HL), E`  : Int = 0x73
     const val `LD (HL), H`  : Int = 0x74
     const val `LD (HL), L`  : Int = 0x75
-
+    const val `HALT`        : Int = 0x76
     const val `LD (HL), A`  : Int = 0x77
 
     const val `JP NN`       : Int = 0xC3
@@ -267,6 +267,7 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
         OpCodes.`LD (HL), E` -> Ld8(Ind8(Reg16.HL), Reg8.E, cycles = 7, size = 1u)
         OpCodes.`LD (HL), H` -> Ld8(Ind8(Reg16.HL), Reg8.H, cycles = 7, size = 1u)
         OpCodes.`LD (HL), L` -> Ld8(Ind8(Reg16.HL), Reg8.L, cycles = 7, size = 1u)
+        OpCodes.`HALT` -> Halt
         OpCodes.`LD (HL), A` -> Ld8(Ind8(Reg16.HL), Reg8.A, cycles = 7, size = 1u)
 
         OpCodes.`JP NN` -> Jp(Imm16)

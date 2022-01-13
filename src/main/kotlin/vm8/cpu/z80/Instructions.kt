@@ -162,6 +162,15 @@ data class Ex(val a: DestOp16, val b: DestOp16, val cycles: Int, val size: UByte
 }
 
 /**
+ * HALT instruction
+ */
+object Halt : Inst {
+    override suspend fun Processor.exec(): Int {
+        return 4
+    }
+}
+
+/**
  * INC instruction for 8-bit operands
  */
 data class Inc8(val dest: DestOp8, val cycles: Int, val size: UByte) : Inst {

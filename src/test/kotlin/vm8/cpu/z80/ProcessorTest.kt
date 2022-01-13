@@ -11,6 +11,11 @@ import vm8.data.*
 class ProcessorTest : FunSpec({
 
     context("General purpose arithmetic and CPU control") {
+        test("HALT") { behavesLike { prevFlags ->
+            whenProcessorRuns { HALT }
+            expect(cycles = 4, pc = 0x0000u, flags = prevFlags)
+        }}
+
         test("NOP") { behavesLike { prevFlags ->
             whenProcessorRuns { NOP }
             expect(cycles = 4, pc = 0x0001u, flags = prevFlags)
