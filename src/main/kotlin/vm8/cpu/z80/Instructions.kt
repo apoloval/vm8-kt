@@ -254,24 +254,11 @@ data class Jp(val addr: SrcOp16) : Inst {
 }
 
 /**
- * Describes the condition for a jump action to take place.
- */
-enum class JumpCond {
-    ALWAYS {  override fun matches(flags: UByte) = true },
-    Z { override fun matches(flags: UByte) = Flag.Z.isSet(flags) },
-    NZ { override fun matches(flags: UByte) = Flag.Z.isReset(flags) },
-    C { override fun matches(flags: UByte) = Flag.C.isSet(flags) },
-    NC { override fun matches(flags: UByte) = Flag.C.isReset(flags) };
-
-    abstract fun matches(flags: UByte): Boolean
-}
-
-/**
  * JR instruction
  */
-data class Jr(val cond: JumpCond, val relj: SrcOp8, val jcycles: Int, val njcycles: Int, val size: UByte) : Inst {
+data class Jr(val cond: FlagsPredicate, val relj: SrcOp8, val jcycles: Int, val njcycles: Int, val size: UByte) : Inst {
     override suspend fun Processor.exec(): Int {
-        return if (cond.matches(regs.f)) {
+        return if (cond.evaluate(regs.f)) {
             regs.pc = regs.pc.increment(load8(relj).toByte())
             jcycles
         } else {
@@ -331,7 +318,23 @@ data class Or8(val dst: DestOp8, val src: SrcOp8, val cycles: Int, val size: UBy
 }
 
 /**
- * RLA instruction
+ * RET instruction.
+ */
+data class Ret(val pred: FlagsPredicate, val jcycles: Int, val njcycles: Int, val size: UByte) : Inst {
+    override suspend fun Processor.exec(): Int {
+        return if (pred.evaluate(regs.f)) {
+            regs.pc = bus.readWord(regs.sp)
+            regs.sp = regs.sp.increment(2u)
+            jcycles
+        } else {
+            regs.pc = regs.pc.increment(size)
+            njcycles
+        }
+    }
+}
+
+/**
+ * RLA instruction.
  */
 data class Rla(val cycles: Int, val size: UByte) : Inst {
     override suspend fun Processor.exec(): Int {

@@ -32,6 +32,10 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     object NC
     object Z
     object NZ
+    object PE
+    object PO
+    object P
+    object M
 
     data class Indirect<T>(val expr: T)
 
@@ -244,6 +248,16 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun OR(src: H) = DB(OpCodes.`OR H`)
     fun OR(src: L) = DB(OpCodes.`OR L`)
     fun OR(src: `(HL)`) = DB(OpCodes.`OR (HL)`)
+
+    val RET: Unit get() { DB(OpCodes.`RET`) }
+    fun RET(cond: NZ) = DB(OpCodes.`RET NZ`)
+    fun RET(cond: Z) = DB(OpCodes.`RET Z`)
+    fun RET(cond: NC) = DB(OpCodes.`RET NC`)
+    fun RET(cond: C) = DB(OpCodes.`RET C`)
+    fun RET(cond: PE) = DB(OpCodes.`RET PE`)
+    fun RET(cond: PO) = DB(OpCodes.`RET PO`)
+    fun RET(cond: P) = DB(OpCodes.`RET P`)
+    fun RET(cond: M) = DB(OpCodes.`RET M`)
 
     val RLA: Unit get() { DB(OpCodes.RLA) }
 

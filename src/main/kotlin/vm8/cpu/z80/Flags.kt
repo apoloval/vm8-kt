@@ -49,6 +49,24 @@ enum class Flag(val mask: UByte) {
 }
 
 /**
+ * Describes a predicate on register flags.
+ */
+enum class FlagsPredicate {
+    ALWAYS {  override fun evaluate(flags: UByte) = true },
+    Z { override fun evaluate(flags: UByte) = Flag.Z.isSet(flags) },
+    NZ { override fun evaluate(flags: UByte) = Flag.Z.isReset(flags) },
+    C { override fun evaluate(flags: UByte) = Flag.C.isSet(flags) },
+    NC { override fun evaluate(flags: UByte) = Flag.C.isReset(flags) },
+    PE { override fun evaluate(flags: UByte) = Flag.P.isSet(flags) },
+    PO { override fun evaluate(flags: UByte) = Flag.P.isReset(flags) },
+    P { override fun evaluate(flags: UByte) = Flag.S.isSet(flags) },
+    M { override fun evaluate(flags: UByte) = Flag.S.isReset(flags) },
+    ;
+
+    abstract fun evaluate(flags: UByte): Boolean
+}
+
+/**
  * An accumulation of flag affections
  */
 class FlagsAffection(val set: UByte = 0u, val clear: UByte = 0u) {

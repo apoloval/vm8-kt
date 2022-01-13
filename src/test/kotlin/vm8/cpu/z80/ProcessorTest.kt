@@ -1338,6 +1338,72 @@ class ProcessorTest : FunSpec({
             }}
         }
 
+        context("Return") {
+            data class TestCase(
+                val jcycles: Int,
+                val cond: ProcessorBehavior.() -> Boolean,
+                val prepare: suspend ProcessorBehavior.(Byte) -> Unit,
+            )
+
+            withData(mapOf(
+                "RET" to TestCase(jcycles = 10, cond = { true }) {
+                    regs.sp = 0xFFFEu
+                    bus.writeWord(0xFFFEu, 0x8000u)
+                    mem.asm { RET }
+                },
+                "RET NC" to TestCase(jcycles = 11, cond = { !regs.f.bit(0) }) {
+                    regs.sp = 0xFFFEu
+                    bus.writeWord(0xFFFEu, 0x8000u)
+                    mem.asm { RET(NC) }
+                },
+                "RET C" to TestCase(jcycles = 11, cond = { regs.f.bit(0) }) {
+                    regs.sp = 0xFFFEu
+                    bus.writeWord(0xFFFEu, 0x8000u)
+                    mem.asm { RET(C) }
+                },
+                "RET PO" to TestCase(jcycles = 11, cond = { !regs.f.bit(2) }) {
+                    regs.sp = 0xFFFEu
+                    bus.writeWord(0xFFFEu, 0x8000u)
+                    mem.asm { RET(PO) }
+                },
+                "RET PE" to TestCase(jcycles = 11, cond = { regs.f.bit(2) }) {
+                    regs.sp = 0xFFFEu
+                    bus.writeWord(0xFFFEu, 0x8000u)
+                    mem.asm { RET(PE) }
+                },
+                "RET NZ" to TestCase(jcycles = 11, cond = { !regs.f.bit(6) }) {
+                    regs.sp = 0xFFFEu
+                    bus.writeWord(0xFFFEu, 0x8000u)
+                    mem.asm { RET(NZ) }
+                },
+                "RET Z" to TestCase(jcycles = 11, cond = { regs.f.bit(6) }) {
+                    regs.sp = 0xFFFEu
+                    bus.writeWord(0xFFFEu, 0x8000u)
+                    mem.asm { RET(Z) }
+                },
+                "RET P" to TestCase(jcycles = 11, cond = { !regs.f.bit(7) }) {
+                    regs.sp = 0xFFFEu
+                    bus.writeWord(0xFFFEu, 0x8000u)
+                    mem.asm { RET(M) }
+                },
+                "RET M" to TestCase(jcycles = 11, cond = { regs.f.bit(7) }) {
+                    regs.sp = 0xFFFEu
+                    bus.writeWord(0xFFFEu, 0x8000u)
+                    mem.asm { RET(P) }
+                },
+            )) { (jcycles, cond, prepare) -> behavesLike { n: Byte, prevFlags ->
+                prepare(n)
+                whenProcessorRuns()
+                if (cond()) {
+                    expect(cycles = jcycles, pc = 0x8000u, prevFlags)
+                    regs.sp shouldBe 0x0000u
+                } else {
+                    expect(cycles = 5, pc = 0x0001u, prevFlags)
+                    regs.sp shouldBe 0xFFFEu
+                }
+            }}
+        }
+
         test("DJNZ") { behavesLike { value: UByte, prevFlags ->
             given { regs.b = value }
             whenProcessorRuns { DJNZ(0x42) }
