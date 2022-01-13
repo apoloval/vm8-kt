@@ -19,6 +19,16 @@ interface Bus {
     suspend fun memWriteByte(addr: Addr, v: UByte)
 
     /**
+     * Read a byte at given port from the IO using the system bus.
+     */
+    suspend fun ioReadByte(port: UByte): UByte
+
+    /**
+     * Write a byte at given port to the IO using the system bus.
+     */
+    suspend fun ioWriteByte(port: UByte, v: UByte)
+
+    /**
      * Read a word at given address from the memory using the system bus.
      */
     suspend fun memReadWord(addr: Addr): UShort = ByteOrder.LITTLE_ENDIAN.decode(
@@ -42,6 +52,8 @@ interface Bus {
 object DisconnectedBus : Bus {
     override suspend fun memReadByte(addr: Addr): UByte = 0xFFu
     override suspend fun memWriteByte(addr: Addr, v: UByte) {}
+    override suspend fun ioReadByte(port: UByte): UByte = 0xFFu
+    override suspend fun ioWriteByte(port: UByte, v: UByte) {}
 }
 
 /**
@@ -49,8 +61,13 @@ object DisconnectedBus : Bus {
  */
 class MinimalSystem : Bus {
     val memory = ByteArray(64*1024)
+    val io = ByteArray(256)
 
     override suspend fun memReadByte(addr: Addr): UByte = memory[addr.toInt()].toUByte()
 
     override suspend fun memWriteByte(addr: Addr, v: UByte) { memory[addr.toInt()] = v.toByte() }
+
+    override suspend fun ioReadByte(port: UByte): UByte = io[port.toInt()].toUByte()
+
+    override suspend fun ioWriteByte(port: UByte, v: UByte) { io[port.toInt()] = v.toByte() }
 }

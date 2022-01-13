@@ -2,8 +2,8 @@ package vm8
 
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import vm8.cpu.z80.Addr
 import vm8.cpu.z80.Assembler.*
+import vm8.cpu.z80.MinimalSystem
 import vm8.cpu.z80.Processor
 import vm8.cpu.z80.asm
 import kotlin.system.measureTimeMillis
@@ -11,8 +11,8 @@ import kotlin.system.measureTimeMillis
 const val TOTAL_INST = 250_000_000
 
 fun main() {
-    val mem = ByteArray(64*1024)
-    mem.asm {
+    val sys = MinimalSystem()
+    sys.memory.asm {
         LABEL("begin")
         NOP
         INC(B)
@@ -22,11 +22,7 @@ fun main() {
         JP(+"begin")
     }
 
-    val bus = object : vm8.cpu.z80.Bus {
-        override suspend fun memReadByte(addr: Addr): UByte = mem[addr.toInt()].toUByte()
-        override suspend fun memWriteByte(addr: Addr, v: UByte) { mem[addr.toInt()] = v.toByte() }
-    }
-    val cpu = Processor(bus)
+    val cpu = Processor(sys)
 
     var cycles: Long = 0
     val elapsed = measureTimeMillis {
