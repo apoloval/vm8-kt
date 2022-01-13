@@ -227,6 +227,15 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     val RRCA: Unit get() { DB(OpCodes.RRCA) }
 
     val SCF: Unit get() { DB(OpCodes.SCF) }
+
+    fun SUB(src: A) = DB(OpCodes.`SUB A`)
+    fun SUB(src: B) = DB(OpCodes.`SUB B`)
+    fun SUB(src: C) = DB(OpCodes.`SUB C`)
+    fun SUB(src: D) = DB(OpCodes.`SUB D`)
+    fun SUB(src: E) = DB(OpCodes.`SUB E`)
+    fun SUB(src: H) = DB(OpCodes.`SUB H`)
+    fun SUB(src: L) = DB(OpCodes.`SUB L`)
+    fun SUB(src: `(HL)`) = DB(OpCodes.`SUB (HL)`)
 }
 
 fun ByteArray.asm(org: Int = 0, f: Assembler.() -> Unit): ByteArray {

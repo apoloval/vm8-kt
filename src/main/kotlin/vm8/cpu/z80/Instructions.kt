@@ -354,6 +354,24 @@ data class Scf(val cycles: Int, val size: UByte) : Inst {
 }
 
 /**
+ * SUB instruction for 8-bit operands.
+ */
+data class Sub8(val dst: DestOp8, val src: SrcOp8, val withCarry: Boolean, val cycles: Int, val size: UByte) : Inst {
+    override suspend fun Processor.exec(): Int {
+        val a = load8(dst)
+        var b = load8(src)
+        if (withCarry && Flag.C.isSet(regs.f)) {
+            b--
+        }
+        val c = (a - b).toUByte()
+        store8(dst, c)
+        apply(PrecomputedFlags.ofSub(a, b))
+        regs.pc = regs.pc.increment(size)
+        return cycles
+    }
+}
+
+/**
  * Illegal pseudo-instruction to refer to an illegal opcode.
  */
 object Illegal : Inst {

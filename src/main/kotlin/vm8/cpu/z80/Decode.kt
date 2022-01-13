@@ -154,6 +154,15 @@ object OpCodes {
     const val `ADC A, (HL)` : Int = 0x8E
     const val `ADC A, A`    : Int = 0x8F
 
+    const val `SUB B`       : Int = 0x90
+    const val `SUB C`       : Int = 0x91
+    const val `SUB D`       : Int = 0x92
+    const val `SUB E`       : Int = 0x93
+    const val `SUB H`       : Int = 0x94
+    const val `SUB L`       : Int = 0x95
+    const val `SUB (HL)`    : Int = 0x96
+    const val `SUB A`       : Int = 0x97
+
     const val `JP NN`       : Int = 0xC3
 }
 
@@ -320,6 +329,16 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
         OpCodes.`ADC A, L` -> Add8(Reg8.A, Reg8.L, withCarry = true, cycles = 4, size = 1u)
         OpCodes.`ADC A, (HL)` -> Add8(Reg8.A, Ind8(Reg16.HL), withCarry = true, cycles = 7, size = 1u)
         OpCodes.`ADC A, A` -> Add8(Reg8.A, Reg8.A, withCarry = true, cycles = 4, size = 1u)
+
+        // From 0x90 to 0x9F
+        OpCodes.`SUB B` -> Sub8(Reg8.A, Reg8.B, withCarry = false, cycles = 4, size = 1u)
+        OpCodes.`SUB C` -> Sub8(Reg8.A, Reg8.C, withCarry = false, cycles = 4, size = 1u)
+        OpCodes.`SUB D` -> Sub8(Reg8.A, Reg8.D, withCarry = false, cycles = 4, size = 1u)
+        OpCodes.`SUB E` -> Sub8(Reg8.A, Reg8.E, withCarry = false, cycles = 4, size = 1u)
+        OpCodes.`SUB H` -> Sub8(Reg8.A, Reg8.H, withCarry = false, cycles = 4, size = 1u)
+        OpCodes.`SUB L` -> Sub8(Reg8.A, Reg8.L, withCarry = false, cycles = 4, size = 1u)
+        OpCodes.`SUB (HL)` -> Sub8(Reg8.A, Ind8(Reg16.HL), withCarry = false, cycles = 7, size = 1u)
+        OpCodes.`SUB A` -> Sub8(Reg8.A, Reg8.A, withCarry = false, cycles = 4, size = 1u)
 
         OpCodes.`JP NN` -> Jp(Imm16)
         else -> Illegal

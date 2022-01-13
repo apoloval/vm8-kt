@@ -664,6 +664,110 @@ class ProcessorTest : FunSpec({
                 }
             }}
         }
+
+        context("SUB 8-bit") {
+            data class TestCase(
+                val cycles: Int,
+                val size: Int,
+                val sameOperand: Boolean = false,
+                val result: suspend ProcessorBehavior.() -> UByte,
+                val prepare: suspend ProcessorBehavior.(UByte, UByte) -> Unit,
+            )
+
+            withData(mapOf(
+                "SUB A" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    sameOperand = true,
+                    result = { regs.a },
+                ) { a, _ ->
+                    regs.a = a
+                    mem.asm { SUB(A) }
+                },
+                "SUB B" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.b = b
+                    mem.asm { SUB(B) }
+                },
+                "SUB C" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.c = b
+                    mem.asm { SUB(C) }
+                },
+                "SUB D" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.d = b
+                    mem.asm { SUB(D) }
+                },
+                "SUB E" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.e = b
+                    mem.asm { SUB(E) }
+                },
+                "SUB H" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.h = b
+                    mem.asm { SUB(H) }
+                },
+                "SUB L" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.l = b
+                    mem.asm { SUB(L) }
+                },
+                "SUB (HL)" to TestCase(
+                    cycles = 7,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.hl = 0x8000u
+                    regs.a = a
+                    bus.write(0x8000u, b)
+                    mem.asm { SUB(!HL) }
+                },
+            )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UByte, b: UByte, _ ->
+                prepare(a, b)
+                whenProcessorRuns()
+                expect(cycles, pc = size.toUShort()) {
+                    if (sameOperand) { result() shouldBe (a - a).toUByte() }
+                    else { result() shouldBe (a - b).toUByte() }
+
+                    expectFlags { flag -> when(flag) {
+                        Flag.C -> flagIsSetOn(flag, borrow(a, result()))
+                        Flag.N -> flagIsSet(flag)
+                        Flag.PV -> flagIsSetOn(flag, underflow(a, result()))
+                        Flag.H -> flagIsSetOn(flag, halfBorrow(a, result()))
+                        Flag.Z -> flagIsSetOn(flag, isZero(result()))
+                        Flag.S -> flagIsSetOn(flag, isNegative(result()))
+                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
+                    }}
+                }
+            }}
+        }
+
     }
 
     context("Rotate and shift") {
