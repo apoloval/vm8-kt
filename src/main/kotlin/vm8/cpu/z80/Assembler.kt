@@ -146,6 +146,14 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun INC(dst: SP) = DB(OpCodes.`INC SP`)
 
     fun JP(addr: UShort) { DB(OpCodes.`JP NN`); DW(addr) }
+    fun JP(cond: Z, addr: UShort) { DB(OpCodes.`JP Z, NN`); DW(addr) }
+    fun JP(cond: NZ, addr: UShort) { DB(OpCodes.`JP NZ, NN`); DW(addr) }
+    fun JP(cond: C, addr: UShort) { DB(OpCodes.`JP C, NN`); DW(addr) }
+    fun JP(cond: NC, addr: UShort) { DB(OpCodes.`JP NC, NN`); DW(addr) }
+    fun JP(cond: PE, addr: UShort) { DB(OpCodes.`JP PE, NN`); DW(addr) }
+    fun JP(cond: PO, addr: UShort) { DB(OpCodes.`JP PO, NN`); DW(addr) }
+    fun JP(cond: P, addr: UShort) { DB(OpCodes.`JP P, NN`); DW(addr) }
+    fun JP(cond: M, addr: UShort) { DB(OpCodes.`JP M, NN`); DW(addr) }
 
     fun JR(rel: Byte) { DB(OpCodes.`JR N`); DB(rel.toUByte()) }
     fun JR(cond: Z, n: Byte) { DB(OpCodes.`JR Z, N`); DB(n.toUByte()) }

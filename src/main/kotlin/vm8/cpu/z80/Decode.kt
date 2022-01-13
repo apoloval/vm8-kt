@@ -207,21 +207,29 @@ object OpCodes {
 
     const val `RET NZ`     : Int = 0xC0
     const val `POP BC`     : Int = 0xC1
+    const val `JP NZ, NN`  : Int = 0xC2
     const val `JP NN`      : Int = 0xC3
     const val `RET Z`      : Int = 0xC8
     const val `RET`        : Int = 0xC9
+    const val `JP Z, NN`   : Int = 0xCA
 
     const val `RET NC`     : Int = 0xD0
     const val `POP DE`     : Int = 0xD1
+    const val `JP NC, NN`  : Int = 0xD2
     const val `RET C`      : Int = 0xD8
+    const val `JP C, NN`   : Int = 0xDA
 
     const val `RET PO`     : Int = 0xE0
     const val `POP HL`     : Int = 0xE1
+    const val `JP PO, NN`  : Int = 0xE2
     const val `RET PE`     : Int = 0xE8
+    const val `JP PE, NN`  : Int = 0xEA
 
     const val `RET P`      : Int = 0xF0
     const val `POP AF`     : Int = 0xF1
+    const val `JP P, NN`   : Int = 0xF2
     const val `RET M`      : Int = 0xF8
+    const val `JP M, NN`   : Int = 0xFA
 }
 
 private val OPCODES_MAIN: Array<Inst> = Array(256) {
@@ -432,21 +440,29 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
 
         /* 0xC0 */ OpCodes.`RET NZ` -> Ret(FlagsPredicate.NZ, jcycles = 11, njcycles = 5, size = 1u)
         /* 0xC1 */ OpCodes.`POP BC` -> Pop(Reg16.BC, cycles = 10, size = 1u)
-        /* 0xC3 */ OpCodes.`JP NN` -> Jp(Imm16)
+        /* 0xC2 */ OpCodes.`JP NZ, NN` -> Jp(FlagsPredicate.NZ, Imm16, cycles = 10, size = 3u)
+        /* 0xC3 */ OpCodes.`JP NN` -> Jp(FlagsPredicate.ALWAYS, Imm16, cycles = 10, size = 3u)
         /* 0xC8 */ OpCodes.`RET Z` -> Ret(FlagsPredicate.Z, jcycles = 11, njcycles = 5, size = 1u)
         /* 0xC9 */ OpCodes.`RET` -> Ret(FlagsPredicate.ALWAYS, jcycles = 10, njcycles = 10, size = 1u)
+        /* 0xCA */ OpCodes.`JP Z, NN` -> Jp(FlagsPredicate.Z, Imm16, cycles = 10, size = 3u)
 
         /* 0xD0 */ OpCodes.`RET NC` -> Ret(FlagsPredicate.NC, jcycles = 11, njcycles = 5, size = 1u)
         /* 0xD1 */ OpCodes.`POP DE` -> Pop(Reg16.DE, cycles = 10, size = 1u)
+        /* 0xD2 */ OpCodes.`JP NC, NN` -> Jp(FlagsPredicate.NC, Imm16, cycles = 10, size = 3u)
         /* 0xD8 */ OpCodes.`RET C` -> Ret(FlagsPredicate.C, jcycles = 11, njcycles = 5, size = 1u)
+        /* 0xDA */ OpCodes.`JP C, NN` -> Jp(FlagsPredicate.C, Imm16, cycles = 10, size = 3u)
 
         /* 0xE0 */ OpCodes.`RET PO` -> Ret(FlagsPredicate.PO, jcycles = 11, njcycles = 5, size = 1u)
         /* 0xE1 */ OpCodes.`POP HL` -> Pop(Reg16.HL, cycles = 10, size = 1u)
+        /* 0xE2 */ OpCodes.`JP PO, NN` -> Jp(FlagsPredicate.PO, Imm16, cycles = 10, size = 3u)
         /* 0xE8 */ OpCodes.`RET PE` -> Ret(FlagsPredicate.PE, jcycles = 11, njcycles = 5, size = 1u)
+        /* 0xEA */ OpCodes.`JP PE, NN` -> Jp(FlagsPredicate.PE, Imm16, cycles = 10, size = 3u)
 
         /* 0xF0 */ OpCodes.`RET P` -> Ret(FlagsPredicate.P, jcycles = 11, njcycles = 5, size = 1u)
         /* 0xF1 */ OpCodes.`POP AF` -> Pop(Reg16.AF, cycles = 10, size = 1u)
+        /* 0xF2 */ OpCodes.`JP P, NN` -> Jp(FlagsPredicate.P, Imm16, cycles = 10, size = 3u)
         /* 0xF8 */ OpCodes.`RET M` -> Ret(FlagsPredicate.M, jcycles = 11, njcycles = 5, size = 1u)
+        /* 0xFA */ OpCodes.`JP M, NN` -> Jp(FlagsPredicate.M, Imm16, cycles = 10, size = 3u)
 
         else -> Illegal
     }

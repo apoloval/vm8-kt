@@ -59,8 +59,8 @@ enum class FlagsPredicate {
     NC { override fun evaluate(flags: UByte) = Flag.C.isReset(flags) },
     PE { override fun evaluate(flags: UByte) = Flag.P.isSet(flags) },
     PO { override fun evaluate(flags: UByte) = Flag.P.isReset(flags) },
-    P { override fun evaluate(flags: UByte) = Flag.S.isSet(flags) },
-    M { override fun evaluate(flags: UByte) = Flag.S.isReset(flags) },
+    P { override fun evaluate(flags: UByte) = Flag.S.isReset(flags) },
+    M { override fun evaluate(flags: UByte) = Flag.S.isSet(flags) },
     ;
 
     abstract fun evaluate(flags: UByte): Boolean

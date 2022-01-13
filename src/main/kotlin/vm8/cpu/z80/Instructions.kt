@@ -246,19 +246,23 @@ data class Inc16(val dest: DestOp16, val cycles: Int, val size: UByte) : Inst {
 /**
  * JP instruction.
  */
-data class Jp(val addr: SrcOp16) : Inst {
+data class Jp(val pred: FlagsPredicate, val addr: SrcOp16, val cycles: Int, val size: UByte) : Inst {
     override suspend fun Processor.exec(): Int {
-        regs.pc = load16(addr)
-        return 10
+        regs.pc = if (pred.evaluate(regs.f)) {
+            load16(addr)
+        } else {
+            regs.pc.increment(size)
+        }
+        return cycles
     }
 }
 
 /**
  * JR instruction
  */
-data class Jr(val cond: FlagsPredicate, val relj: SrcOp8, val jcycles: Int, val njcycles: Int, val size: UByte) : Inst {
+data class Jr(val pred: FlagsPredicate, val relj: SrcOp8, val jcycles: Int, val njcycles: Int, val size: UByte) : Inst {
     override suspend fun Processor.exec(): Int {
-        return if (cond.evaluate(regs.f)) {
+        return if (pred.evaluate(regs.f)) {
             regs.pc = regs.pc.increment(load8(relj).toByte())
             jcycles
         } else {

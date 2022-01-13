@@ -1305,6 +1305,53 @@ class ProcessorTest : FunSpec({
     }
 
     context("Jump, call and return") {
+        context("Absolute jump") {
+            data class TestCase(
+                val cycles: Int,
+                val size: Int,
+                val cond: ProcessorBehavior.() -> Boolean,
+                val prepare: ProcessorBehavior.(UShort) -> Unit,
+            )
+
+            withData(mapOf(
+                "JP NN" to TestCase(cycles = 10, size = 3, cond = { true }) {
+                    mem.asm { JP(it) }
+                },
+                "JP Z, NN" to TestCase(cycles = 10, size = 3, cond = { regs.f.bit(6) }) {
+                    mem.asm { JP(Z, it) }
+                },
+                "JP NZ, NN" to TestCase(cycles = 10, size = 3, cond = { !regs.f.bit(6) }) {
+                    mem.asm { JP(NZ, it) }
+                },
+                "JP C, NN" to TestCase(cycles = 10, size = 3, cond = { regs.f.bit(0) }) {
+                    mem.asm { JP(C, it) }
+                },
+                "JP NC, NN" to TestCase(cycles = 10, size = 3, cond = { !regs.f.bit(0) }) {
+                    mem.asm { JP(NC, it) }
+                },
+                "JP PE, NN" to TestCase(cycles = 10, size = 3, cond = { regs.f.bit(2) }) {
+                    mem.asm { JP(PE, it) }
+                },
+                "JP PO, NN" to TestCase(cycles = 10, size = 3, cond = { !regs.f.bit(2) }) {
+                    mem.asm { JP(PO, it) }
+                },
+                "JP P, NN" to TestCase(cycles = 10, size = 3, cond = { !regs.f.bit(7) }) {
+                    mem.asm { JP(P, it) }
+                },
+                "JP M, NN" to TestCase(cycles = 10, size = 3, cond = { regs.f.bit(7) }) {
+                    mem.asm { JP(M, it) }
+                },
+            )) { (cycles, size, cond, prepare) -> behavesLike { dest: UShort, prevFlags ->
+                prepare(dest)
+                whenProcessorRuns()
+                if (cond()) {
+                    expect(cycles, pc = dest, prevFlags)
+                } else {
+                    expect(cycles, pc = size.toUShort(), prevFlags)
+                }
+            }}
+        }
+
         context("Relative jump") {
             data class TestCase(
                 val cond: ProcessorBehavior.() -> Boolean,
@@ -1384,12 +1431,12 @@ class ProcessorTest : FunSpec({
                 "RET P" to TestCase(jcycles = 11, cond = { !regs.f.bit(7) }) {
                     regs.sp = 0xFFFEu
                     bus.writeWord(0xFFFEu, 0x8000u)
-                    mem.asm { RET(M) }
+                    mem.asm { RET(P) }
                 },
                 "RET M" to TestCase(jcycles = 11, cond = { regs.f.bit(7) }) {
                     regs.sp = 0xFFFEu
                     bus.writeWord(0xFFFEu, 0x8000u)
-                    mem.asm { RET(P) }
+                    mem.asm { RET(M) }
                 },
             )) { (jcycles, cond, prepare) -> behavesLike { n: Byte, prevFlags ->
                 prepare(n)
