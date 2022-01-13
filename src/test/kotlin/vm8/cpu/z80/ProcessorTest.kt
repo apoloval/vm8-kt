@@ -537,7 +537,7 @@ class ProcessorTest : FunSpec({
             data class TestCase(
                 val cycles: Int,
                 val size: Int,
-                val result: suspend ProcessorBehavior.() -> UByte,
+                val result: suspend ProcessorBehavior.(UByte) -> UByte,
                 val prepare: suspend ProcessorBehavior.(UByte) -> Unit,
             )
 
@@ -1042,12 +1042,75 @@ class ProcessorTest : FunSpec({
                         regs.hl = 0x8000u
                         mem.asm { LD(!HL, it) }
                     },
+                    "LD (HL), A" to TestCase(
+                        cycles = 7,
+                        size = 1,
+                        result = { bus.read(0x8000u) })
+                    {
+                        regs.a = it
+                        regs.hl = 0x8000u
+                        mem.asm { LD(!HL, A) }
+                    },
+                    "LD (HL), B" to TestCase(
+                        cycles = 7,
+                        size = 1,
+                        result = { bus.read(0x8000u) })
+                    {
+                        regs.b = it
+                        regs.hl = 0x8000u
+                        mem.asm { LD(!HL, B) }
+                    },
+                    "LD (HL), C" to TestCase(
+                        cycles = 7,
+                        size = 1,
+                        result = { bus.read(0x8000u) })
+                    {
+                        regs.c = it
+                        regs.hl = 0x8000u
+                        mem.asm { LD(!HL, C) }
+                    },
+                    "LD (HL), D" to TestCase(
+                        cycles = 7,
+                        size = 1,
+                        result = { bus.read(0x8000u) })
+                    {
+                        regs.d = it
+                        regs.hl = 0x8000u
+                        mem.asm { LD(!HL, D) }
+                    },
+                    "LD (HL), E" to TestCase(
+                        cycles = 7,
+                        size = 1,
+                        result = { bus.read(0x8000u) })
+                    {
+                        regs.e = it
+                        regs.hl = 0x8000u
+                        mem.asm { LD(!HL, E) }
+                    },
+                    "LD (HL), H" to TestCase(
+                        cycles = 7,
+                        size = 1,
+                        result = { bus.read(0x8080u.toUShort().setHigh(it)) })
+                    {
+                        regs.hl = 0x8080u
+                        regs.h = it
+                        mem.asm { LD(!HL, H) }
+                    },
+                    "LD (HL), L" to TestCase(
+                        cycles = 7,
+                        size = 1,
+                        result = { bus.read(0x8080u.toUShort().setLow(it)) })
+                    {
+                        regs.hl = 0x8080u
+                        regs.l = it
+                        mem.asm { LD(!HL, L) }
+                    },
                 )
             ) { (cycles, size, result, prepare) -> behavesLike { value: UByte, prevFlags ->
                 prepare(value)
                 whenProcessorRuns()
                 expect(cycles, pc = size.toUShort(), prevFlags) {
-                    result() shouldBe value
+                    result(value) shouldBe value
                 }
             } }
         }
