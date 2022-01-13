@@ -216,6 +216,7 @@ object OpCodes {
     const val `RET NC`     : Int = 0xD0
     const val `POP DE`     : Int = 0xD1
     const val `JP NC, NN`  : Int = 0xD2
+    const val `OUT (N), A` : Int = 0xD3
     const val `RET C`      : Int = 0xD8
     const val `JP C, NN`   : Int = 0xDA
 
@@ -449,6 +450,7 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
         /* 0xD0 */ OpCodes.`RET NC` -> Ret(FlagsPredicate.NC, jcycles = 11, njcycles = 5, size = 1u)
         /* 0xD1 */ OpCodes.`POP DE` -> Pop(Reg16.DE, cycles = 10, size = 1u)
         /* 0xD2 */ OpCodes.`JP NC, NN` -> Jp(FlagsPredicate.NC, Imm16, cycles = 10, size = 3u)
+        /* 0xD3 */ OpCodes.`OUT (N), A` -> Out(Imm8, Reg8.A, cycles = 11, size = 2u)
         /* 0xD8 */ OpCodes.`RET C` -> Ret(FlagsPredicate.C, jcycles = 11, njcycles = 5, size = 1u)
         /* 0xDA */ OpCodes.`JP C, NN` -> Jp(FlagsPredicate.C, Imm16, cycles = 10, size = 3u)
 

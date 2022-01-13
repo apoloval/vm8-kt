@@ -39,6 +39,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
 
     data class Indirect<T>(val expr: T)
 
+    operator fun UByte.not() = Indirect(this)
     operator fun UShort.not() = Indirect(this)
     operator fun UInt.not() = this.toUShort().not()
 
@@ -256,6 +257,8 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun OR(src: H) = DB(OpCodes.`OR H`)
     fun OR(src: L) = DB(OpCodes.`OR L`)
     fun OR(src: `(HL)`) = DB(OpCodes.`OR (HL)`)
+
+    fun OUT(port: Indirect<UByte>, src: A) { DB(OpCodes.`OUT (N), A`); DB(port.expr) }
 
     fun POP(dst: BC) = DB(OpCodes.`POP BC`)
     fun POP(dst: DE) = DB(OpCodes.`POP DE`)

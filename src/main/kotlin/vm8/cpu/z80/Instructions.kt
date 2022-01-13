@@ -322,6 +322,17 @@ data class Or8(val dst: DestOp8, val src: SrcOp8, val cycles: Int, val size: UBy
 }
 
 /**
+ * OUT instruction.
+ */
+data class Out(val port: SrcOp8, val src: SrcOp8, val cycles: Int, val size: UByte) : Inst {
+    override suspend fun Processor.exec(): Int {
+        bus.ioWriteByte(load8(port), load8(src))
+        regs.pc = regs.pc.increment(size)
+        return cycles
+    }
+}
+
+/**
  * POP instruction.
  */
 data class Pop(val dst: DestOp16, val cycles: Int, val size: UByte) : Inst {

@@ -2254,5 +2254,29 @@ class ProcessorTest : FunSpec({
             } }
         }
     }
+
+    context("Input and output") {
+        context("Output") {
+            data class TestCase(
+                val cycles: Int,
+                val size: Int,
+                val result: suspend ProcessorBehavior.() -> UByte,
+                val prepare: ProcessorBehavior.(UByte) -> Unit
+            )
+
+            withData(mapOf(
+                "OUT (N), A" to TestCase(cycles = 11, size = 2, result = { bus.ioReadByte(0x42u) }) {
+                    regs.a = it
+                    mem.asm { OUT(!0x42u.toUByte(), A) }
+                },
+            )) { (cycles, size, result, prepare) -> behavesLike { value: UByte, prevFlags ->
+                prepare(value)
+                whenProcessorRuns()
+                expect(cycles, pc = size.toUShort(), prevFlags) {
+                    result() shouldBe value
+                }
+            }}
+        }
+    }
 })
 
