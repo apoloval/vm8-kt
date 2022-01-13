@@ -361,7 +361,7 @@ data class Sub8(val dst: DestOp8, val src: SrcOp8, val withCarry: Boolean, val c
         val a = load8(dst)
         var b = load8(src)
         if (withCarry && Flag.C.isSet(regs.f)) {
-            b--
+            b++
         }
         val c = (a - b).toUByte()
         store8(dst, c)

@@ -228,6 +228,15 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
 
     val SCF: Unit get() { DB(OpCodes.SCF) }
 
+    fun SBC(src: A) = DB(OpCodes.`SBC A`)
+    fun SBC(src: B) = DB(OpCodes.`SBC B`)
+    fun SBC(src: C) = DB(OpCodes.`SBC C`)
+    fun SBC(src: D) = DB(OpCodes.`SBC D`)
+    fun SBC(src: E) = DB(OpCodes.`SBC E`)
+    fun SBC(src: H) = DB(OpCodes.`SBC H`)
+    fun SBC(src: L) = DB(OpCodes.`SBC L`)
+    fun SBC(src: `(HL)`) = DB(OpCodes.`SBC (HL)`)
+
     fun SUB(src: A) = DB(OpCodes.`SUB A`)
     fun SUB(src: B) = DB(OpCodes.`SUB B`)
     fun SUB(src: C) = DB(OpCodes.`SUB C`)

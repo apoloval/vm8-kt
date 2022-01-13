@@ -665,6 +665,113 @@ class ProcessorTest : FunSpec({
             }}
         }
 
+        context("SBC 8-bit") {
+            data class TestCase(
+                val cycles: Int,
+                val size: Int,
+                val sameOperand: Boolean = false,
+                val result: suspend ProcessorBehavior.() -> UByte,
+                val prepare: suspend ProcessorBehavior.(UByte, UByte) -> Unit,
+            )
+
+            withData(mapOf(
+                "SBC A" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    sameOperand = true,
+                    result = { regs.a },
+                ) { a, _ ->
+                    regs.a = a
+                    mem.asm { SBC(A) }
+                },
+                "SBC B" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.b = b
+                    mem.asm { SBC(B) }
+                },
+                "SBC C" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.c = b
+                    mem.asm { SBC(C) }
+                },
+                "SBC D" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.d = b
+                    mem.asm { SBC(D) }
+                },
+                "SBC E" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.e = b
+                    mem.asm { SBC(E) }
+                },
+                "SBC H" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.h = b
+                    mem.asm { SBC(H) }
+                },
+                "SBC L" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.l = b
+                    mem.asm { SBC(L) }
+                },
+                "SBC (HL)" to TestCase(
+                    cycles = 7,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.hl = 0x8000u
+                    regs.a = a
+                    bus.write(0x8000u, b)
+                    mem.asm { SBC(!HL) }
+                },
+            )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UByte, b: UByte, prevFlags ->
+                prepare(a, b)
+                whenProcessorRuns()
+                expect(cycles, pc = size.toUShort()) {
+                    var expected = if (sameOperand) { (a - a).toUByte() } else { (a - b).toUByte() }
+                    if (Flag.C.isSet(prevFlags)) {
+                        expected--
+                    }
+
+                    result() shouldBe expected
+
+                    expectFlags { flag -> when(flag) {
+                        Flag.C -> flagIsSetOn(flag, borrow(a, result()))
+                        Flag.N -> flagIsSet(flag)
+                        Flag.PV -> flagIsSetOn(flag, underflow(a, result()))
+                        Flag.H -> flagIsSetOn(flag, halfBorrow(a, result()))
+                        Flag.Z -> flagIsSetOn(flag, isZero(result()))
+                        Flag.S -> flagIsSetOn(flag, isNegative(result()))
+                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
+                    }}
+                }
+            }}
+        }
+
         context("SUB 8-bit") {
             data class TestCase(
                 val cycles: Int,
