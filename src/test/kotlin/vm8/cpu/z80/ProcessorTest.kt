@@ -427,6 +427,98 @@ class ProcessorTest : FunSpec({
             }}
         }
 
+        context("CP") {
+            data class TestCase(
+                val cycles: Int,
+                val size: Int,
+                val sameOperand: Boolean = false,
+                val prepare: suspend ProcessorBehavior.(UByte, UByte) -> Unit,
+            )
+
+            withData(mapOf(
+                "CP A" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    sameOperand = true,
+                ) { a, _ ->
+                    regs.a = a
+                    mem.asm { CP(A) }
+                },
+                "CP B" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                ) { a, b ->
+                    regs.a = a
+                    regs.b = b
+                    mem.asm { CP(B) }
+                },
+                "CP C" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                ) { a, b ->
+                    regs.a = a
+                    regs.c = b
+                    mem.asm { CP(C) }
+                },
+                "CP D" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                ) { a, b ->
+                    regs.a = a
+                    regs.d = b
+                    mem.asm { CP(D) }
+                },
+                "CP E" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                ) { a, b ->
+                    regs.a = a
+                    regs.e = b
+                    mem.asm { CP(E) }
+                },
+                "CP H" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                ) { a, b ->
+                    regs.a = a
+                    regs.h = b
+                    mem.asm { CP(H) }
+                },
+                "CP L" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                ) { a, b ->
+                    regs.a = a
+                    regs.l = b
+                    mem.asm { CP(L) }
+                },
+                "CP (HL)" to TestCase(
+                    cycles = 7,
+                    size = 1,
+                ) { a, b ->
+                    regs.hl = 0x8000u
+                    regs.a = a
+                    bus.write(0x8000u, b)
+                    mem.asm { CP(!HL) }
+                },
+            )) { (cycles, size, sameOperand, prepare) -> behavesLike { a: UByte, b: UByte, _ ->
+                val result = if (sameOperand) 0u else (a - b).toUByte()
+                prepare(a, b)
+                whenProcessorRuns()
+                expect(cycles, pc = size.toUShort()) {
+                    expectFlags { flag -> when(flag) {
+                        Flag.C -> flagIsSetOn(flag, borrow(a, result))
+                        Flag.N -> flagIsSet(flag)
+                        Flag.PV -> flagIsSetOn(flag, underflow(a, result))
+                        Flag.H -> flagIsSetOn(flag, halfBorrow(a, result))
+                        Flag.Z -> flagIsSetOn(flag, isZero(result))
+                        Flag.S -> flagIsSetOn(flag, isNegative(result))
+                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, if (sameOperand) a else b)
+                    }}
+                }
+            }}
+        }
+
         test("CPL") { behavesLike { a: UByte, prevFlags ->
             given { regs.a = a }
             whenProcessorRuns { CPL }

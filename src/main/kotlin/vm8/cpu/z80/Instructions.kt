@@ -79,6 +79,19 @@ data class Ccf(val cycles: Int, val size: UByte) : Inst {
 }
 
 /**
+ * CP instruction for 8-bit operands.
+ */
+data class Cp8(val dst: DestOp8, val src: SrcOp8, val cycles: Int, val size: UByte) : Inst {
+    override suspend fun Processor.exec(): Int {
+        val a = load8(dst)
+        val b = load8(src)
+        apply(PrecomputedFlags.ofCp(a, b))
+        regs.pc = regs.pc.increment(size)
+        return cycles
+    }
+}
+
+/**
  * CPL instruction.
  */
 data class Cpl(val cycles: Int, val size: UByte) : Inst {

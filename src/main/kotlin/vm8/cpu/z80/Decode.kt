@@ -196,6 +196,14 @@ object OpCodes {
     const val `OR L`       : Int = 0xB5
     const val `OR (HL)`    : Int = 0xB6
     const val `OR A`       : Int = 0xB7
+    const val `CP B`       : Int = 0xB8
+    const val `CP C`       : Int = 0xB9
+    const val `CP D`       : Int = 0xBA
+    const val `CP E`       : Int = 0xBB
+    const val `CP H`       : Int = 0xBC
+    const val `CP L`       : Int = 0xBD
+    const val `CP (HL)`    : Int = 0xBE
+    const val `CP A`       : Int = 0xBF
 
     const val `JP NN`       : Int = 0xC3
 }
@@ -409,6 +417,14 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
         OpCodes.`OR L` -> Or8(Reg8.A, Reg8.L,  cycles = 4, size = 1u)
         OpCodes.`OR (HL)` -> Or8(Reg8.A, Ind8(Reg16.HL), cycles = 7, size = 1u)
         OpCodes.`OR A` -> Or8(Reg8.A, Reg8.A, cycles = 4, size = 1u)
+        OpCodes.`CP B` -> Cp8(Reg8.A, Reg8.B,  cycles = 4, size = 1u)
+        OpCodes.`CP C` -> Cp8(Reg8.A, Reg8.C,  cycles = 4, size = 1u)
+        OpCodes.`CP D` -> Cp8(Reg8.A, Reg8.D,  cycles = 4, size = 1u)
+        OpCodes.`CP E` -> Cp8(Reg8.A, Reg8.E,  cycles = 4, size = 1u)
+        OpCodes.`CP H` -> Cp8(Reg8.A, Reg8.H,  cycles = 4, size = 1u)
+        OpCodes.`CP L` -> Cp8(Reg8.A, Reg8.L,  cycles = 4, size = 1u)
+        OpCodes.`CP (HL)` -> Cp8(Reg8.A, Ind8(Reg16.HL), cycles = 7, size = 1u)
+        OpCodes.`CP A` -> Cp8(Reg8.A, Reg8.A, cycles = 4, size = 1u)
 
 
         OpCodes.`JP NN` -> Jp(Imm16)

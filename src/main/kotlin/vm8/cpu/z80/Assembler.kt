@@ -94,6 +94,15 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
 
     val CCF: Unit get() = DB(OpCodes.CCF)
 
+    fun CP(src: A) = DB(OpCodes.`CP A`)
+    fun CP(src: B) = DB(OpCodes.`CP B`)
+    fun CP(src: C) = DB(OpCodes.`CP C`)
+    fun CP(src: D) = DB(OpCodes.`CP D`)
+    fun CP(src: E) = DB(OpCodes.`CP E`)
+    fun CP(src: H) = DB(OpCodes.`CP H`)
+    fun CP(src: L) = DB(OpCodes.`CP L`)
+    fun CP(src: `(HL)`) = DB(OpCodes.`CP (HL)`)
+
     val CPL: Unit get() = DB(OpCodes.CPL)
 
     val DAA: Unit get() = DB(OpCodes.DAA)

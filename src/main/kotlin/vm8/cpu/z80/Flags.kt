@@ -139,6 +139,19 @@ object PrecomputedFlags {
         }
     }
 
+    // CP(a, b) flags
+    private val cp = Array(256) { a ->
+        Array(256) { b ->
+            val c = (a - b) and 0xFF
+            intrinsic[c] + Flag.N and
+                (Flag.H on borrowNibble(a, c)) and
+                (Flag.V on underflow(a, b, c)) and
+                (Flag.C on borrowByte(a, c)) and
+                (Flag.F3 on b.toUByte().bit(3)) and
+                (Flag.F5 on b.toUByte().bit(5))
+        }
+    }
+
     // INC(a) flags are ADD(a, 1) flags but C is not affected
     private val inc = Array(256) { add8[it][1] * Flag.C }
 
@@ -206,6 +219,11 @@ object PrecomputedFlags {
      * Get the flags resulting from subtracting two UBytes.
      */
     fun ofSub(a: UByte, b: UByte): FlagsAffection = sub[a.toInt()][b.toInt()]
+
+    /**
+     * Get the flags resulting from comparing two UBytes.
+     */
+    fun ofCp(a: UByte, b: UByte): FlagsAffection = cp[a.toInt()][b.toInt()]
 
     /**
      * Get the flags resulting from incrementing an UByte.
