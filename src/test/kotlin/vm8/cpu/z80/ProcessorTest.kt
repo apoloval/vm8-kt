@@ -2180,17 +2180,58 @@ class ProcessorTest : FunSpec({
             } }
         }
 
-        test("EX AF, AF'") { behavesLike {
-            given {
-                regs.af = 0xABCDu
-                regs.`af'` = 0x1234u
-            }
-            whenProcessorRuns { EX(AF, `AF'`) }
-            expect(cycles = 4, pc = 0x0001u) {
-                regs.af shouldBe 0x1234u
-                regs.`af'` shouldBe 0xABCDu
-            }
-        }}
+        context("Exchange") {
+            data class TestCase(
+                val cycles: Int,
+                val size: Int,
+                val affectsFlags: Boolean = false,
+                val result: suspend ProcessorBehavior.() -> Pair<UShort, UShort>,
+                val prepare: suspend ProcessorBehavior.(UShort, UShort) -> Unit,
+            )
+
+            withData(mapOf(
+                "EX AF, AF'" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    affectsFlags = true,
+                    result = { Pair(regs.af, regs.`af'`) }
+                ) { a, b ->
+                    regs.af = a
+                    regs.`af'` = b
+                    mem.asm { EX(AF, `AF'`) }
+                },
+                "EX (SP), HL'" to TestCase(
+                    cycles = 19,
+                    size = 1,
+                    result = { Pair(bus.memReadWord(0x8000u), regs.hl) }
+                ) { a, b ->
+                    regs.sp = 0x8000u
+                    bus.memWriteWord(0x8000u, a)
+                    regs.hl = b
+                    mem.asm { EX(!SP, HL) }
+                },
+                "EX DE, HL'" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { Pair(regs.de, regs.hl) }
+                ) { a, b ->
+                    regs.de = a
+                    regs.hl = b
+                    mem.asm { EX(DE, HL) }
+                },
+            )) { (cycles, size, affectsFlags, result, prepare) -> behavesLike { a: UShort, b: UShort, prevFlags ->
+                prepare(a, b)
+                whenProcessorRuns()
+                expect(cycles, pc = size.toUShort()) {
+                    if (!affectsFlags) {
+                        regs.f shouldBe prevFlags
+                    }
+                    val (resA, resB) = result()
+                    resA shouldBe b
+                    resB shouldBe a
+                }
+            }}
+        }
 
         context("POP") {
             data class TestCase(

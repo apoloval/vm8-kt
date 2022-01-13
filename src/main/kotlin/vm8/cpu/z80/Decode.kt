@@ -223,8 +223,10 @@ object OpCodes {
     const val `RET PO`     : Int = 0xE0
     const val `POP HL`     : Int = 0xE1
     const val `JP PO, NN`  : Int = 0xE2
+    const val `EX (SP), HL`: Int = 0xE3
     const val `RET PE`     : Int = 0xE8
     const val `JP PE, NN`  : Int = 0xEA
+    const val `EX DE, HL`  : Int = 0xEB
 
     const val `RET P`      : Int = 0xF0
     const val `POP AF`     : Int = 0xF1
@@ -457,8 +459,10 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
         /* 0xE0 */ OpCodes.`RET PO` -> Ret(FlagsPredicate.PO, jcycles = 11, njcycles = 5, size = 1u)
         /* 0xE1 */ OpCodes.`POP HL` -> Pop(Reg16.HL, cycles = 10, size = 1u)
         /* 0xE2 */ OpCodes.`JP PO, NN` -> Jp(FlagsPredicate.PO, Imm16, cycles = 10, size = 3u)
+        /* 0xE3 */ OpCodes.`EX (SP), HL` -> Ex(Ind16(Reg16.SP), Reg16.HL, cycles = 19, size = 1u)
         /* 0xE8 */ OpCodes.`RET PE` -> Ret(FlagsPredicate.PE, jcycles = 11, njcycles = 5, size = 1u)
         /* 0xEA */ OpCodes.`JP PE, NN` -> Jp(FlagsPredicate.PE, Imm16, cycles = 10, size = 3u)
+        /* 0xEB */ OpCodes.`EX DE, HL` -> Ex(Reg16.DE, Reg16.HL, cycles = 4, size = 1u)
 
         /* 0xF0 */ OpCodes.`RET P` -> Ret(FlagsPredicate.P, jcycles = 11, njcycles = 5, size = 1u)
         /* 0xF1 */ OpCodes.`POP AF` -> Pop(Reg16.AF, cycles = 10, size = 1u)

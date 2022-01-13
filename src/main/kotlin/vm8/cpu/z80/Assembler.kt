@@ -21,12 +21,13 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     object BC { operator fun not() = `(BC)` }
     object DE { operator fun not() = `(DE)` }
     object HL { operator fun not() = `(HL)` }
-    object SP
+    object SP { operator fun not() = `(SP)` }
 
     // Indirect registers
     object `(BC)`
     object `(DE)`
     object `(HL)`
+    object `(SP)`
 
     // Jump conditions
     object NC
@@ -129,6 +130,8 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun DJNZ(n: Int) { DB(OpCodes.`DJNZ N`); DB(n) }
 
     fun EX(a: AF, b: `AF'`) = DB(OpCodes.`EX AF, AF'`)
+    fun EX(a: `(SP)`, b: HL) = DB(OpCodes.`EX (SP), HL`)
+    fun EX(a: DE, b: HL) = DB(OpCodes.`EX DE, HL`)
 
     val HALT: Unit get() = DB(OpCodes.HALT)
 
