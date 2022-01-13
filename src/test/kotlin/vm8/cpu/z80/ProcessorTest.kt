@@ -917,6 +917,71 @@ class ProcessorTest : FunSpec({
                         bus.write(0x8000u, it)
                         mem.asm { LD(H, !HL) }
                     },
+                    "LD L, A" to TestCase(
+                        cycles = 4,
+                        size = 1,
+                        result = { regs.l })
+                    {
+                        regs.a = it
+                        mem.asm { LD(L, A) }
+                    },
+                    "LD L, B" to TestCase(
+                        cycles = 4,
+                        size = 1,
+                        result = { regs.l })
+                    {
+                        regs.b = it
+                        mem.asm { LD(L, B) }
+                    },
+                    "LD L, C" to TestCase(
+                        cycles = 4,
+                        size = 1,
+                        result = { regs.l })
+                    {
+                        regs.c = it
+                        mem.asm { LD(L, C) }
+                    },
+                    "LD L, D" to TestCase(
+                        cycles = 4,
+                        size = 1,
+                        result = { regs.l })
+                    {
+                        regs.d = it
+                        mem.asm { LD(L, D) }
+                    },
+                    "LD L, E" to TestCase(
+                        cycles = 4,
+                        size = 1,
+                        result = { regs.l })
+                    {
+                        regs.e = it
+                        mem.asm { LD(L, E) }
+                    },
+                    "LD L, H" to TestCase(
+                        cycles = 4,
+                        size = 1,
+                        result = { regs.l })
+                    {
+                        regs.h = it
+                        mem.asm { LD(L, H) }
+                    },
+                    "LD L, L" to TestCase(
+                        cycles = 4,
+                        size = 1,
+                        result = { regs.l })
+                    {
+                        regs.l = it
+                        mem.asm { LD(L, L) }
+                    },
+                    "LD L, (HL)" to TestCase(
+                        cycles = 7,
+                        size = 1,
+                        result = { regs.l })
+                    {
+                        regs.hl = 0x8000u
+                        bus.write(0x8000u, it)
+                        mem.asm { LD(L, !HL) }
+                    },
                     "LD (BC), A" to TestCase(
                         cycles = 7,
                         size = 1,
