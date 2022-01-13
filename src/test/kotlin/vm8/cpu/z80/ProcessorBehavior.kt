@@ -29,17 +29,17 @@ suspend inline fun<reified T> behavesLike(crossinline f: suspend ProcessorBehavi
 
 suspend inline fun<reified T1, reified T2> behavesLike(crossinline f: suspend ProcessorBehavior.(a: T1, b: T2, flags: UByte) -> Unit) {
     checkAll<T1, T2, UByte> { a, b, flags ->
-        val behav = ProcessorBehavior()
-        behav.cpu.regs.f = flags
-        behav.f(a, b, flags)
+        val behavior = ProcessorBehavior()
+        behavior.cpu.regs.f = flags
+        behavior.f(a, b, flags)
     }
 }
 
 suspend inline fun<reified T1, reified T2> behavesLike(arbA: Arb<T1>, arbB: Arb<T2>, crossinline f: suspend ProcessorBehavior.(a: T1, b: T2, flags: UByte) -> Unit) {
     checkAll(arbA, arbB, Arb.uByte()) { a, b, flags ->
-        val behav = ProcessorBehavior()
-        behav.cpu.regs.f = flags
-        behav.f(a, b, flags)
+        val behavior = ProcessorBehavior()
+        behavior.cpu.regs.f = flags
+        behavior.f(a, b, flags)
     }
 }
 
@@ -76,37 +76,33 @@ class ProcessorBehavior {
         this.f()
     }
 
-    suspend fun expectRotate(xval: UByte, carry: Boolean, flags: UByte) = expect(cycles = 4, pc = 0x0001u) {
-        regs.a shouldBe xval
+    suspend fun expectRotate(expected: UByte, carry: Boolean, flags: UByte) = expect(cycles = 4, pc = 0x0001u) {
+        regs.a shouldBe expected
 
         regs.f.bit(0) shouldBe carry
         regs.f.bit(1) shouldBe false
         regs.f.bit(2) shouldBe flags.bit(2)
-        regs.f.bit(3) shouldBe xval.bit(3)
+        regs.f.bit(3) shouldBe expected.bit(3)
         regs.f.bit(4) shouldBe false
-        regs.f.bit(5) shouldBe xval.bit(5)
+        regs.f.bit(5) shouldBe expected.bit(5)
         regs.f.bit(6) shouldBe flags.bit(6)
         regs.f.bit(7) shouldBe flags.bit(7)
     }
 
     data class Condition(val description: String, val eval: () -> Boolean)
 
-    fun overflow(a: Int, c: Int) = Condition("Overflow from $a to $c") {
+    fun overflow(a: UByte, b: UByte) = overflow(a.toInt(), b.toInt())
+
+    private fun overflow(a: Int, c: Int) = Condition("Overflow from $a to $c") {
         val b = c - a
         ((a xor b xor 0x80) and (b xor c) and 0x80) != 0
     }
 
-    fun overflow(a: UByte, b: UByte) = overflow(a.toInt(), b.toInt())
-
-    fun underflow(a: Int, c: Int) = Condition("underflow from $a to $c") {
-        val b = a - c
-        ((a xor b) and ((a xor c) and 0x80)) != 0
-    }
-
     fun underflow(a: UByte, b: UByte) = underflow(a.toInt(), b.toInt())
 
-    fun carry(a: Int, c: Int, mask: Int) = Condition("carry from $a to $c respect mask $mask") {
-        (a and mask) > (c and mask)
+    private fun underflow(a: Int, c: Int) = Condition("underflow from $a to $c") {
+        val b = a - c
+        ((a xor b) and ((a xor c) and 0x80)) != 0
     }
 
     fun carry(a: UByte, c: UByte) = carry(a.toInt(), c.toInt(), 0xFF)
@@ -117,13 +113,17 @@ class ProcessorBehavior {
 
     fun halfCarry(a: UShort, c: UShort) = carry(a.toInt(), c.toInt(), 0x0FFF)
 
-    fun borrow(a: Int, c: Int, mask: Int) = Condition("borrow from $a to $c respect mask $mask") {
-        (a and mask) < (c and mask)
+    private fun carry(a: Int, c: Int, mask: Int) = Condition("carry from $a to $c respect mask $mask") {
+        (a and mask) > (c and mask)
     }
 
     fun borrow(a: UByte, c: UByte) = borrow(a.toInt(), c.toInt(), 0xFF)
 
     fun halfBorrow(a: UByte, c: UByte) = borrow(a.toInt(), c.toInt(), 0x0F)
+
+    private fun borrow(a: Int, c: Int, mask: Int) = Condition("borrow from $a to $c respect mask $mask") {
+        (a and mask) < (c and mask)
+    }
 
     fun isZero(v: UByte) = Condition("value ${v.toHexString()} is zero") { v.isZero() }
 
@@ -153,13 +153,15 @@ class ProcessorBehavior {
 
     fun flagIsReset(flag: Flag) = flagIsSet(flag).invert()
 
-    fun flagCopiedFrom(flag: Flag, v: UByte) = object : Matcher<UByte> {
+    fun flagCopiedFrom(flag: Flag, v: UByte, copiedFromFlag: Flag = flag) = object : Matcher<UByte> {
         override fun test(value: UByte) = MatcherResult(
-            flag.isSet(value) == flag.isSet(v),
-            failureMessageFn = { "expected flag $flag to be copied from ${v.toBinString()}" },
-            negatedFailureMessageFn = { "expected flag $flag not to be copied from ${v.toBinString()}" },
+            flag.isSet(value) == copiedFromFlag.isSet(v),
+            failureMessageFn = { "expected flag $flag to be copied from $copiedFromFlag in ${v.toBinString()}" },
+            negatedFailureMessageFn = { "expected flag $flag not to be copied from $copiedFromFlag in ${v.toBinString()}" },
         )
     }
+
+    fun flagNotCopiedFrom(flag: Flag, v: UByte) = flagCopiedFrom(flag, v).invert()
 
     fun flagIsSetOn(flag: Flag, cond: Condition) = object : Matcher<UByte> {
         override fun test(value: UByte) = MatcherResult(

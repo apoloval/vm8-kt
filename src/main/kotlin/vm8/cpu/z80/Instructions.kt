@@ -30,6 +30,22 @@ data class Add16(val dst: DestOp16, val src: SrcOp16, val cycles: Int, val size:
 }
 
 /**
+ * CCF instruction.
+ */
+data class Ccf(val cycles: Int, val size: UByte) : Inst {
+    override suspend fun Processor.exec(): Int {
+        apply(
+            (Flag.C on (Flag.C.isReset(regs.f))) and
+            (Flag.H on (Flag.C.isSet(regs.f))) and
+            (Flag.F3 on regs.a.bit(3)) and
+            (Flag.F5 on regs.a.bit(5)) - Flag.N
+        )
+        regs.pc = regs.pc.increment(size)
+        return cycles
+    }
+}
+
+/**
  * CPL instruction.
  */
 data class Cpl(val cycles: Int, val size: UByte) : Inst {
@@ -121,12 +137,12 @@ data class Djnz(val dst: DestOp8, val relj: SrcOp8, val jcycles: Int, val njcycl
         val a = load8(dst)
         val c = a.dec()
         store8(dst, c)
-        if (c.isZero()) {
+        return if (c.isZero()) {
             regs.pc = regs.pc.increment(size)
-            return njcycles
+            njcycles
         } else {
             regs.pc = regs.pc.increment(load8(relj).toByte())
-            return jcycles
+            jcycles
         }
     }
 }
@@ -192,7 +208,7 @@ enum class JumpCond {
     C { override fun matches(flags: UByte) = Flag.C.isSet(flags) },
     NC { override fun matches(flags: UByte) = Flag.C.isReset(flags) };
 
-    abstract fun matches(flags: UByte): Boolean;
+    abstract fun matches(flags: UByte): Boolean
 }
 
 /**
@@ -200,12 +216,12 @@ enum class JumpCond {
  */
 data class Jr(val cond: JumpCond, val relj: SrcOp8, val jcycles: Int, val njcycles: Int, val size: UByte) : Inst {
     override suspend fun Processor.exec(): Int {
-        if (cond.matches(regs.f)) {
+        return if (cond.matches(regs.f)) {
             regs.pc = regs.pc.increment(load8(relj).toByte())
-            return jcycles
+            jcycles
         } else {
             regs.pc = regs.pc.increment(size)
-            return njcycles
+            njcycles
         }
     }
 }

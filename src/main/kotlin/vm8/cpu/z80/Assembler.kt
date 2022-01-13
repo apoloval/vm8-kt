@@ -65,6 +65,8 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun ADD(dst: HL, src: HL) = DB(OpCodes.`ADD HL, HL`)
     fun ADD(dst: HL, src: SP) = DB(OpCodes.`ADD HL, SP`)
 
+    val CCF: Unit get() = DB(OpCodes.CCF)
+
     val CPL: Unit get() = DB(OpCodes.CPL)
 
     val DAA: Unit get() = DB(OpCodes.DAA)

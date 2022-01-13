@@ -4,7 +4,6 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.datatest.withData
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.kotest.property.Arb
 import vm8.cpu.z80.Assembler.*
 import vm8.data.*
@@ -15,6 +14,20 @@ class ProcessorTest : FunSpec({
         test("NOP") { behavesLike { prevFlags ->
             whenProcessorRuns { NOP }
             expect(cycles = 4, pc = 0x0001u, flags = prevFlags)
+        }}
+
+        test("CCF") { behavesLike { a: UByte, prevFlags ->
+            given { regs.a = a }
+            whenProcessorRuns { CCF }
+            expect(cycles = 4, pc = 0x0001u) {
+                expectFlags { flag -> when(flag) {
+                    Flag.C -> flagNotCopiedFrom(flag, prevFlags)
+                    Flag.N -> flagIsReset(flag)
+                    Flag.H -> flagCopiedFrom(flag, prevFlags, copiedFromFlag = Flag.C)
+                    Flag.F3, Flag.F5 -> flagCopiedFrom(flag, regs.a)
+                    else -> flagCopiedFrom(flag, prevFlags)
+                }}
+            }
         }}
 
         test("SCF") { behavesLike { a: UByte, prevFlags ->
