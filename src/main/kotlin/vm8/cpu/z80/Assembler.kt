@@ -83,6 +83,15 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun ADD(dst: HL, src: HL) = DB(OpCodes.`ADD HL, HL`)
     fun ADD(dst: HL, src: SP) = DB(OpCodes.`ADD HL, SP`)
 
+    fun AND(src: A) = DB(OpCodes.`AND A`)
+    fun AND(src: B) = DB(OpCodes.`AND B`)
+    fun AND(src: C) = DB(OpCodes.`AND C`)
+    fun AND(src: D) = DB(OpCodes.`AND D`)
+    fun AND(src: E) = DB(OpCodes.`AND E`)
+    fun AND(src: H) = DB(OpCodes.`AND H`)
+    fun AND(src: L) = DB(OpCodes.`AND L`)
+    fun AND(src: `(HL)`) = DB(OpCodes.`AND (HL)`)
+
     val CCF: Unit get() = DB(OpCodes.CCF)
 
     val CPL: Unit get() = DB(OpCodes.CPL)

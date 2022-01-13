@@ -325,6 +325,108 @@ class ProcessorTest : FunSpec({
             }}
         }
 
+        context("AND 8-bit") {
+            data class TestCase(
+                val cycles: Int,
+                val size: Int,
+                val sameOperand: Boolean = false,
+                val result: suspend ProcessorBehavior.() -> UByte,
+                val prepare: suspend ProcessorBehavior.(UByte, UByte) -> Unit,
+            )
+
+            withData(mapOf(
+                "AND A" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    sameOperand = true,
+                    result = { regs.a },
+                ) { a, _ ->
+                    regs.a = a
+                    mem.asm { AND(A) }
+                },
+                "AND B" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.b = b
+                    mem.asm { AND(B) }
+                },
+                "AND C" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.c = b
+                    mem.asm { AND(C) }
+                },
+                "AND D" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.d = b
+                    mem.asm { AND(D) }
+                },
+                "AND E" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.e = b
+                    mem.asm { AND(E) }
+                },
+                "AND H" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.h = b
+                    mem.asm { AND(H) }
+                },
+                "AND L" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.l = b
+                    mem.asm { AND(L) }
+                },
+                "AND (HL)" to TestCase(
+                    cycles = 7,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.hl = 0x8000u
+                    regs.a = a
+                    bus.write(0x8000u, b)
+                    mem.asm { AND(!HL) }
+                },
+            )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UByte, b: UByte, _ ->
+                prepare(a, b)
+                whenProcessorRuns()
+                expect(cycles, pc = size.toUShort()) {
+                    if (sameOperand) { result() shouldBe (a and a).toUByte() }
+                    else { result() shouldBe (a and b).toUByte() }
+
+                    expectFlags { flag -> when(flag) {
+                        Flag.C, Flag.N -> flagIsReset(flag)
+                        Flag.PV -> flagIsSetOn(flag, hasEvenParity(result()))
+                        Flag.H -> flagIsSet(flag)
+                        Flag.Z -> flagIsSetOn(flag, isZero(result()))
+                        Flag.S -> flagIsSetOn(flag, isNegative(result()))
+                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
+                    }}
+                }
+            }}
+        }
+
         test("CPL") { behavesLike { a: UByte, prevFlags ->
             given { regs.a = a }
             whenProcessorRuns { CPL }
@@ -874,7 +976,6 @@ class ProcessorTest : FunSpec({
                 }
             }}
         }
-
     }
 
     context("Rotate and shift") {

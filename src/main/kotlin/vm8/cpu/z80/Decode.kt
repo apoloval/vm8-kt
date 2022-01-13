@@ -171,6 +171,15 @@ object OpCodes {
     const val `SBC (HL)`    : Int = 0x9E
     const val `SBC A`       : Int = 0x9F
 
+    const val `AND B`       : Int = 0xA0
+    const val `AND C`       : Int = 0xA1
+    const val `AND D`       : Int = 0xA2
+    const val `AND E`       : Int = 0xA3
+    const val `AND H`       : Int = 0xA4
+    const val `AND L`       : Int = 0xA5
+    const val `AND (HL)`    : Int = 0xA6
+    const val `AND A`       : Int = 0xA7
+
     const val `JP NN`       : Int = 0xC3
 }
 
@@ -355,6 +364,17 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
         OpCodes.`SBC L` -> Sub8(Reg8.A, Reg8.L, withCarry = true, cycles = 4, size = 1u)
         OpCodes.`SBC (HL)` -> Sub8(Reg8.A, Ind8(Reg16.HL), withCarry = true, cycles = 7, size = 1u)
         OpCodes.`SBC A` -> Sub8(Reg8.A, Reg8.A, withCarry = true, cycles = 4, size = 1u)
+
+        // From 0xA0 to 0xAF
+        OpCodes.`AND B` -> And8(Reg8.A, Reg8.B,  cycles = 4, size = 1u)
+        OpCodes.`AND C` -> And8(Reg8.A, Reg8.C,  cycles = 4, size = 1u)
+        OpCodes.`AND D` -> And8(Reg8.A, Reg8.D,  cycles = 4, size = 1u)
+        OpCodes.`AND E` -> And8(Reg8.A, Reg8.E,  cycles = 4, size = 1u)
+        OpCodes.`AND H` -> And8(Reg8.A, Reg8.H,  cycles = 4, size = 1u)
+        OpCodes.`AND L` -> And8(Reg8.A, Reg8.L,  cycles = 4, size = 1u)
+        OpCodes.`AND (HL)` -> And8(Reg8.A, Ind8(Reg16.HL), cycles = 7, size = 1u)
+        OpCodes.`AND A` -> And8(Reg8.A, Reg8.A, cycles = 4, size = 1u)
+
 
         OpCodes.`JP NN` -> Jp(Imm16)
         else -> Illegal

@@ -128,6 +128,12 @@ object PrecomputedFlags {
         }
     }
 
+    // AND(a, b) flags
+    private val and8 = Array(256) { c ->
+        intrinsic[c] - Flag.C - Flag.N + Flag.H and
+            (Flag.P on c.toUByte().parity())
+    }
+
     // SUB/SBC(a, b) flags
     private val sub = Array(256) { a -> 
         Array(256) { b ->
@@ -174,6 +180,11 @@ object PrecomputedFlags {
             (Flag.F3 on c.high().bit(3)) - Flag.N and
             (Flag.C on carryUShort(a.toInt(), c.toInt()))
     }
+
+    /**
+     * Get the flags resulting from an AND operation.
+     */
+    fun ofAnd(c: UByte): FlagsAffection = and8[c.toInt()]
 
     /**
      * Get the flags resulting from subtracting two UBytes.

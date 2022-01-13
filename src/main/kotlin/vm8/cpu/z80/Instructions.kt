@@ -48,6 +48,21 @@ data class Add16(val dst: DestOp16, val src: SrcOp16, val cycles: Int, val size:
 }
 
 /**
+ * AND instruction for 8-bit operands.
+ */
+data class And8(val dst: DestOp8, val src: SrcOp8, val cycles: Int, val size: UByte) : Inst {
+    override suspend fun Processor.exec(): Int {
+        val a = load8(dst)
+        val b = load8(src)
+        val c = (a and b)
+        store8(dst, c)
+        apply(PrecomputedFlags.ofAnd(c))
+        regs.pc = regs.pc.increment(size)
+        return cycles
+    }
+}
+
+/**
  * CCF instruction.
  */
 data class Ccf(val cycles: Int, val size: UByte) : Inst {
