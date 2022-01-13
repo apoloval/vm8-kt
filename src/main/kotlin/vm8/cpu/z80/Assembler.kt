@@ -145,6 +145,14 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun INC(dst: HL) = DB(OpCodes.`INC HL`)
     fun INC(dst: SP) = DB(OpCodes.`INC SP`)
 
+    fun JP(addr: UShort) { DB(OpCodes.`JP NN`); DW(addr) }
+
+    fun JR(rel: Byte) { DB(OpCodes.`JR N`); DB(rel.toUByte()) }
+    fun JR(cond: Z, n: Byte) { DB(OpCodes.`JR Z, N`); DB(n.toUByte()) }
+    fun JR(cond: NZ, n: Byte) { DB(OpCodes.`JR NZ, N`); DB(n.toUByte()) }
+    fun JR(cond: C, n: Byte) { DB(OpCodes.`JR C, N`); DB(n.toUByte()) }
+    fun JR(cond: NC, n: Byte) { DB(OpCodes.`JR NC, N`); DB(n.toUByte()) }
+
     fun LD(dst: A, src: UByte) { DB(OpCodes.`LD A, N`); DB(src) }
     fun LD(dst: B, src: UByte) { DB(OpCodes.`LD B, N`); DB(src) }
     fun LD(dst: C, src: UByte) { DB(OpCodes.`LD C, N`); DB(src) }
@@ -230,14 +238,6 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun LD(dst: Indirect<UShort>, src: HL) { DB(OpCodes.`LD (NN), HL`); DW(dst.expr) }
     fun LD(dst: HL, src: Indirect<UShort>) { DB(OpCodes.`LD HL, (NN)`); DW(src.expr) }
 
-    fun JP(addr: UShort) { DB(OpCodes.`JP NN`); DW(addr) }
-
-    fun JR(rel: Byte) { DB(OpCodes.`JR N`); DB(rel.toUByte()) }
-    fun JR(cond: Z, n: Byte) { DB(OpCodes.`JR Z, N`); DB(n.toUByte()) }
-    fun JR(cond: NZ, n: Byte) { DB(OpCodes.`JR NZ, N`); DB(n.toUByte()) }
-    fun JR(cond: C, n: Byte) { DB(OpCodes.`JR C, N`); DB(n.toUByte()) }
-    fun JR(cond: NC, n: Byte) { DB(OpCodes.`JR NC, N`); DB(n.toUByte()) }
-
     val NOP: Unit get() = DB(OpCodes.NOP)
 
     fun OR(src: A) = DB(OpCodes.`OR A`)
@@ -248,6 +248,11 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun OR(src: H) = DB(OpCodes.`OR H`)
     fun OR(src: L) = DB(OpCodes.`OR L`)
     fun OR(src: `(HL)`) = DB(OpCodes.`OR (HL)`)
+
+    fun POP(dst: BC) = DB(OpCodes.`POP BC`)
+    fun POP(dst: DE) = DB(OpCodes.`POP DE`)
+    fun POP(dst: HL) = DB(OpCodes.`POP HL`)
+    fun POP(dst: AF) = DB(OpCodes.`POP AF`)
 
     val RET: Unit get() { DB(OpCodes.`RET`) }
     fun RET(cond: NZ) = DB(OpCodes.`RET NZ`)

@@ -2144,6 +2144,68 @@ class ProcessorTest : FunSpec({
                 regs.`af'` shouldBe 0xABCDu
             }
         }}
+
+        context("POP") {
+            data class TestCase(
+                val cycles: Int,
+                val size: Int,
+                val touchFlags: Boolean = false,
+                val result: suspend ProcessorBehavior.() -> UShort,
+                val prepare: suspend ProcessorBehavior.(UShort) -> Unit,
+            )
+
+            withData(
+                mapOf(
+                    "POP BC" to TestCase(
+                        cycles = 10,
+                        size = 1,
+                        result = { regs.bc },
+                    ) {
+                        regs.sp = 0xFFFEu
+                        bus.writeWord(0xFFFEu, it)
+                        mem.asm { POP (BC) }
+                    },
+                    "POP DE" to TestCase(
+                        cycles = 10,
+                        size = 1,
+                        result = { regs.de },
+                    ) {
+                        regs.sp = 0xFFFEu
+                        bus.writeWord(0xFFFEu, it)
+                        mem.asm { POP (DE) }
+                    },
+                    "POP HL" to TestCase(
+                        cycles = 10,
+                        size = 1,
+                        result = { regs.hl },
+                    ) {
+                        regs.sp = 0xFFFEu
+                        bus.writeWord(0xFFFEu, it)
+                        mem.asm { POP (HL) }
+                    },
+                    "POP AF" to TestCase(
+                        cycles = 10,
+                        size = 1,
+                        touchFlags = true,
+                        result = { regs.af },
+                    ) {
+                        regs.sp = 0xFFFEu
+                        bus.writeWord(0xFFFEu, it)
+                        mem.asm { POP (AF) }
+                    },
+                )
+            ) { (cycles, size, touchFlags, result, prepare) -> behavesLike { value: UShort, prevFlags ->
+                prepare(value)
+                whenProcessorRuns()
+                expect(cycles, pc = size.toUShort()) {
+                    if (!touchFlags) {
+                        regs.f shouldBe prevFlags
+                    }
+                    result() shouldBe value
+                    regs.sp shouldBe 0x0000u
+                }
+            } }
+        }
     }
 })
 

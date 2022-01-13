@@ -318,6 +318,19 @@ data class Or8(val dst: DestOp8, val src: SrcOp8, val cycles: Int, val size: UBy
 }
 
 /**
+ * POP instruction.
+ */
+data class Pop(val dst: DestOp16, val cycles: Int, val size: UByte) : Inst {
+    override suspend fun Processor.exec(): Int {
+        val word = bus.readWord(regs.sp)
+        store16(dst, word)
+        regs.sp = regs.sp.increment(2u)
+        regs.pc = regs.pc.increment(size)
+        return cycles
+    }
+}
+
+/**
  * RET instruction.
  */
 data class Ret(val pred: FlagsPredicate, val jcycles: Int, val njcycles: Int, val size: UByte) : Inst {
