@@ -128,12 +128,6 @@ object PrecomputedFlags {
         }
     }
 
-    // AND(a, b) flags
-    private val and8 = Array(256) { c ->
-        intrinsic[c] - Flag.C - Flag.N + Flag.H and
-            (Flag.P on c.toUByte().parity())
-    }
-
     // SUB/SBC(a, b) flags
     private val sub = Array(256) { a -> 
         Array(256) { b ->
@@ -150,6 +144,18 @@ object PrecomputedFlags {
 
     // DEC(a) flags are SUB(a, 1) flags but C is not affected
     private val dec = Array(256) { sub[it][1] * Flag.C }
+
+    // AND(a, b) flags
+    private val and8 = Array(256) { c ->
+        intrinsic[c] - Flag.C - Flag.N + Flag.H and
+                (Flag.P on c.toUByte().parity())
+    }
+
+    // OR/XOR(a, b) flags
+    private val or8 = Array(256) { c ->
+        intrinsic[c] - Flag.C - Flag.N - Flag.H and
+                (Flag.P on c.toUByte().parity())
+    }
 
     // RLCA/RLA/RRCA/RRA intrinsic flags
     private val rotA = Array(256) { it.toUByte().run {
@@ -185,6 +191,16 @@ object PrecomputedFlags {
      * Get the flags resulting from an AND operation.
      */
     fun ofAnd(c: UByte): FlagsAffection = and8[c.toInt()]
+
+    /**
+     * Get the flags resulting from an XOR operation.
+     */
+    fun ofXor(c: UByte): FlagsAffection = or8[c.toInt()]
+
+    /**
+     * Get the flags resulting from an OR operation.
+     */
+    fun ofOr(c: UByte): FlagsAffection = or8[c.toInt()]
 
     /**
      * Get the flags resulting from subtracting two UBytes.

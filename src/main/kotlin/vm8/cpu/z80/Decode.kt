@@ -179,6 +179,23 @@ object OpCodes {
     const val `AND L`       : Int = 0xA5
     const val `AND (HL)`    : Int = 0xA6
     const val `AND A`       : Int = 0xA7
+    const val `XOR B`       : Int = 0xA8
+    const val `XOR C`       : Int = 0xA9
+    const val `XOR D`       : Int = 0xAA
+    const val `XOR E`       : Int = 0xAB
+    const val `XOR H`       : Int = 0xAC
+    const val `XOR L`       : Int = 0xAD
+    const val `XOR (HL)`    : Int = 0xAE
+    const val `XOR A`       : Int = 0xAF
+
+    const val `OR B`       : Int = 0xB0
+    const val `OR C`       : Int = 0xB1
+    const val `OR D`       : Int = 0xB2
+    const val `OR E`       : Int = 0xB3
+    const val `OR H`       : Int = 0xB4
+    const val `OR L`       : Int = 0xB5
+    const val `OR (HL)`    : Int = 0xB6
+    const val `OR A`       : Int = 0xB7
 
     const val `JP NN`       : Int = 0xC3
 }
@@ -374,6 +391,24 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
         OpCodes.`AND L` -> And8(Reg8.A, Reg8.L,  cycles = 4, size = 1u)
         OpCodes.`AND (HL)` -> And8(Reg8.A, Ind8(Reg16.HL), cycles = 7, size = 1u)
         OpCodes.`AND A` -> And8(Reg8.A, Reg8.A, cycles = 4, size = 1u)
+        OpCodes.`XOR B` -> Xor8(Reg8.A, Reg8.B,  cycles = 4, size = 1u)
+        OpCodes.`XOR C` -> Xor8(Reg8.A, Reg8.C,  cycles = 4, size = 1u)
+        OpCodes.`XOR D` -> Xor8(Reg8.A, Reg8.D,  cycles = 4, size = 1u)
+        OpCodes.`XOR E` -> Xor8(Reg8.A, Reg8.E,  cycles = 4, size = 1u)
+        OpCodes.`XOR H` -> Xor8(Reg8.A, Reg8.H,  cycles = 4, size = 1u)
+        OpCodes.`XOR L` -> Xor8(Reg8.A, Reg8.L,  cycles = 4, size = 1u)
+        OpCodes.`XOR (HL)` -> Xor8(Reg8.A, Ind8(Reg16.HL), cycles = 7, size = 1u)
+        OpCodes.`XOR A` -> Xor8(Reg8.A, Reg8.A, cycles = 4, size = 1u)
+
+        // From 0xB0 to 0xBF
+        OpCodes.`OR B` -> Or8(Reg8.A, Reg8.B,  cycles = 4, size = 1u)
+        OpCodes.`OR C` -> Or8(Reg8.A, Reg8.C,  cycles = 4, size = 1u)
+        OpCodes.`OR D` -> Or8(Reg8.A, Reg8.D,  cycles = 4, size = 1u)
+        OpCodes.`OR E` -> Or8(Reg8.A, Reg8.E,  cycles = 4, size = 1u)
+        OpCodes.`OR H` -> Or8(Reg8.A, Reg8.H,  cycles = 4, size = 1u)
+        OpCodes.`OR L` -> Or8(Reg8.A, Reg8.L,  cycles = 4, size = 1u)
+        OpCodes.`OR (HL)` -> Or8(Reg8.A, Ind8(Reg16.HL), cycles = 7, size = 1u)
+        OpCodes.`OR A` -> Or8(Reg8.A, Reg8.A, cycles = 4, size = 1u)
 
 
         OpCodes.`JP NN` -> Jp(Imm16)

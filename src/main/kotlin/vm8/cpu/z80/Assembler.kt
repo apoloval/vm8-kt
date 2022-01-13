@@ -227,6 +227,15 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
 
     val NOP: Unit get() = DB(OpCodes.NOP)
 
+    fun OR(src: A) = DB(OpCodes.`OR A`)
+    fun OR(src: B) = DB(OpCodes.`OR B`)
+    fun OR(src: C) = DB(OpCodes.`OR C`)
+    fun OR(src: D) = DB(OpCodes.`OR D`)
+    fun OR(src: E) = DB(OpCodes.`OR E`)
+    fun OR(src: H) = DB(OpCodes.`OR H`)
+    fun OR(src: L) = DB(OpCodes.`OR L`)
+    fun OR(src: `(HL)`) = DB(OpCodes.`OR (HL)`)
+
     val RLA: Unit get() { DB(OpCodes.RLA) }
 
     val RLCA: Unit get() { DB(OpCodes.RLCA) }
@@ -254,6 +263,15 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun SUB(src: H) = DB(OpCodes.`SUB H`)
     fun SUB(src: L) = DB(OpCodes.`SUB L`)
     fun SUB(src: `(HL)`) = DB(OpCodes.`SUB (HL)`)
+
+    fun XOR(src: A) = DB(OpCodes.`XOR A`)
+    fun XOR(src: B) = DB(OpCodes.`XOR B`)
+    fun XOR(src: C) = DB(OpCodes.`XOR C`)
+    fun XOR(src: D) = DB(OpCodes.`XOR D`)
+    fun XOR(src: E) = DB(OpCodes.`XOR E`)
+    fun XOR(src: H) = DB(OpCodes.`XOR H`)
+    fun XOR(src: L) = DB(OpCodes.`XOR L`)
+    fun XOR(src: `(HL)`) = DB(OpCodes.`XOR (HL)`)
 }
 
 fun ByteArray.asm(org: Int = 0, f: Assembler.() -> Unit): ByteArray {

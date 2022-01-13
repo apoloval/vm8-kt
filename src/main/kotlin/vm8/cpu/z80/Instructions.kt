@@ -303,6 +303,21 @@ object Nop : Inst {
 }
 
 /**
+ * OR instruction for 8-bit operands.
+ */
+data class Or8(val dst: DestOp8, val src: SrcOp8, val cycles: Int, val size: UByte) : Inst {
+    override suspend fun Processor.exec(): Int {
+        val a = load8(dst)
+        val b = load8(src)
+        val c = (a or b)
+        store8(dst, c)
+        apply(PrecomputedFlags.ofOr(c))
+        regs.pc = regs.pc.increment(size)
+        return cycles
+    }
+}
+
+/**
  * RLA instruction
  */
 data class Rla(val cycles: Int, val size: UByte) : Inst {
@@ -381,6 +396,21 @@ data class Sub8(val dst: DestOp8, val src: SrcOp8, val withCarry: Boolean, val c
         val c = (a - b).toUByte()
         store8(dst, c)
         apply(PrecomputedFlags.ofSub(a, b))
+        regs.pc = regs.pc.increment(size)
+        return cycles
+    }
+}
+
+/**
+ * XOR instruction for 8-bit operands.
+ */
+data class Xor8(val dst: DestOp8, val src: SrcOp8, val cycles: Int, val size: UByte) : Inst {
+    override suspend fun Processor.exec(): Int {
+        val a = load8(dst)
+        val b = load8(src)
+        val c = (a xor b)
+        store8(dst, c)
+        apply(PrecomputedFlags.ofXor(c))
         regs.pc = regs.pc.increment(size)
         return cycles
     }

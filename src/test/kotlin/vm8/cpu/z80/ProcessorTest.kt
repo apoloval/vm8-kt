@@ -767,6 +767,107 @@ class ProcessorTest : FunSpec({
             }}
         }
 
+        context("OR 8-bit") {
+            data class TestCase(
+                val cycles: Int,
+                val size: Int,
+                val sameOperand: Boolean = false,
+                val result: suspend ProcessorBehavior.() -> UByte,
+                val prepare: suspend ProcessorBehavior.(UByte, UByte) -> Unit,
+            )
+
+            withData(mapOf(
+                "OR A" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    sameOperand = true,
+                    result = { regs.a },
+                ) { a, _ ->
+                    regs.a = a
+                    mem.asm { OR(A) }
+                },
+                "OR B" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.b = b
+                    mem.asm { OR(B) }
+                },
+                "OR C" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.c = b
+                    mem.asm { OR(C) }
+                },
+                "OR D" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.d = b
+                    mem.asm { OR(D) }
+                },
+                "OR E" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.e = b
+                    mem.asm { OR(E) }
+                },
+                "OR H" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.h = b
+                    mem.asm { OR(H) }
+                },
+                "OR L" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.l = b
+                    mem.asm { OR(L) }
+                },
+                "OR (HL)" to TestCase(
+                    cycles = 7,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.hl = 0x8000u
+                    regs.a = a
+                    bus.write(0x8000u, b)
+                    mem.asm { OR(!HL) }
+                },
+            )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UByte, b: UByte, _ ->
+                prepare(a, b)
+                whenProcessorRuns()
+                expect(cycles, pc = size.toUShort()) {
+                    if (sameOperand) { result() shouldBe (a or a) }
+                    else { result() shouldBe (a or b) }
+
+                    expectFlags { flag -> when(flag) {
+                        Flag.C, Flag.N, Flag.H -> flagIsReset(flag)
+                        Flag.PV -> flagIsSetOn(flag, hasEvenParity(result()))
+                        Flag.Z -> flagIsSetOn(flag, isZero(result()))
+                        Flag.S -> flagIsSetOn(flag, isNegative(result()))
+                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
+                    }}
+                }
+            }}
+        }
+
         context("SBC 8-bit") {
             data class TestCase(
                 val cycles: Int,
@@ -969,6 +1070,107 @@ class ProcessorTest : FunSpec({
                         Flag.N -> flagIsSet(flag)
                         Flag.PV -> flagIsSetOn(flag, underflow(a, result()))
                         Flag.H -> flagIsSetOn(flag, halfBorrow(a, result()))
+                        Flag.Z -> flagIsSetOn(flag, isZero(result()))
+                        Flag.S -> flagIsSetOn(flag, isNegative(result()))
+                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
+                    }}
+                }
+            }}
+        }
+
+        context("XOR 8-bit") {
+            data class TestCase(
+                val cycles: Int,
+                val size: Int,
+                val sameOperand: Boolean = false,
+                val result: suspend ProcessorBehavior.() -> UByte,
+                val prepare: suspend ProcessorBehavior.(UByte, UByte) -> Unit,
+            )
+
+            withData(mapOf(
+                "XOR A" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    sameOperand = true,
+                    result = { regs.a },
+                ) { a, _ ->
+                    regs.a = a
+                    mem.asm { XOR(A) }
+                },
+                "XOR B" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.b = b
+                    mem.asm { XOR(B) }
+                },
+                "XOR C" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.c = b
+                    mem.asm { XOR(C) }
+                },
+                "XOR D" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.d = b
+                    mem.asm { XOR(D) }
+                },
+                "XOR E" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.e = b
+                    mem.asm { XOR(E) }
+                },
+                "XOR H" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.h = b
+                    mem.asm { XOR(H) }
+                },
+                "XOR L" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.l = b
+                    mem.asm { XOR(L) }
+                },
+                "XOR (HL)" to TestCase(
+                    cycles = 7,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.hl = 0x8000u
+                    regs.a = a
+                    bus.write(0x8000u, b)
+                    mem.asm { XOR(!HL) }
+                },
+            )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UByte, b: UByte, _ ->
+                prepare(a, b)
+                whenProcessorRuns()
+                expect(cycles, pc = size.toUShort()) {
+                    if (sameOperand) { result() shouldBe (a xor a).toUByte() }
+                    else { result() shouldBe (a xor b).toUByte() }
+
+                    expectFlags { flag -> when(flag) {
+                        Flag.C, Flag.N, Flag.H -> flagIsReset(flag)
+                        Flag.PV -> flagIsSetOn(flag, hasEvenParity(result()))
                         Flag.Z -> flagIsSetOn(flag, isZero(result()))
                         Flag.S -> flagIsSetOn(flag, isNegative(result()))
                         Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
