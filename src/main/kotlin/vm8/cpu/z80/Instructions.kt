@@ -17,10 +17,13 @@ sealed interface Inst {
 /**
  * ADD instruction for 8-bit operands.
  */
-data class Add8(val dst: DestOp8, val src: SrcOp8, val cycles: Int, val size: UByte) : Inst {
+data class Add8(val dst: DestOp8, val src: SrcOp8, val withCarry: Boolean, val cycles: Int, val size: UByte) : Inst {
     override suspend fun Processor.exec(): Int {
-        val a = load8(src)
-        val b = load8(dst)
+        val a = load8(dst)
+        var b = load8(src)
+        if (withCarry && Flag.C.isSet(regs.f)) {
+            b++
+        }
         val c = (a + b).toUByte()
         store8(dst, c)
         apply(PrecomputedFlags.ofAdd(a, b))
@@ -34,8 +37,8 @@ data class Add8(val dst: DestOp8, val src: SrcOp8, val cycles: Int, val size: UB
  */
 data class Add16(val dst: DestOp16, val src: SrcOp16, val cycles: Int, val size: UByte) : Inst {
     override suspend fun Processor.exec(): Int {
-        val a = load16(src)
-        val b = load16(dst)
+        val a = load16(dst)
+        val b = load16(src)
         val c = (a + b).toUShort()
         store16(dst, c)
         apply(PrecomputedFlags.ofAdd(a, b))

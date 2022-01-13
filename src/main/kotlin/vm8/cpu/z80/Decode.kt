@@ -145,6 +145,14 @@ object OpCodes {
     const val `ADD A, L`    : Int = 0x85
     const val `ADD A, (HL)` : Int = 0x86
     const val `ADD A, A`    : Int = 0x87
+    const val `ADC A, B`    : Int = 0x88
+    const val `ADC A, C`    : Int = 0x89
+    const val `ADC A, D`    : Int = 0x8A
+    const val `ADC A, E`    : Int = 0x8B
+    const val `ADC A, H`    : Int = 0x8C
+    const val `ADC A, L`    : Int = 0x8D
+    const val `ADC A, (HL)` : Int = 0x8E
+    const val `ADC A, A`    : Int = 0x8F
 
     const val `JP NN`       : Int = 0xC3
 }
@@ -296,14 +304,22 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
         OpCodes.`LD A, A` -> Ld8(Reg8.A, Reg8.A, cycles = 4, size = 1u)
 
         // From 0x80 to 0x8F
-        OpCodes.`ADD A, B` -> Add8(Reg8.A, Reg8.B, cycles = 4, size = 1u)
-        OpCodes.`ADD A, C` -> Add8(Reg8.A, Reg8.C, cycles = 4, size = 1u)
-        OpCodes.`ADD A, D` -> Add8(Reg8.A, Reg8.D, cycles = 4, size = 1u)
-        OpCodes.`ADD A, E` -> Add8(Reg8.A, Reg8.E, cycles = 4, size = 1u)
-        OpCodes.`ADD A, H` -> Add8(Reg8.A, Reg8.H, cycles = 4, size = 1u)
-        OpCodes.`ADD A, L` -> Add8(Reg8.A, Reg8.L, cycles = 4, size = 1u)
-        OpCodes.`ADD A, (HL)` -> Add8(Reg8.A, Ind8(Reg16.HL), cycles = 4, size = 1u)
-        OpCodes.`ADD A, A` -> Add8(Reg8.A, Reg8.A, cycles = 4, size = 1u)
+        OpCodes.`ADD A, B` -> Add8(Reg8.A, Reg8.B, withCarry = false, cycles = 4, size = 1u)
+        OpCodes.`ADD A, C` -> Add8(Reg8.A, Reg8.C, withCarry = false, cycles = 4, size = 1u)
+        OpCodes.`ADD A, D` -> Add8(Reg8.A, Reg8.D, withCarry = false, cycles = 4, size = 1u)
+        OpCodes.`ADD A, E` -> Add8(Reg8.A, Reg8.E, withCarry = false, cycles = 4, size = 1u)
+        OpCodes.`ADD A, H` -> Add8(Reg8.A, Reg8.H, withCarry = false, cycles = 4, size = 1u)
+        OpCodes.`ADD A, L` -> Add8(Reg8.A, Reg8.L, withCarry = false, cycles = 4, size = 1u)
+        OpCodes.`ADD A, (HL)` -> Add8(Reg8.A, Ind8(Reg16.HL), withCarry = false, cycles = 7, size = 1u)
+        OpCodes.`ADD A, A` -> Add8(Reg8.A, Reg8.A, withCarry = false, cycles = 4, size = 1u)
+        OpCodes.`ADC A, B` -> Add8(Reg8.A, Reg8.B, withCarry = true, cycles = 4, size = 1u)
+        OpCodes.`ADC A, C` -> Add8(Reg8.A, Reg8.C, withCarry = true, cycles = 4, size = 1u)
+        OpCodes.`ADC A, D` -> Add8(Reg8.A, Reg8.D, withCarry = true, cycles = 4, size = 1u)
+        OpCodes.`ADC A, E` -> Add8(Reg8.A, Reg8.E, withCarry = true, cycles = 4, size = 1u)
+        OpCodes.`ADC A, H` -> Add8(Reg8.A, Reg8.H, withCarry = true, cycles = 4, size = 1u)
+        OpCodes.`ADC A, L` -> Add8(Reg8.A, Reg8.L, withCarry = true, cycles = 4, size = 1u)
+        OpCodes.`ADC A, (HL)` -> Add8(Reg8.A, Ind8(Reg16.HL), withCarry = true, cycles = 7, size = 1u)
+        OpCodes.`ADC A, A` -> Add8(Reg8.A, Reg8.A, withCarry = true, cycles = 4, size = 1u)
 
         OpCodes.`JP NN` -> Jp(Imm16)
         else -> Illegal

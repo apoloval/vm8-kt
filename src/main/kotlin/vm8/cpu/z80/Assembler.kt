@@ -60,6 +60,15 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
         }
     }
 
+    fun ADC(dst: A, src: A) = DB(OpCodes.`ADC A, A`)
+    fun ADC(dst: A, src: B) = DB(OpCodes.`ADC A, B`)
+    fun ADC(dst: A, src: C) = DB(OpCodes.`ADC A, C`)
+    fun ADC(dst: A, src: D) = DB(OpCodes.`ADC A, D`)
+    fun ADC(dst: A, src: E) = DB(OpCodes.`ADC A, E`)
+    fun ADC(dst: A, src: H) = DB(OpCodes.`ADC A, H`)
+    fun ADC(dst: A, src: L) = DB(OpCodes.`ADC A, L`)
+    fun ADC(dst: A, src: `(HL)`) = DB(OpCodes.`ADC A, (HL)`)
+
     fun ADD(dst: A, src: A) = DB(OpCodes.`ADD A, A`)
     fun ADD(dst: A, src: B) = DB(OpCodes.`ADD A, B`)
     fun ADD(dst: A, src: C) = DB(OpCodes.`ADD A, C`)
