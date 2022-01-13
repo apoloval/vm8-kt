@@ -137,6 +137,15 @@ object OpCodes {
     const val `LD A, (HL)`  : Int = 0x7E
     const val `LD A, A`     : Int = 0x7F
 
+    const val `ADD A, B`    : Int = 0x80
+    const val `ADD A, C`    : Int = 0x81
+    const val `ADD A, D`    : Int = 0x82
+    const val `ADD A, E`    : Int = 0x83
+    const val `ADD A, H`    : Int = 0x84
+    const val `ADD A, L`    : Int = 0x85
+    const val `ADD A, (HL)` : Int = 0x86
+    const val `ADD A, A`    : Int = 0x87
+
     const val `JP NN`       : Int = 0xC3
 }
 
@@ -285,6 +294,16 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
         OpCodes.`LD A, L` -> Ld8(Reg8.A, Reg8.L, cycles = 4, size = 1u)
         OpCodes.`LD A, (HL)` -> Ld8(Reg8.A, Ind8(Reg16.HL), cycles = 7, size = 1u)
         OpCodes.`LD A, A` -> Ld8(Reg8.A, Reg8.A, cycles = 4, size = 1u)
+
+        // From 0x80 to 0x8F
+        OpCodes.`ADD A, B` -> Add8(Reg8.A, Reg8.B, cycles = 4, size = 1u)
+        OpCodes.`ADD A, C` -> Add8(Reg8.A, Reg8.C, cycles = 4, size = 1u)
+        OpCodes.`ADD A, D` -> Add8(Reg8.A, Reg8.D, cycles = 4, size = 1u)
+        OpCodes.`ADD A, E` -> Add8(Reg8.A, Reg8.E, cycles = 4, size = 1u)
+        OpCodes.`ADD A, H` -> Add8(Reg8.A, Reg8.H, cycles = 4, size = 1u)
+        OpCodes.`ADD A, L` -> Add8(Reg8.A, Reg8.L, cycles = 4, size = 1u)
+        OpCodes.`ADD A, (HL)` -> Add8(Reg8.A, Ind8(Reg16.HL), cycles = 4, size = 1u)
+        OpCodes.`ADD A, A` -> Add8(Reg8.A, Reg8.A, cycles = 4, size = 1u)
 
         OpCodes.`JP NN` -> Jp(Imm16)
         else -> Illegal

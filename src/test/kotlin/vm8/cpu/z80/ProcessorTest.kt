@@ -50,6 +50,109 @@ class ProcessorTest : FunSpec({
     }
 
     context("Arithmetic and logic") {
+        context("ADD 8-bit") {
+            data class TestCase(
+                val cycles: Int,
+                val size: Int,
+                val sameOperand: Boolean = false,
+                val result: suspend ProcessorBehavior.() -> UByte,
+                val prepare: suspend ProcessorBehavior.(UByte, UByte) -> Unit,
+            )
+
+            withData(mapOf(
+                "ADD A, A" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    sameOperand = true,
+                    result = { regs.a },
+                ) { a, _ ->
+                    regs.a = a
+                    mem.asm { ADD(A, A) }
+                },
+                "ADD A, B" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.b = b
+                    mem.asm { ADD(A, B) }
+                },
+                "ADD A, C" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.c = b
+                    mem.asm { ADD(A, C) }
+                },
+                "ADD A, D" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.d = b
+                    mem.asm { ADD(A, D) }
+                },
+                "ADD A, E" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.e = b
+                    mem.asm { ADD(A, E) }
+                },
+                "ADD A, H" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.h = b
+                    mem.asm { ADD(A, H) }
+                },
+                "ADD A, L" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    regs.l = b
+                    mem.asm { ADD(A, L) }
+                },
+                "ADD A, (HL)" to TestCase(
+                    cycles = 4,
+                    size = 1,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.hl = 0x8000u
+                    regs.a = a
+                    bus.write(0x8000u, b)
+                    mem.asm { ADD(A, !HL) }
+                },
+            )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UByte, b: UByte, _ ->
+                prepare(a, b)
+                whenProcessorRuns()
+                expect(cycles, pc = size.toUShort()) {
+                    if (sameOperand) { result() shouldBe (a + a).toUByte() }
+                    else { result() shouldBe (a + b).toUByte() }
+
+                    expectFlags { flag -> when(flag) {
+                        Flag.C -> flagIsSetOn(flag, carry(a, result()))
+                        Flag.N -> flagIsReset(flag)
+                        Flag.PV -> flagIsSetOn(flag, overflow(a, result()))
+                        Flag.H -> flagIsSetOn(flag, halfCarry(a, result()))
+                        Flag.Z -> flagIsSetOn(flag, isZero(result()))
+                        Flag.S -> flagIsSetOn(flag, isNegative(result()))
+                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
+                    }}
+                }
+            }}
+        }
+
         context("ADD 16-bit") {
             data class TestCase(
                 val cycles: Int,
