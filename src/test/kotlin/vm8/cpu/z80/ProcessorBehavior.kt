@@ -230,6 +230,4 @@ class ProcessorBehavior {
             )
         }
     }
-
-    suspend fun wordAtAddress(addr: UShort): UShort = bus.memReadWord(addr)
 }

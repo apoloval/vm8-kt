@@ -2424,6 +2424,59 @@ class ProcessorTest : FunSpec({
                 result() shouldBe value
             }}
         }
+        
+        context("PUSH") {
+            data class TestCase(
+                val cycles: Int,
+                val size: Int,
+                val touchFlags: Boolean = false,
+                val prepare: suspend ProcessorBehavior.(UShort) -> Unit,
+            )
+
+            withData(
+                mapOf(
+                    "PUSH BC" to TestCase(
+                        cycles = 11,
+                        size = 1,
+                    ) {
+                        regs.bc = it
+                        mem.asm { PUSH (BC) }
+                    },
+                    "PUSH DE" to TestCase(
+                        cycles = 11,
+                        size = 1,
+                    ) {
+                        regs.de = it
+                        mem.asm { PUSH (DE) }
+                    },
+                    "PUSH HL" to TestCase(
+                        cycles = 11,
+                        size = 1,
+                    ) {
+                        regs.hl = it
+                        mem.asm { PUSH (HL) }
+                    },
+                    "PUSH AF" to TestCase(
+                        cycles = 11,
+                        size = 1,
+                        touchFlags = true,
+                    ) {
+                        regs.af = it
+                        mem.asm { PUSH (AF) }
+                    },
+                )
+            ) { (cycles, size, touchFlags, prepare) -> behavesLike { value: UShort, prevFlags ->
+                given(sp = 0xFFFFu)
+                prepare(value)
+                whenProcessorRuns()
+                expect(cycles = cycles, pc = size.toUShort(), sp = 0xFFFDu)
+                if (!touchFlags) {
+                    expect(flags = prevFlags)
+                }
+
+                expectPushedWord(0xFFFFu, value)
+            }}
+        }
     }
 
     context("Input and output") {

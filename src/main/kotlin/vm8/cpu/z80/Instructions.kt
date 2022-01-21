@@ -1,5 +1,6 @@
 package vm8.cpu.z80
 
+import vm8.cpu.z80.Imm8.get
 import vm8.data.*
 
 /**
@@ -239,6 +240,7 @@ sealed interface Inst {
         /* 0xC2 */ val `JP NZ, NN`      : Inst = Jp(FlagsPredicate.NZ, Imm16, cycles = 10, size = 3u)
         /* 0xC3 */ val `JP NN`          : Inst = Jp(FlagsPredicate.ALWAYS, Imm16, cycles = 10, size = 3u)
         /* 0xC4 */ val `CALL NZ, NN`    : Inst = Call(FlagsPredicate.NZ)
+        /* 0xC5 */ val `PUSH BC`        : Inst = Push(Reg16.BC, cycles = 11, size = 1u)
         /* 0xC7 */ val `RST 0x00`       : Inst = Rst(0x0000u)
         /* 0xC8 */ val `RET Z`          : Inst = Ret(FlagsPredicate.Z, jcycles = 11, cycles = 5, size = 1u)
         /* 0xC9 */ val `RET`            : Inst = Ret(FlagsPredicate.ALWAYS, jcycles = 10, cycles = 10, size = 1u)
@@ -252,6 +254,7 @@ sealed interface Inst {
         /* 0xD2 */ val `JP NC, NN`      : Inst = Jp(FlagsPredicate.NC, Imm16, cycles = 10, size = 3u)
         /* 0xD3 */ val `OUT (N), A`     : Inst = Out(Imm8, Reg8.A, cycles = 11, size = 2u)
         /* 0xD4 */ val `CALL NC, NN`    : Inst = Call(FlagsPredicate.NC)
+        /* 0xD5 */ val `PUSH DE`        : Inst = Push(Reg16.DE, cycles = 11, size = 1u)
         /* 0xD7 */ val `RST 0x10`       : Inst = Rst(0x0010u)
         /* 0xD8 */ val `RET C`          : Inst = Ret(FlagsPredicate.C, jcycles = 11, cycles = 5, size = 1u)
         /* 0xDA */ val `JP C, NN`       : Inst = Jp(FlagsPredicate.C, Imm16, cycles = 10, size = 3u)
@@ -263,6 +266,7 @@ sealed interface Inst {
         /* 0xE2 */ val `JP PO, NN`      : Inst = Jp(FlagsPredicate.PO, Imm16, cycles = 10, size = 3u)
         /* 0xE3 */ val `EX (SP), HL`    : Inst = Ex(Ind16(Reg16.SP), Reg16.HL, cycles = 19, size = 1u)
         /* 0xE4 */ val `CALL PO, NN`    : Inst = Call(FlagsPredicate.PO)
+        /* 0xE5 */ val `PUSH HL`        : Inst = Push(Reg16.HL, cycles = 11, size = 1u)
         /* 0xE7 */ val `RST 0x20`       : Inst = Rst(0x0020u)
         /* 0xE8 */ val `RET PE`         : Inst = Ret(FlagsPredicate.PE, jcycles = 11, cycles = 5, size = 1u)
         /* 0xEA */ val `JP PE, NN`      : Inst = Jp(FlagsPredicate.PE, Imm16, cycles = 10, size = 3u)
@@ -275,6 +279,7 @@ sealed interface Inst {
         /* 0xF2 */ val `JP P, NN`       : Inst = Jp(FlagsPredicate.P, Imm16, cycles = 10, size = 3u)
         /* 0xF3 */ val `DI`             : Inst = Di
         /* 0xF4 */ val `CALL P, NN`     : Inst = Call(FlagsPredicate.P)
+        /* 0xF5 */ val `PUSH AF`        : Inst = Push(Reg16.AF, cycles = 11, size = 1u)
         /* 0xF7 */ val `RST 0x30`       : Inst = Rst(0x0030u)
         /* 0xF8 */ val `RET M`          : Inst = Ret(FlagsPredicate.M, jcycles = 11, cycles = 5, size = 1u)
         /* 0xFA */ val `JP M, NN`       : Inst = Jp(FlagsPredicate.M, Imm16, cycles = 10, size = 3u)
@@ -697,11 +702,20 @@ data class Out(val port: SrcOp8, val src: SrcOp8, override val cycles: Long, ove
 /**
  * POP instruction.
  */
-data class Pop(val dst: DestOp16, override val cycles: Long, override val size: UByte) : Inst {
+data class Pop(val reg: Reg16, override val cycles: Long, override val size: UByte) : Inst {
     override suspend fun Processor.exec() {
-        val word = bus.memReadWord(regs.sp)
-        store16(dst, word)
-        regs.sp = regs.sp.increment(2u)
+        with(reg) { set(pop()) }
+        incPC()
+        incCycles()
+    }
+}
+
+/**
+ * PUSH instruction.
+ */
+data class Push(val reg: Reg16, override val cycles: Long, override val size: UByte) : Inst {
+    override suspend fun Processor.exec() {
+        push(with(reg) { get() })
         incPC()
         incCycles()
     }

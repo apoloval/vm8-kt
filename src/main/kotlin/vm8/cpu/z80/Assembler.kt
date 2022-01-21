@@ -282,6 +282,11 @@ class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
     fun POP(dst: HL) = DB(OpCodes.`POP HL`)
     fun POP(dst: AF) = DB(OpCodes.`POP AF`)
 
+    fun PUSH(dst: BC) = DB(OpCodes.`PUSH BC`)
+    fun PUSH(dst: DE) = DB(OpCodes.`PUSH DE`)
+    fun PUSH(dst: HL) = DB(OpCodes.`PUSH HL`)
+    fun PUSH(dst: AF) = DB(OpCodes.`PUSH AF`)
+
     val RET: Unit get() { DB(OpCodes.`RET`) }
     fun RET(cond: NZ) = DB(OpCodes.`RET NZ`)
     fun RET(cond: Z) = DB(OpCodes.`RET Z`)

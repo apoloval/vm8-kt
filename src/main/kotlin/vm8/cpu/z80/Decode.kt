@@ -210,6 +210,7 @@ object OpCodes {
     const val `JP NZ, NN`   : Int = 0xC2
     const val `JP NN`       : Int = 0xC3
     const val `CALL NZ, NN` : Int = 0xC4
+    const val `PUSH BC`     : Int = 0xC5
     const val `RST 0x00`    : Int = 0xC7
     const val `RET Z`       : Int = 0xC8
     const val `RET`         : Int = 0xC9
@@ -223,6 +224,7 @@ object OpCodes {
     const val `JP NC, NN`   : Int = 0xD2
     const val `OUT (N), A`  : Int = 0xD3
     const val `CALL NC, NN` : Int = 0xD4
+    const val `PUSH DE`     : Int = 0xD5
     const val `RST 0x10`    : Int = 0xD7
     const val `RET C`       : Int = 0xD8
     const val `JP C, NN`    : Int = 0xDA
@@ -234,6 +236,7 @@ object OpCodes {
     const val `JP PO, NN`   : Int = 0xE2
     const val `EX (SP), HL` : Int = 0xE3
     const val `CALL PO, NN` : Int = 0xE4
+    const val `PUSH HL`     : Int = 0xE5
     const val `RST 0x20`    : Int = 0xE7
     const val `RET PE`      : Int = 0xE8
     const val `JP PE, NN`   : Int = 0xEA
@@ -246,6 +249,7 @@ object OpCodes {
     const val `JP P, NN`    : Int = 0xF2
     const val `DI`          : Int = 0xF3
     const val `CALL P, NN`  : Int = 0xF4
+    const val `PUSH AF`     : Int = 0xF5
     const val `RST 0x30`    : Int = 0xF7
     const val `RET M`       : Int = 0xF8
     const val `JP M, NN`    : Int = 0xFA
@@ -465,6 +469,7 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
         /* 0xC2 */ OpCodes.`JP NZ, NN` -> Inst.`JP NZ, NN`
         /* 0xC3 */ OpCodes.`JP NN` -> Inst.`JP NN`
         /* 0xC4 */ OpCodes.`CALL NZ, NN` -> Inst.`CALL NZ, NN`
+        /* 0xC5 */ OpCodes.`PUSH BC` -> Inst.`PUSH BC`
         /* 0xC7 */ OpCodes.`RST 0x00` -> Inst.`RST 0x00`
         /* 0xC8 */ OpCodes.`RET Z` -> Inst.`RET Z`
         /* 0xC9 */ OpCodes.`RET` -> Inst.`RET`
@@ -478,6 +483,7 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
         /* 0xD2 */ OpCodes.`JP NC, NN` -> Inst.`JP NC, NN`
         /* 0xD3 */ OpCodes.`OUT (N), A` -> Inst.`OUT (N), A`
         /* 0xD4 */ OpCodes.`CALL NC, NN` -> Inst.`CALL NC, NN`
+        /* 0xD5 */ OpCodes.`PUSH DE` -> Inst.`PUSH DE`
         /* 0xD7 */ OpCodes.`RST 0x10` -> Inst.`RST 0x10`
         /* 0xD8 */ OpCodes.`RET C` -> Inst.`RET C`
         /* 0xDA */ OpCodes.`JP C, NN` -> Inst.`JP C, NN`
@@ -489,6 +495,7 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
         /* 0xE2 */ OpCodes.`JP PO, NN` -> Inst.`JP PO, NN`
         /* 0xE3 */ OpCodes.`EX (SP), HL` -> Inst.`EX (SP), HL`
         /* 0xE4 */ OpCodes.`CALL PO, NN` -> Inst.`CALL PO, NN`
+        /* 0xE5 */ OpCodes.`PUSH HL` -> Inst.`PUSH HL`
         /* 0xE7 */ OpCodes.`RST 0x20` -> Inst.`RST 0x20`
         /* 0xE8 */ OpCodes.`RET PE` -> Inst.`RET PE`
         /* 0xEA */ OpCodes.`JP PE, NN` -> Inst.`JP PE, NN`
@@ -501,6 +508,7 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
         /* 0xF2 */ OpCodes.`JP P, NN` -> Inst.`JP P, NN`
         /* 0xF3 */ OpCodes.`DI` -> Inst.`DI`
         /* 0xF4 */ OpCodes.`CALL P, NN` -> Inst.`CALL P, NN`
+        /* 0xF5 */ OpCodes.`PUSH AF` -> Inst.`PUSH AF`
         /* 0xF7 */ OpCodes.`RST 0x30` -> Inst.`RST 0x30`
         /* 0xF8 */ OpCodes.`RET M` -> Inst.`RET M`
         /* 0xFA */ OpCodes.`JP M, NN` -> Inst.`JP M, NN`

@@ -143,8 +143,18 @@ class Processor(val bus: Bus, fn: Processor.() -> Unit = {}) {
     }
 
     internal suspend fun call(addr: UShort) {
-        regs.sp = regs.sp.increment(-2)
-        bus.memWriteWord(regs.sp, regs.pc)
+        push(regs.pc)
         regs.pc = addr
+    }
+
+    internal suspend fun push(value: UShort) {
+        regs.sp = regs.sp.increment(-2)
+        bus.memWriteWord(regs.sp, value)
+    }
+
+    internal suspend fun pop(): UShort {
+        val value = bus.memReadWord(regs.sp)
+        regs.sp = regs.sp.increment(2)
+        return value
     }
 }
