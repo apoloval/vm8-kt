@@ -155,6 +155,8 @@ class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
 
     val HALT: Unit get() = DB(OpCodes.HALT)
 
+    fun IN(dst: A, port: Indirect<UByte>) { DB(OpCodes.`IN A, (N)`); DB(port.expr) }
+
     fun INC(dst: A) = DB(OpCodes.`INC A`)
     fun INC(dst: B) = DB(OpCodes.`INC B`)
     fun INC(dst: C) = DB(OpCodes.`INC C`)

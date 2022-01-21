@@ -232,6 +232,7 @@ object OpCodes {
     const val `RET C`       : Int = 0xD8
     const val `EXX`         : Int = 0xD9
     const val `JP C, NN`    : Int = 0xDA
+    const val `IN A, (N)`   : Int = 0xDB
     const val `CALL C, NN`  : Int = 0xDC
     const val `SBC N`       : Int = 0xDE
     const val `RST 0x18`    : Int = 0xDF
@@ -500,6 +501,7 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
         /* 0xD8 */ OpCodes.`RET C` -> Inst.`RET C`
         /* 0xD9 */ OpCodes.`EXX` -> Inst.`EXX`
         /* 0xDA */ OpCodes.`JP C, NN` -> Inst.`JP C, NN`
+        /* 0xDB */ OpCodes.`IN A, (N)` -> Inst.`IN A, (N)`
         /* 0xDC */ OpCodes.`CALL C, NN` -> Inst.`CALL C, NN`
         /* 0xDE */ OpCodes.`SBC N` -> Inst.`SBC N`
         /* 0xDF */ OpCodes.`RST 0x18` -> Inst.`RST 0x18`

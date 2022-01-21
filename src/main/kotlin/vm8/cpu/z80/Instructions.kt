@@ -262,6 +262,7 @@ sealed interface Inst {
         /* 0xD8 */ val `RET C`          : Inst = Ret(FlagsPredicate.C, jcycles = 11, cycles = 5, size = 1u)
         /* 0xD9 */ val `EXX`            : Inst = Exx
         /* 0xDA */ val `JP C, NN`       : Inst = Jp(FlagsPredicate.C, Imm16, cycles = 10, size = 3u)
+        /* 0xDB */ val `IN A, (N)`      : Inst = In(Reg8.A, Imm8, cycles = 11, size = 2u)
         /* 0xDC */ val `CALL C, NN`     : Inst = Call(FlagsPredicate.C)
         /* 0xDE */ val `SBC N`          : Inst = Sub8(Reg8.A, Imm8, withCarry = true, cycles = 7, size = 2u)
         /* 0xDF */ val `RST 0x18`       : Inst = Rst(0x0018u)
@@ -275,6 +276,7 @@ sealed interface Inst {
         /* 0xE6 */ val `AND N`          : Inst = And8(Reg8.A, Imm8, cycles = 7, size = 2u)
         /* 0xE7 */ val `RST 0x20`       : Inst = Rst(0x0020u)
         /* 0xE8 */ val `RET PE`         : Inst = Ret(FlagsPredicate.PE, jcycles = 11, cycles = 5, size = 1u)
+        /* 0xE9 */
         /* 0xEA */ val `JP PE, NN`      : Inst = Jp(FlagsPredicate.PE, Imm16, cycles = 10, size = 3u)
         /* 0xEB */ val `EX DE, HL`      : Inst = Ex(Reg16.DE, Reg16.HL, cycles = 4, size = 1u)
         /* 0xEC */ val `CALL PE, NN`    : Inst = Call(FlagsPredicate.PE)
@@ -290,6 +292,7 @@ sealed interface Inst {
         /* 0xF6 */ val `OR N`           : Inst = Or8(Reg8.A, Imm8, cycles = 7, size = 2u)
         /* 0xF7 */ val `RST 0x30`       : Inst = Rst(0x0030u)
         /* 0xF8 */ val `RET M`          : Inst = Ret(FlagsPredicate.M, jcycles = 11, cycles = 5, size = 1u)
+        /* 0xF9 */
         /* 0xFA */ val `JP M, NN`       : Inst = Jp(FlagsPredicate.M, Imm16, cycles = 10, size = 3u)
         /* 0xFB */ val `EI`             : Inst = Ei
         /* 0xFC */ val `CALL M, NN`     : Inst = Call(FlagsPredicate.M)
@@ -588,6 +591,17 @@ object Halt : Inst {
 
     override suspend fun Processor.exec() {
         // TODO: HALT can be interrupted
+        incCycles()
+    }
+}
+
+/**
+ * IN instruction.
+ */
+data class In(val dst: DestOp8, val port: SrcOp8, override val cycles: Long, override val size: UByte) : Inst {
+    override suspend fun Processor.exec() {
+        store8(dst, bus.ioReadByte(load8(port)))
+        incPC()
         incCycles()
     }
 }

@@ -2551,26 +2551,38 @@ class ProcessorTest : FunSpec({
     }
 
     context("Input and output") {
-        context("Output") {
-            data class TestCase(
-                val cycles: Int,
-                val size: Int,
-                val result: suspend ProcessorBehavior.() -> UByte,
-                val prepare: ProcessorBehavior.(UByte) -> Unit
-            )
+        data class TestCase(
+            val cycles: Int,
+            val size: Int,
+            val result: suspend ProcessorBehavior.() -> UByte,
+            val prepare: suspend ProcessorBehavior.(UByte) -> Unit
+        )
 
-            withData(mapOf(
-                "OUT (N), A" to TestCase(cycles = 11, size = 2, result = { bus.ioReadByte(0x42u) }) {
+        withData(mapOf(
+            "IN A, (N)" to TestCase(
+                cycles = 11,
+                size = 2,
+                result = { regs.a },
+                prepare = {
+                    bus.ioWriteByte(0x42u, it)
+                    mem.asm { IN(A, !0x42u.toUByte()) }
+                },
+            ),
+            "OUT (N), A" to TestCase(
+                cycles = 11,
+                size = 2,
+                result = { bus.ioReadByte(0x42u) },
+                prepare = {
                     regs.a = it
                     mem.asm { OUT(!0x42u.toUByte(), A) }
                 },
-            )) { (cycles, size, result, prepare) -> behavesLike { value: UByte, prevFlags ->
-                prepare(value)
-                whenProcessorRuns()
-                expect(cycles = cycles, pc = size.toUShort(), flags = prevFlags)
-                result() shouldBe value
-            }}
-        }
+            ),
+        )) { (cycles, size, result, prepare) -> behavesLike { value: UByte, prevFlags ->
+            prepare(value)
+            whenProcessorRuns()
+            expect(cycles = cycles, pc = size.toUShort(), flags = prevFlags)
+            result() shouldBe value
+        }}
     }
 })
 
