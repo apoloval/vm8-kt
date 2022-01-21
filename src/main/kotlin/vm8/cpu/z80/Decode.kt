@@ -209,272 +209,295 @@ object OpCodes {
     const val `POP BC`     : Int = 0xC1
     const val `JP NZ, NN`  : Int = 0xC2
     const val `JP NN`      : Int = 0xC3
+    const val `RST 0x00`   : Int = 0xC7
     const val `RET Z`      : Int = 0xC8
     const val `RET`        : Int = 0xC9
     const val `JP Z, NN`   : Int = 0xCA
+    const val `RST 0x08`   : Int = 0xCF
 
     const val `RET NC`     : Int = 0xD0
     const val `POP DE`     : Int = 0xD1
     const val `JP NC, NN`  : Int = 0xD2
     const val `OUT (N), A` : Int = 0xD3
+    const val `RST 0x10`   : Int = 0xD7
     const val `RET C`      : Int = 0xD8
     const val `JP C, NN`   : Int = 0xDA
+    const val `RST 0x18`   : Int = 0xDF
 
     const val `RET PO`     : Int = 0xE0
     const val `POP HL`     : Int = 0xE1
     const val `JP PO, NN`  : Int = 0xE2
     const val `EX (SP), HL`: Int = 0xE3
+    const val `RST 0x20`   : Int = 0xE7
     const val `RET PE`     : Int = 0xE8
     const val `JP PE, NN`  : Int = 0xEA
     const val `EX DE, HL`  : Int = 0xEB
+    const val `RST 0x28`   : Int = 0xEF
 
     const val `RET P`      : Int = 0xF0
     const val `POP AF`     : Int = 0xF1
     const val `JP P, NN`   : Int = 0xF2
+    const val `DI`         : Int = 0xF3
+    const val `RST 0x30`   : Int = 0xF7
     const val `RET M`      : Int = 0xF8
     const val `JP M, NN`   : Int = 0xFA
+    const val `EI`         : Int = 0xFB
+    const val `RST 0x38`   : Int = 0xFF
 }
 
 private val OPCODES_MAIN: Array<Inst> = Array(256) {
     when(it) {
-        /* 0x00 */ OpCodes.`NOP` -> Nop
-        /* 0x01 */ OpCodes.`LD BC, NN` -> Ld16(Reg16.BC, Imm16, cycles = 10, size = 3u)
-        /* 0x02 */ OpCodes.`LD (BC), A` -> Ld8(Ind8(Reg16.BC), Reg8.A, cycles = 7, size = 1u)
-        /* 0x03 */ OpCodes.`INC BC` -> Inc16(Reg16.BC, cycles = 6, size = 1u)
-        /* 0x04 */ OpCodes.`INC B` -> Inc8(Reg8.B, cycles = 4, size = 1u)
-        /* 0x05 */ OpCodes.`DEC B` -> Dec8(Reg8.B, cycles = 4, size = 1u)
-        /* 0x06 */ OpCodes.`LD B, N` -> Ld8(Reg8.B, Imm8, cycles = 7, size = 2u)
-        /* 0x07 */ OpCodes.`RLCA` -> Rlca(cycles = 4, size = 1u)
-        /* 0x08 */ OpCodes.`EX AF, AF'` -> Ex(Reg16.AF, Reg16.`AF'`, cycles = 4, size = 1u)
-        /* 0x09 */ OpCodes.`ADD HL, BC` -> Add16(Reg16.HL, Reg16.BC, cycles = 11, size = 1u)
-        /* 0x0A */ OpCodes.`LD A, (BC)` -> Ld8(Reg8.A, Ind8(Reg16.BC), cycles = 7, size = 1u)
-        /* 0x0B */ OpCodes.`DEC BC` -> Dec16(Reg16.BC, cycles = 6, size = 1u)
-        /* 0x0C */ OpCodes.`INC C` -> Inc8(Reg8.C, cycles = 4, size = 1u)
-        /* 0x0D */ OpCodes.`DEC C` -> Dec8(Reg8.C, cycles = 4, size = 1u)
-        /* 0x0E */ OpCodes.`LD C, N` -> Ld8(Reg8.C, Imm8, cycles = 7, size = 2u)
-        /* 0x0F */ OpCodes.`RRCA` -> Rrca(cycles = 4, size = 1u)
+        /* 0x00 */ OpCodes.`NOP` -> Inst.`NOP`
+        /* 0x01 */ OpCodes.`LD BC, NN` -> Inst.`LD BC, NN`
+        /* 0x02 */ OpCodes.`LD (BC), A` -> Inst.`LD (BC), A`
+        /* 0x03 */ OpCodes.`INC BC` -> Inst.`INC BC`
+        /* 0x04 */ OpCodes.`INC B` -> Inst.`INC B`
+        /* 0x05 */ OpCodes.`DEC B` -> Inst.`DEC B`
+        /* 0x06 */ OpCodes.`LD B, N` -> Inst.`LD B, N`
+        /* 0x07 */ OpCodes.`RLCA` -> Inst.`RLCA`
+        /* 0x08 */ OpCodes.`EX AF, AF'` -> Inst.`EX AF, AF'`
+        /* 0x09 */ OpCodes.`ADD HL, BC` -> Inst.`ADD HL, BC`
+        /* 0x0A */ OpCodes.`LD A, (BC)` -> Inst.`LD A, (BC)`
+        /* 0x0B */ OpCodes.`DEC BC` -> Inst.`DEC BC`
+        /* 0x0C */ OpCodes.`INC C` -> Inst.`INC C`
+        /* 0x0D */ OpCodes.`DEC C` -> Inst.`DEC C`
+        /* 0x0E */ OpCodes.`LD C, N` -> Inst.`LD C, N`
+        /* 0x0F */ OpCodes.`RRCA` -> Inst.`RRCA`
 
-        /* 0x10 */ OpCodes.`DJNZ N` -> Djnz(Reg8.B, Imm8, jcycles = 13, njcycles = 8, size = 2u)
-        /* 0x11 */ OpCodes.`LD DE, NN` -> Ld16(Reg16.DE, Imm16, cycles = 10, size = 3u)
-        /* 0x12 */ OpCodes.`LD (DE), A` -> Ld8(Ind8(Reg16.DE), Reg8.A, cycles = 7, size = 1u)
-        /* 0x13 */ OpCodes.`INC DE` -> Inc16(Reg16.DE, cycles = 6, size = 1u)
-        /* 0x14 */ OpCodes.`INC D` -> Inc8(Reg8.D, cycles = 4, size = 1u)
-        /* 0x15 */ OpCodes.`DEC D` -> Dec8(Reg8.D, cycles = 4, size = 1u)
-        /* 0x16 */ OpCodes.`LD D, N` -> Ld8(Reg8.D, Imm8, cycles = 7, size = 2u)
-        /* 0x17 */ OpCodes.`RLA` -> Rla(cycles = 4, size = 1u)
-        /* 0x18 */ OpCodes.`JR N` -> Jr(FlagsPredicate.ALWAYS, Imm8, jcycles = 12, njcycles = 12, size = 2u)
-        /* 0x19 */ OpCodes.`ADD HL, DE` -> Add16(Reg16.HL, Reg16.DE, cycles = 11, size = 1u)
-        /* 0x1A */ OpCodes.`LD A, (DE)` -> Ld8(Reg8.A, Ind8(Reg16.DE), cycles = 7, size = 1u)
-        /* 0x1B */ OpCodes.`DEC DE` -> Dec16(Reg16.DE, cycles = 6, size = 1u)
-        /* 0x1C */ OpCodes.`INC E` -> Inc8(Reg8.E, cycles = 4, size = 1u)
-        /* 0x1D */ OpCodes.`DEC E` -> Dec8(Reg8.E, cycles = 4, size = 1u)
-        /* 0x1E */ OpCodes.`LD E, N` -> Ld8(Reg8.E, Imm8, cycles = 7, size = 2u)
-        /* 0x1F */ OpCodes.`RRA` -> Rra(cycles = 4, size = 1u)
+        /* 0x10 */ OpCodes.`DJNZ N` -> Inst.`DJNZ N`
+        /* 0x11 */ OpCodes.`LD DE, NN` -> Inst.`LD DE, NN`
+        /* 0x12 */ OpCodes.`LD (DE), A` -> Inst.`LD (DE), A`
+        /* 0x13 */ OpCodes.`INC DE` -> Inst.`INC DE`
+        /* 0x14 */ OpCodes.`INC D` -> Inst.`INC D`
+        /* 0x15 */ OpCodes.`DEC D` -> Inst.`DEC D`
+        /* 0x16 */ OpCodes.`LD D, N` -> Inst.`LD D, N`
+        /* 0x17 */ OpCodes.`RLA` -> Inst.`RLA`
+        /* 0x18 */ OpCodes.`JR N` -> Inst.`JR N`
+        /* 0x19 */ OpCodes.`ADD HL, DE` -> Inst.`ADD HL, DE`
+        /* 0x1A */ OpCodes.`LD A, (DE)` -> Inst.`LD A, (DE)`
+        /* 0x1B */ OpCodes.`DEC DE` -> Inst.`DEC DE`
+        /* 0x1C */ OpCodes.`INC E` -> Inst.`INC E`
+        /* 0x1D */ OpCodes.`DEC E` -> Inst.`DEC E`
+        /* 0x1E */ OpCodes.`LD E, N` -> Inst.`LD E, N`
+        /* 0x1F */ OpCodes.`RRA` -> Inst.`RRA`
 
-        /* 0x20 */ OpCodes.`JR NZ, N` -> Jr(FlagsPredicate.NZ, Imm8, jcycles = 12, njcycles = 7, size = 2u)
-        /* 0x21 */ OpCodes.`LD HL, NN` -> Ld16(Reg16.HL, Imm16, cycles = 10, size = 3u)
-        /* 0x22 */ OpCodes.`LD (NN), HL` -> Ld16(Ind16(Imm16), Reg16.HL, cycles = 16, size = 3u)
-        /* 0x23 */ OpCodes.`INC HL` -> Inc16(Reg16.HL, cycles = 6, size = 1u)
-        /* 0x24 */ OpCodes.`INC H` -> Inc8(Reg8.H, cycles = 4, size = 1u)
-        /* 0x25 */ OpCodes.`DEC H` -> Dec8(Reg8.H, cycles = 4, size = 1u)
-        /* 0x26 */ OpCodes.`LD H, N` -> Ld8(Reg8.H, Imm8, cycles = 7, size = 2u)
-        /* 0x27 */ OpCodes.`DAA` -> Daa(cycles = 4, size = 1u)
-        /* 0x28 */ OpCodes.`JR Z, N` -> Jr(FlagsPredicate.Z, Imm8, jcycles = 12, njcycles = 7, size = 2u)
-        /* 0x29 */ OpCodes.`ADD HL, HL` -> Add16(Reg16.HL, Reg16.HL, cycles = 11, size = 1u)
-        /* 0x2A */ OpCodes.`LD HL, (NN)` -> Ld16(Reg16.HL, Ind16(Imm16), cycles = 16, size = 3u)
-        /* 0x2B */ OpCodes.`DEC HL` -> Dec16(Reg16.HL, cycles = 6, size = 1u)
-        /* 0x2C */ OpCodes.`INC L` -> Inc8(Reg8.L, cycles = 4, size = 1u)
-        /* 0x2D */ OpCodes.`DEC L` -> Dec8(Reg8.L, cycles = 4, size = 1u)
-        /* 0x2E */ OpCodes.`LD L, N` -> Ld8(Reg8.L, Imm8, cycles = 7, size = 2u)
-        /* 0x2F */ OpCodes.`CPL` -> Cpl(cycles = 4, size = 1u)
+        /* 0x20 */ OpCodes.`JR NZ, N` -> Inst.`JR NZ, N`
+        /* 0x21 */ OpCodes.`LD HL, NN` -> Inst.`LD HL, NN`
+        /* 0x22 */ OpCodes.`LD (NN), HL` -> Inst.`LD (NN), HL`
+        /* 0x23 */ OpCodes.`INC HL` -> Inst.`INC HL`
+        /* 0x24 */ OpCodes.`INC H` -> Inst.`INC H`
+        /* 0x25 */ OpCodes.`DEC H` -> Inst.`DEC H`
+        /* 0x26 */ OpCodes.`LD H, N` -> Inst.`LD H, N`
+        /* 0x27 */ OpCodes.`DAA` -> Inst.`DAA`
+        /* 0x28 */ OpCodes.`JR Z, N` -> Inst.`JR Z, N`
+        /* 0x29 */ OpCodes.`ADD HL, HL` -> Inst.`ADD HL, HL`
+        /* 0x2A */ OpCodes.`LD HL, (NN)` -> Inst.`LD HL, (NN)`
+        /* 0x2B */ OpCodes.`DEC HL` -> Inst.`DEC HL`
+        /* 0x2C */ OpCodes.`INC L` -> Inst.`INC L`
+        /* 0x2D */ OpCodes.`DEC L` -> Inst.`DEC L`
+        /* 0x2E */ OpCodes.`LD L, N` -> Inst.`LD L, N`
+        /* 0x2F */ OpCodes.`CPL` -> Inst.`CPL`
 
-        /* 0x30 */ OpCodes.`JR NC, N` -> Jr(FlagsPredicate.NC, Imm8, jcycles = 12, njcycles = 7, size = 2u)
-        /* 0x31 */ OpCodes.`LD SP, NN` -> Ld16(Reg16.SP, Imm16, cycles = 10, size = 3u)
-        /* 0x32 */ OpCodes.`LD (NN), A` -> Ld8(Ind8(Imm16), Reg8.A, cycles = 13, size = 3u)
-        /* 0x33 */ OpCodes.`INC SP` -> Inc16(Reg16.SP, cycles = 6, size = 1u)
-        /* 0x34 */ OpCodes.`INC (HL)` -> Inc8(Ind8(Reg16.HL), cycles = 11, size = 1u)
-        /* 0x35 */ OpCodes.`DEC (HL)` -> Dec8(Ind8(Reg16.HL), cycles = 11, size = 1u)
-        /* 0x36 */ OpCodes.`LD (HL), N` -> Ld8(Ind8(Reg16.HL), Imm8, cycles = 10, size = 2u)
-        /* 0x37 */ OpCodes.`SCF` -> Scf(cycles = 4, size = 1u)
-        /* 0x38 */ OpCodes.`JR C, N` -> Jr(FlagsPredicate.C, Imm8, jcycles = 12, njcycles = 7, size = 2u)
-        /* 0x39 */ OpCodes.`ADD HL, SP` -> Add16(Reg16.HL, Reg16.SP, cycles = 11, size = 1u)
-        /* 0x3A */ OpCodes.`LD A, (NN)` -> Ld8(Reg8.A, Ind8(Imm16), cycles = 13, size = 3u)
-        /* 0x3B */ OpCodes.`DEC SP` -> Dec16(Reg16.SP, cycles = 6, size = 1u)
-        /* 0x3C */ OpCodes.`INC A` -> Inc8(Reg8.A, cycles = 4, size = 1u)
-        /* 0x3D */ OpCodes.`DEC A` -> Dec8(Reg8.A, cycles = 4, size = 1u)
-        /* 0x3E */ OpCodes.`LD A, N` -> Ld8(Reg8.A, Imm8, cycles = 7, size = 2u)
-        /* 0x3F */ OpCodes.`CCF` -> Ccf(cycles = 4, size = 1u)
+        /* 0x30 */ OpCodes.`JR NC, N` -> Inst.`JR NC, N`
+        /* 0x31 */ OpCodes.`LD SP, NN` -> Inst.`LD SP, NN`
+        /* 0x32 */ OpCodes.`LD (NN), A` -> Inst.`LD (NN), A`
+        /* 0x33 */ OpCodes.`INC SP` -> Inst.`INC SP`
+        /* 0x34 */ OpCodes.`INC (HL)` -> Inst.`INC (HL)`
+        /* 0x35 */ OpCodes.`DEC (HL)` -> Inst.`DEC (HL)`
+        /* 0x36 */ OpCodes.`LD (HL), N` -> Inst.`LD (HL), N`
+        /* 0x37 */ OpCodes.`SCF` -> Inst.`SCF`
+        /* 0x38 */ OpCodes.`JR C, N` -> Inst.`JR C, N`
+        /* 0x39 */ OpCodes.`ADD HL, SP` -> Inst.`ADD HL, SP`
+        /* 0x3A */ OpCodes.`LD A, (NN)` -> Inst.`LD A, (NN)`
+        /* 0x3B */ OpCodes.`DEC SP` -> Inst.`DEC SP`
+        /* 0x3C */ OpCodes.`INC A` -> Inst.`INC A`
+        /* 0x3D */ OpCodes.`DEC A` -> Inst.`DEC A`
+        /* 0x3E */ OpCodes.`LD A, N` -> Inst.`LD A, N`
+        /* 0x3F */ OpCodes.`CCF` -> Inst.`CCF`
 
-        /* 0x40 */ OpCodes.`LD B, B` -> Ld8(Reg8.B, Reg8.B, cycles = 4, size = 1u)
-        /* 0x41 */ OpCodes.`LD B, C` -> Ld8(Reg8.B, Reg8.C, cycles = 4, size = 1u)
-        /* 0x42 */ OpCodes.`LD B, D` -> Ld8(Reg8.B, Reg8.D, cycles = 4, size = 1u)
-        /* 0x43 */ OpCodes.`LD B, E` -> Ld8(Reg8.B, Reg8.E, cycles = 4, size = 1u)
-        /* 0x44 */ OpCodes.`LD B, H` -> Ld8(Reg8.B, Reg8.H, cycles = 4, size = 1u)
-        /* 0x45 */ OpCodes.`LD B, L` -> Ld8(Reg8.B, Reg8.L, cycles = 4, size = 1u)
-        /* 0x46 */ OpCodes.`LD B, (HL)` -> Ld8(Reg8.B, Ind8(Reg16.HL), cycles = 7, size = 1u)
-        /* 0x47 */ OpCodes.`LD B, A` -> Ld8(Reg8.B, Reg8.A, cycles = 4, size = 1u)
-        /* 0x48 */ OpCodes.`LD C, B` -> Ld8(Reg8.C, Reg8.B, cycles = 4, size = 1u)
-        /* 0x49 */ OpCodes.`LD C, C` -> Ld8(Reg8.C, Reg8.C, cycles = 4, size = 1u)
-        /* 0x4A */ OpCodes.`LD C, D` -> Ld8(Reg8.C, Reg8.D, cycles = 4, size = 1u)
-        /* 0x4B */ OpCodes.`LD C, E` -> Ld8(Reg8.C, Reg8.E, cycles = 4, size = 1u)
-        /* 0x4C */ OpCodes.`LD C, H` -> Ld8(Reg8.C, Reg8.H, cycles = 4, size = 1u)
-        /* 0x4D */ OpCodes.`LD C, L` -> Ld8(Reg8.C, Reg8.L, cycles = 4, size = 1u)
-        /* 0x4E */ OpCodes.`LD C, (HL)` -> Ld8(Reg8.C, Ind8(Reg16.HL), cycles = 7, size = 1u)
-        /* 0x4F */ OpCodes.`LD C, A` -> Ld8(Reg8.C, Reg8.A, cycles = 4, size = 1u)
+        /* 0x40 */ OpCodes.`LD B, B` -> Inst.`LD B, B`
+        /* 0x41 */ OpCodes.`LD B, C` -> Inst.`LD B, C`
+        /* 0x42 */ OpCodes.`LD B, D` -> Inst.`LD B, D`
+        /* 0x43 */ OpCodes.`LD B, E` -> Inst.`LD B, E`
+        /* 0x44 */ OpCodes.`LD B, H` -> Inst.`LD B, H`
+        /* 0x45 */ OpCodes.`LD B, L` -> Inst.`LD B, L`
+        /* 0x46 */ OpCodes.`LD B, (HL)` -> Inst.`LD B, (HL)`
+        /* 0x47 */ OpCodes.`LD B, A` -> Inst.`LD B, A`
+        /* 0x48 */ OpCodes.`LD C, B` -> Inst.`LD C, B`
+        /* 0x49 */ OpCodes.`LD C, C` -> Inst.`LD C, C`
+        /* 0x4A */ OpCodes.`LD C, D` -> Inst.`LD C, D`
+        /* 0x4B */ OpCodes.`LD C, E` -> Inst.`LD C, E`
+        /* 0x4C */ OpCodes.`LD C, H` -> Inst.`LD C, H`
+        /* 0x4D */ OpCodes.`LD C, L` -> Inst.`LD C, L`
+        /* 0x4E */ OpCodes.`LD C, (HL)` -> Inst.`LD C, (HL)`
+        /* 0x4F */ OpCodes.`LD C, A` -> Inst.`LD C, A`
 
-        /* 0x50 */ OpCodes.`LD D, B` -> Ld8(Reg8.D, Reg8.B, cycles = 4, size = 1u)
-        /* 0x51 */ OpCodes.`LD D, C` -> Ld8(Reg8.D, Reg8.C, cycles = 4, size = 1u)
-        /* 0x52 */ OpCodes.`LD D, D` -> Ld8(Reg8.D, Reg8.D, cycles = 4, size = 1u)
-        /* 0x53 */ OpCodes.`LD D, E` -> Ld8(Reg8.D, Reg8.E, cycles = 4, size = 1u)
-        /* 0x54 */ OpCodes.`LD D, H` -> Ld8(Reg8.D, Reg8.H, cycles = 4, size = 1u)
-        /* 0x55 */ OpCodes.`LD D, L` -> Ld8(Reg8.D, Reg8.L, cycles = 4, size = 1u)
-        /* 0x56 */ OpCodes.`LD D, (HL)` -> Ld8(Reg8.D, Ind8(Reg16.HL), cycles = 7, size = 1u)
-        /* 0x57 */ OpCodes.`LD D, A` -> Ld8(Reg8.D, Reg8.A, cycles = 4, size = 1u)
-        /* 0x58 */ OpCodes.`LD E, B` -> Ld8(Reg8.E, Reg8.B, cycles = 4, size = 1u)
-        /* 0x59 */ OpCodes.`LD E, C` -> Ld8(Reg8.E, Reg8.C, cycles = 4, size = 1u)
-        /* 0x5A */ OpCodes.`LD E, D` -> Ld8(Reg8.E, Reg8.D, cycles = 4, size = 1u)
-        /* 0x5B */ OpCodes.`LD E, E` -> Ld8(Reg8.E, Reg8.E, cycles = 4, size = 1u)
-        /* 0x5C */ OpCodes.`LD E, H` -> Ld8(Reg8.E, Reg8.H, cycles = 4, size = 1u)
-        /* 0x5D */ OpCodes.`LD E, L` -> Ld8(Reg8.E, Reg8.L, cycles = 4, size = 1u)
-        /* 0x5E */ OpCodes.`LD E, (HL)` -> Ld8(Reg8.E, Ind8(Reg16.HL), cycles = 7, size = 1u)
-        /* 0x5F */ OpCodes.`LD E, A` -> Ld8(Reg8.E, Reg8.A, cycles = 4, size = 1u)
+        /* 0x50 */ OpCodes.`LD D, B` -> Inst.`LD D, B`
+        /* 0x51 */ OpCodes.`LD D, C` -> Inst.`LD D, C`
+        /* 0x52 */ OpCodes.`LD D, D` -> Inst.`LD D, D`
+        /* 0x53 */ OpCodes.`LD D, E` -> Inst.`LD D, E`
+        /* 0x54 */ OpCodes.`LD D, H` -> Inst.`LD D, H`
+        /* 0x55 */ OpCodes.`LD D, L` -> Inst.`LD D, L`
+        /* 0x56 */ OpCodes.`LD D, (HL)` -> Inst.`LD D, (HL)`
+        /* 0x57 */ OpCodes.`LD D, A` -> Inst.`LD D, A`
+        /* 0x58 */ OpCodes.`LD E, B` -> Inst.`LD E, B`
+        /* 0x59 */ OpCodes.`LD E, C` -> Inst.`LD E, C`
+        /* 0x5A */ OpCodes.`LD E, D` -> Inst.`LD E, D`
+        /* 0x5B */ OpCodes.`LD E, E` -> Inst.`LD E, E`
+        /* 0x5C */ OpCodes.`LD E, H` -> Inst.`LD E, H`
+        /* 0x5D */ OpCodes.`LD E, L` -> Inst.`LD E, L`
+        /* 0x5E */ OpCodes.`LD E, (HL)` -> Inst.`LD E, (HL)`
+        /* 0x5F */ OpCodes.`LD E, A` -> Inst.`LD E, A`
 
-        /* 0x60 */ OpCodes.`LD H, B` -> Ld8(Reg8.H, Reg8.B, cycles = 4, size = 1u)
-        /* 0x61 */ OpCodes.`LD H, C` -> Ld8(Reg8.H, Reg8.C, cycles = 4, size = 1u)
-        /* 0x62 */ OpCodes.`LD H, D` -> Ld8(Reg8.H, Reg8.D, cycles = 4, size = 1u)
-        /* 0x63 */ OpCodes.`LD H, E` -> Ld8(Reg8.H, Reg8.E, cycles = 4, size = 1u)
-        /* 0x64 */ OpCodes.`LD H, H` -> Ld8(Reg8.H, Reg8.H, cycles = 4, size = 1u)
-        /* 0x65 */ OpCodes.`LD H, L` -> Ld8(Reg8.H, Reg8.L, cycles = 4, size = 1u)
-        /* 0x66 */ OpCodes.`LD H, (HL)` -> Ld8(Reg8.H, Ind8(Reg16.HL), cycles = 7, size = 1u)
-        /* 0x67 */ OpCodes.`LD H, A` -> Ld8(Reg8.H, Reg8.A, cycles = 4, size = 1u)
-        /* 0x68 */ OpCodes.`LD L, B` -> Ld8(Reg8.L, Reg8.B, cycles = 4, size = 1u)
-        /* 0x69 */ OpCodes.`LD L, C` -> Ld8(Reg8.L, Reg8.C, cycles = 4, size = 1u)
-        /* 0x6A */ OpCodes.`LD L, D` -> Ld8(Reg8.L, Reg8.D, cycles = 4, size = 1u)
-        /* 0x6B */ OpCodes.`LD L, E` -> Ld8(Reg8.L, Reg8.E, cycles = 4, size = 1u)
-        /* 0x6C */ OpCodes.`LD L, H` -> Ld8(Reg8.L, Reg8.H, cycles = 4, size = 1u)
-        /* 0x6D */ OpCodes.`LD L, L` -> Ld8(Reg8.L, Reg8.L, cycles = 4, size = 1u)
-        /* 0x6E */ OpCodes.`LD L, (HL)` -> Ld8(Reg8.L, Ind8(Reg16.HL), cycles = 7, size = 1u)
-        /* 0x6F */ OpCodes.`LD L, A` -> Ld8(Reg8.L, Reg8.A, cycles = 4, size = 1u)
+        /* 0x60 */ OpCodes.`LD H, B` -> Inst.`LD H, B`
+        /* 0x61 */ OpCodes.`LD H, C` -> Inst.`LD H, C`
+        /* 0x62 */ OpCodes.`LD H, D` -> Inst.`LD H, D`
+        /* 0x63 */ OpCodes.`LD H, E` -> Inst.`LD H, E`
+        /* 0x64 */ OpCodes.`LD H, H` -> Inst.`LD H, H`
+        /* 0x65 */ OpCodes.`LD H, L` -> Inst.`LD H, L`
+        /* 0x66 */ OpCodes.`LD H, (HL)` -> Inst.`LD H, (HL)`
+        /* 0x67 */ OpCodes.`LD H, A` -> Inst.`LD H, A`
+        /* 0x68 */ OpCodes.`LD L, B` -> Inst.`LD L, B`
+        /* 0x69 */ OpCodes.`LD L, C` -> Inst.`LD L, C`
+        /* 0x6A */ OpCodes.`LD L, D` -> Inst.`LD L, D`
+        /* 0x6B */ OpCodes.`LD L, E` -> Inst.`LD L, E`
+        /* 0x6C */ OpCodes.`LD L, H` -> Inst.`LD L, H`
+        /* 0x6D */ OpCodes.`LD L, L` -> Inst.`LD L, L`
+        /* 0x6E */ OpCodes.`LD L, (HL)` -> Inst.`LD L, (HL)`
+        /* 0x6F */ OpCodes.`LD L, A` -> Inst.`LD L, A`
 
-        /* 0x70 */ OpCodes.`LD (HL), B` -> Ld8(Ind8(Reg16.HL), Reg8.B, cycles = 7, size = 1u)
-        /* 0x71 */ OpCodes.`LD (HL), C` -> Ld8(Ind8(Reg16.HL), Reg8.C, cycles = 7, size = 1u)
-        /* 0x72 */ OpCodes.`LD (HL), D` -> Ld8(Ind8(Reg16.HL), Reg8.D, cycles = 7, size = 1u)
-        /* 0x73 */ OpCodes.`LD (HL), E` -> Ld8(Ind8(Reg16.HL), Reg8.E, cycles = 7, size = 1u)
-        /* 0x74 */ OpCodes.`LD (HL), H` -> Ld8(Ind8(Reg16.HL), Reg8.H, cycles = 7, size = 1u)
-        /* 0x75 */ OpCodes.`LD (HL), L` -> Ld8(Ind8(Reg16.HL), Reg8.L, cycles = 7, size = 1u)
-        /* 0x76 */ OpCodes.`HALT` -> Halt
-        /* 0x77 */ OpCodes.`LD (HL), A` -> Ld8(Ind8(Reg16.HL), Reg8.A, cycles = 7, size = 1u)
-        /* 0x78 */ OpCodes.`LD A, B` -> Ld8(Reg8.A, Reg8.B, cycles = 4, size = 1u)
-        /* 0x79 */ OpCodes.`LD A, C` -> Ld8(Reg8.A, Reg8.C, cycles = 4, size = 1u)
-        /* 0x7A */ OpCodes.`LD A, D` -> Ld8(Reg8.A, Reg8.D, cycles = 4, size = 1u)
-        /* 0x7B */ OpCodes.`LD A, E` -> Ld8(Reg8.A, Reg8.E, cycles = 4, size = 1u)
-        /* 0x7C */ OpCodes.`LD A, H` -> Ld8(Reg8.A, Reg8.H, cycles = 4, size = 1u)
-        /* 0x7D */ OpCodes.`LD A, L` -> Ld8(Reg8.A, Reg8.L, cycles = 4, size = 1u)
-        /* 0x7E */ OpCodes.`LD A, (HL)` -> Ld8(Reg8.A, Ind8(Reg16.HL), cycles = 7, size = 1u)
-        /* 0x7F */ OpCodes.`LD A, A` -> Ld8(Reg8.A, Reg8.A, cycles = 4, size = 1u)
+        /* 0x70 */ OpCodes.`LD (HL), B` -> Inst.`LD (HL), B`
+        /* 0x71 */ OpCodes.`LD (HL), C` -> Inst.`LD (HL), C`
+        /* 0x72 */ OpCodes.`LD (HL), D` -> Inst.`LD (HL), D`
+        /* 0x73 */ OpCodes.`LD (HL), E` -> Inst.`LD (HL), E`
+        /* 0x74 */ OpCodes.`LD (HL), H` -> Inst.`LD (HL), H`
+        /* 0x75 */ OpCodes.`LD (HL), L` -> Inst.`LD (HL), L`
+        /* 0x76 */ OpCodes.`HALT` -> Inst.`HALT`
+        /* 0x77 */ OpCodes.`LD (HL), A` -> Inst.`LD (HL), A`
+        /* 0x78 */ OpCodes.`LD A, B` -> Inst.`LD A, B`
+        /* 0x79 */ OpCodes.`LD A, C` -> Inst.`LD A, C`
+        /* 0x7A */ OpCodes.`LD A, D` -> Inst.`LD A, D`
+        /* 0x7B */ OpCodes.`LD A, E` -> Inst.`LD A, E`
+        /* 0x7C */ OpCodes.`LD A, H` -> Inst.`LD A, H`
+        /* 0x7D */ OpCodes.`LD A, L` -> Inst.`LD A, L`
+        /* 0x7E */ OpCodes.`LD A, (HL)` -> Inst.`LD A, (HL)`
+        /* 0x7F */ OpCodes.`LD A, A` -> Inst.`LD A, A`
 
-        /* 0x80 */ OpCodes.`ADD A, B` -> Add8(Reg8.A, Reg8.B, withCarry = false, cycles = 4, size = 1u)
-        /* 0x81 */ OpCodes.`ADD A, C` -> Add8(Reg8.A, Reg8.C, withCarry = false, cycles = 4, size = 1u)
-        /* 0x82 */ OpCodes.`ADD A, D` -> Add8(Reg8.A, Reg8.D, withCarry = false, cycles = 4, size = 1u)
-        /* 0x83 */ OpCodes.`ADD A, E` -> Add8(Reg8.A, Reg8.E, withCarry = false, cycles = 4, size = 1u)
-        /* 0x84 */ OpCodes.`ADD A, H` -> Add8(Reg8.A, Reg8.H, withCarry = false, cycles = 4, size = 1u)
-        /* 0x85 */ OpCodes.`ADD A, L` -> Add8(Reg8.A, Reg8.L, withCarry = false, cycles = 4, size = 1u)
-        /* 0x86 */ OpCodes.`ADD A, (HL)` -> Add8(Reg8.A, Ind8(Reg16.HL), withCarry = false, cycles = 7, size = 1u)
-        /* 0x87 */ OpCodes.`ADD A, A` -> Add8(Reg8.A, Reg8.A, withCarry = false, cycles = 4, size = 1u)
-        /* 0x88 */ OpCodes.`ADC A, B` -> Add8(Reg8.A, Reg8.B, withCarry = true, cycles = 4, size = 1u)
-        /* 0x89 */ OpCodes.`ADC A, C` -> Add8(Reg8.A, Reg8.C, withCarry = true, cycles = 4, size = 1u)
-        /* 0x8A */ OpCodes.`ADC A, D` -> Add8(Reg8.A, Reg8.D, withCarry = true, cycles = 4, size = 1u)
-        /* 0x8B */ OpCodes.`ADC A, E` -> Add8(Reg8.A, Reg8.E, withCarry = true, cycles = 4, size = 1u)
-        /* 0x8C */ OpCodes.`ADC A, H` -> Add8(Reg8.A, Reg8.H, withCarry = true, cycles = 4, size = 1u)
-        /* 0x8D */ OpCodes.`ADC A, L` -> Add8(Reg8.A, Reg8.L, withCarry = true, cycles = 4, size = 1u)
-        /* 0x8E */ OpCodes.`ADC A, (HL)` -> Add8(Reg8.A, Ind8(Reg16.HL), withCarry = true, cycles = 7, size = 1u)
-        /* 0x8F */ OpCodes.`ADC A, A` -> Add8(Reg8.A, Reg8.A, withCarry = true, cycles = 4, size = 1u)
+        /* 0x80 */ OpCodes.`ADD A, B` -> Inst.`ADD A, B`
+        /* 0x81 */ OpCodes.`ADD A, C` -> Inst.`ADD A, C`
+        /* 0x82 */ OpCodes.`ADD A, D` -> Inst.`ADD A, D`
+        /* 0x83 */ OpCodes.`ADD A, E` -> Inst.`ADD A, E`
+        /* 0x84 */ OpCodes.`ADD A, H` -> Inst.`ADD A, H`
+        /* 0x85 */ OpCodes.`ADD A, L` -> Inst.`ADD A, L`
+        /* 0x86 */ OpCodes.`ADD A, (HL)` -> Inst.`ADD A, (HL)`
+        /* 0x87 */ OpCodes.`ADD A, A` -> Inst.`ADD A, A`
+        /* 0x88 */ OpCodes.`ADC A, B` -> Inst.`ADC A, B`
+        /* 0x89 */ OpCodes.`ADC A, C` -> Inst.`ADC A, C`
+        /* 0x8A */ OpCodes.`ADC A, D` -> Inst.`ADC A, D`
+        /* 0x8B */ OpCodes.`ADC A, E` -> Inst.`ADC A, E`
+        /* 0x8C */ OpCodes.`ADC A, H` -> Inst.`ADC A, H`
+        /* 0x8D */ OpCodes.`ADC A, L` -> Inst.`ADC A, L`
+        /* 0x8E */ OpCodes.`ADC A, (HL)` -> Inst.`ADC A, (HL)`
+        /* 0x8F */ OpCodes.`ADC A, A` -> Inst.`ADC A, A`
 
-        /* 0x90 */ OpCodes.`SUB B` -> Sub8(Reg8.A, Reg8.B, withCarry = false, cycles = 4, size = 1u)
-        /* 0x91 */ OpCodes.`SUB C` -> Sub8(Reg8.A, Reg8.C, withCarry = false, cycles = 4, size = 1u)
-        /* 0x92 */ OpCodes.`SUB D` -> Sub8(Reg8.A, Reg8.D, withCarry = false, cycles = 4, size = 1u)
-        /* 0x93 */ OpCodes.`SUB E` -> Sub8(Reg8.A, Reg8.E, withCarry = false, cycles = 4, size = 1u)
-        /* 0x94 */ OpCodes.`SUB H` -> Sub8(Reg8.A, Reg8.H, withCarry = false, cycles = 4, size = 1u)
-        /* 0x95 */ OpCodes.`SUB L` -> Sub8(Reg8.A, Reg8.L, withCarry = false, cycles = 4, size = 1u)
-        /* 0x96 */ OpCodes.`SUB (HL)` -> Sub8(Reg8.A, Ind8(Reg16.HL), withCarry = false, cycles = 7, size = 1u)
-        /* 0x97 */ OpCodes.`SUB A` -> Sub8(Reg8.A, Reg8.A, withCarry = false, cycles = 4, size = 1u)
-        /* 0x98 */ OpCodes.`SBC B` -> Sub8(Reg8.A, Reg8.B, withCarry = true, cycles = 4, size = 1u)
-        /* 0x99 */ OpCodes.`SBC C` -> Sub8(Reg8.A, Reg8.C, withCarry = true, cycles = 4, size = 1u)
-        /* 0x9A */ OpCodes.`SBC D` -> Sub8(Reg8.A, Reg8.D, withCarry = true, cycles = 4, size = 1u)
-        /* 0x9B */ OpCodes.`SBC E` -> Sub8(Reg8.A, Reg8.E, withCarry = true, cycles = 4, size = 1u)
-        /* 0x9C */ OpCodes.`SBC H` -> Sub8(Reg8.A, Reg8.H, withCarry = true, cycles = 4, size = 1u)
-        /* 0x9D */ OpCodes.`SBC L` -> Sub8(Reg8.A, Reg8.L, withCarry = true, cycles = 4, size = 1u)
-        /* 0x9E */ OpCodes.`SBC (HL)` -> Sub8(Reg8.A, Ind8(Reg16.HL), withCarry = true, cycles = 7, size = 1u)
-        /* 0x9F */ OpCodes.`SBC A` -> Sub8(Reg8.A, Reg8.A, withCarry = true, cycles = 4, size = 1u)
+        /* 0x90 */ OpCodes.`SUB B` -> Inst.`SUB B`
+        /* 0x91 */ OpCodes.`SUB C` -> Inst.`SUB C`
+        /* 0x92 */ OpCodes.`SUB D` -> Inst.`SUB D`
+        /* 0x93 */ OpCodes.`SUB E` -> Inst.`SUB E`
+        /* 0x94 */ OpCodes.`SUB H` -> Inst.`SUB H`
+        /* 0x95 */ OpCodes.`SUB L` -> Inst.`SUB L`
+        /* 0x96 */ OpCodes.`SUB (HL)` -> Inst.`SUB (HL)`
+        /* 0x97 */ OpCodes.`SUB A` -> Inst.`SUB A`
+        /* 0x98 */ OpCodes.`SBC B` -> Inst.`SBC B`
+        /* 0x99 */ OpCodes.`SBC C` -> Inst.`SBC C`
+        /* 0x9A */ OpCodes.`SBC D` -> Inst.`SBC D`
+        /* 0x9B */ OpCodes.`SBC E` -> Inst.`SBC E`
+        /* 0x9C */ OpCodes.`SBC H` -> Inst.`SBC H`
+        /* 0x9D */ OpCodes.`SBC L` -> Inst.`SBC L`
+        /* 0x9E */ OpCodes.`SBC (HL)` -> Inst.`SBC (HL)`
+        /* 0x9F */ OpCodes.`SBC A` -> Inst.`SBC A`
 
-        /* 0xA0 */ OpCodes.`AND B` -> And8(Reg8.A, Reg8.B,  cycles = 4, size = 1u)
-        /* 0xA1 */ OpCodes.`AND C` -> And8(Reg8.A, Reg8.C,  cycles = 4, size = 1u)
-        /* 0xA2 */ OpCodes.`AND D` -> And8(Reg8.A, Reg8.D,  cycles = 4, size = 1u)
-        /* 0xA3 */ OpCodes.`AND E` -> And8(Reg8.A, Reg8.E,  cycles = 4, size = 1u)
-        /* 0xA4 */ OpCodes.`AND H` -> And8(Reg8.A, Reg8.H,  cycles = 4, size = 1u)
-        /* 0xA5 */ OpCodes.`AND L` -> And8(Reg8.A, Reg8.L,  cycles = 4, size = 1u)
-        /* 0xA6 */ OpCodes.`AND (HL)` -> And8(Reg8.A, Ind8(Reg16.HL), cycles = 7, size = 1u)
-        /* 0xA7 */ OpCodes.`AND A` -> And8(Reg8.A, Reg8.A, cycles = 4, size = 1u)
-        /* 0xA8 */ OpCodes.`XOR B` -> Xor8(Reg8.A, Reg8.B,  cycles = 4, size = 1u)
-        /* 0xA9 */ OpCodes.`XOR C` -> Xor8(Reg8.A, Reg8.C,  cycles = 4, size = 1u)
-        /* 0xAA */ OpCodes.`XOR D` -> Xor8(Reg8.A, Reg8.D,  cycles = 4, size = 1u)
-        /* 0xAB */ OpCodes.`XOR E` -> Xor8(Reg8.A, Reg8.E,  cycles = 4, size = 1u)
-        /* 0xAC */ OpCodes.`XOR H` -> Xor8(Reg8.A, Reg8.H,  cycles = 4, size = 1u)
-        /* 0xAD */ OpCodes.`XOR L` -> Xor8(Reg8.A, Reg8.L,  cycles = 4, size = 1u)
-        /* 0xAE */ OpCodes.`XOR (HL)` -> Xor8(Reg8.A, Ind8(Reg16.HL), cycles = 7, size = 1u)
-        /* 0xAF */ OpCodes.`XOR A` -> Xor8(Reg8.A, Reg8.A, cycles = 4, size = 1u)
+        /* 0xA0 */ OpCodes.`AND B` -> Inst.`AND B`
+        /* 0xA1 */ OpCodes.`AND C` -> Inst.`AND C`
+        /* 0xA2 */ OpCodes.`AND D` -> Inst.`AND D`
+        /* 0xA3 */ OpCodes.`AND E` -> Inst.`AND E`
+        /* 0xA4 */ OpCodes.`AND H` -> Inst.`AND H`
+        /* 0xA5 */ OpCodes.`AND L` -> Inst.`AND L`
+        /* 0xA6 */ OpCodes.`AND (HL)` -> Inst.`AND (HL)`
+        /* 0xA7 */ OpCodes.`AND A` -> Inst.`AND A`
+        /* 0xA8 */ OpCodes.`XOR B` -> Inst.`XOR B`
+        /* 0xA9 */ OpCodes.`XOR C` -> Inst.`XOR C`
+        /* 0xAA */ OpCodes.`XOR D` -> Inst.`XOR D`
+        /* 0xAB */ OpCodes.`XOR E` -> Inst.`XOR E`
+        /* 0xAC */ OpCodes.`XOR H` -> Inst.`XOR H`
+        /* 0xAD */ OpCodes.`XOR L` -> Inst.`XOR L`
+        /* 0xAE */ OpCodes.`XOR (HL)` -> Inst.`XOR (HL)`
+        /* 0xAF */ OpCodes.`XOR A` -> Inst.`XOR A`
 
-        /* 0xB0 */ OpCodes.`OR B` -> Or8(Reg8.A, Reg8.B,  cycles = 4, size = 1u)
-        /* 0xB1 */ OpCodes.`OR C` -> Or8(Reg8.A, Reg8.C,  cycles = 4, size = 1u)
-        /* 0xB2 */ OpCodes.`OR D` -> Or8(Reg8.A, Reg8.D,  cycles = 4, size = 1u)
-        /* 0xB3 */ OpCodes.`OR E` -> Or8(Reg8.A, Reg8.E,  cycles = 4, size = 1u)
-        /* 0xB4 */ OpCodes.`OR H` -> Or8(Reg8.A, Reg8.H,  cycles = 4, size = 1u)
-        /* 0xB5 */ OpCodes.`OR L` -> Or8(Reg8.A, Reg8.L,  cycles = 4, size = 1u)
-        /* 0xB6 */ OpCodes.`OR (HL)` -> Or8(Reg8.A, Ind8(Reg16.HL), cycles = 7, size = 1u)
-        /* 0xB7 */ OpCodes.`OR A` -> Or8(Reg8.A, Reg8.A, cycles = 4, size = 1u)
-        /* 0xB8 */ OpCodes.`CP B` -> Cp8(Reg8.A, Reg8.B,  cycles = 4, size = 1u)
-        /* 0xB9 */ OpCodes.`CP C` -> Cp8(Reg8.A, Reg8.C,  cycles = 4, size = 1u)
-        /* 0xBA */ OpCodes.`CP D` -> Cp8(Reg8.A, Reg8.D,  cycles = 4, size = 1u)
-        /* 0xBB */ OpCodes.`CP E` -> Cp8(Reg8.A, Reg8.E,  cycles = 4, size = 1u)
-        /* 0xBC */ OpCodes.`CP H` -> Cp8(Reg8.A, Reg8.H,  cycles = 4, size = 1u)
-        /* 0xBD */ OpCodes.`CP L` -> Cp8(Reg8.A, Reg8.L,  cycles = 4, size = 1u)
-        /* 0xBE */ OpCodes.`CP (HL)` -> Cp8(Reg8.A, Ind8(Reg16.HL), cycles = 7, size = 1u)
-        /* 0xBF */ OpCodes.`CP A` -> Cp8(Reg8.A, Reg8.A, cycles = 4, size = 1u)
+        /* 0xB0 */ OpCodes.`OR B` -> Inst.`OR B`
+        /* 0xB1 */ OpCodes.`OR C` -> Inst.`OR C`
+        /* 0xB2 */ OpCodes.`OR D` -> Inst.`OR D`
+        /* 0xB3 */ OpCodes.`OR E` -> Inst.`OR E`
+        /* 0xB4 */ OpCodes.`OR H` -> Inst.`OR H`
+        /* 0xB5 */ OpCodes.`OR L` -> Inst.`OR L`
+        /* 0xB6 */ OpCodes.`OR (HL)` -> Inst.`OR (HL)`
+        /* 0xB7 */ OpCodes.`OR A` -> Inst.`OR A`
+        /* 0xB8 */ OpCodes.`CP B` -> Inst.`CP B`
+        /* 0xB9 */ OpCodes.`CP C` -> Inst.`CP C`
+        /* 0xBA */ OpCodes.`CP D` -> Inst.`CP D`
+        /* 0xBB */ OpCodes.`CP E` -> Inst.`CP E`
+        /* 0xBC */ OpCodes.`CP H` -> Inst.`CP H`
+        /* 0xBD */ OpCodes.`CP L` -> Inst.`CP L`
+        /* 0xBE */ OpCodes.`CP (HL)` -> Inst.`CP (HL)`
+        /* 0xBF */ OpCodes.`CP A` -> Inst.`CP A`
 
-        /* 0xC0 */ OpCodes.`RET NZ` -> Ret(FlagsPredicate.NZ, jcycles = 11, njcycles = 5, size = 1u)
-        /* 0xC1 */ OpCodes.`POP BC` -> Pop(Reg16.BC, cycles = 10, size = 1u)
-        /* 0xC2 */ OpCodes.`JP NZ, NN` -> Jp(FlagsPredicate.NZ, Imm16, cycles = 10, size = 3u)
-        /* 0xC3 */ OpCodes.`JP NN` -> Jp(FlagsPredicate.ALWAYS, Imm16, cycles = 10, size = 3u)
-        /* 0xC8 */ OpCodes.`RET Z` -> Ret(FlagsPredicate.Z, jcycles = 11, njcycles = 5, size = 1u)
-        /* 0xC9 */ OpCodes.`RET` -> Ret(FlagsPredicate.ALWAYS, jcycles = 10, njcycles = 10, size = 1u)
-        /* 0xCA */ OpCodes.`JP Z, NN` -> Jp(FlagsPredicate.Z, Imm16, cycles = 10, size = 3u)
+        /* 0xC0 */ OpCodes.`RET NZ` -> Inst.`RET NZ`
+        /* 0xC1 */ OpCodes.`POP BC` -> Inst.`POP BC`
+        /* 0xC2 */ OpCodes.`JP NZ, NN` -> Inst.`JP NZ, NN`
+        /* 0xC3 */ OpCodes.`JP NN` -> Inst.`JP NN`
+        /* 0xC7 */ OpCodes.`RST 0x00` -> Inst.`RST 0x00`
+        /* 0xC8 */ OpCodes.`RET Z` -> Inst.`RET Z`
+        /* 0xC9 */ OpCodes.`RET` -> Inst.`RET`
+        /* 0xCA */ OpCodes.`JP Z, NN` -> Inst.`JP Z, NN`
+        /* 0xCF */ OpCodes.`RST 0x08` -> Inst.`RST 0x08`
 
-        /* 0xD0 */ OpCodes.`RET NC` -> Ret(FlagsPredicate.NC, jcycles = 11, njcycles = 5, size = 1u)
-        /* 0xD1 */ OpCodes.`POP DE` -> Pop(Reg16.DE, cycles = 10, size = 1u)
-        /* 0xD2 */ OpCodes.`JP NC, NN` -> Jp(FlagsPredicate.NC, Imm16, cycles = 10, size = 3u)
-        /* 0xD3 */ OpCodes.`OUT (N), A` -> Out(Imm8, Reg8.A, cycles = 11, size = 2u)
-        /* 0xD8 */ OpCodes.`RET C` -> Ret(FlagsPredicate.C, jcycles = 11, njcycles = 5, size = 1u)
-        /* 0xDA */ OpCodes.`JP C, NN` -> Jp(FlagsPredicate.C, Imm16, cycles = 10, size = 3u)
+        /* 0xD0 */ OpCodes.`RET NC` -> Inst.`RET NC`
+        /* 0xD1 */ OpCodes.`POP DE` -> Inst.`POP DE`
+        /* 0xD2 */ OpCodes.`JP NC, NN` -> Inst.`JP NC, NN`
+        /* 0xD3 */ OpCodes.`OUT (N), A` -> Inst.`OUT (N), A`
+        /* 0xD7 */ OpCodes.`RST 0x10` -> Inst.`RST 0x10`
+        /* 0xD8 */ OpCodes.`RET C` -> Inst.`RET C`
+        /* 0xDA */ OpCodes.`JP C, NN` -> Inst.`JP C, NN`
+        /* 0xDF */ OpCodes.`RST 0x18` -> Inst.`RST 0x18`
 
-        /* 0xE0 */ OpCodes.`RET PO` -> Ret(FlagsPredicate.PO, jcycles = 11, njcycles = 5, size = 1u)
-        /* 0xE1 */ OpCodes.`POP HL` -> Pop(Reg16.HL, cycles = 10, size = 1u)
-        /* 0xE2 */ OpCodes.`JP PO, NN` -> Jp(FlagsPredicate.PO, Imm16, cycles = 10, size = 3u)
-        /* 0xE3 */ OpCodes.`EX (SP), HL` -> Ex(Ind16(Reg16.SP), Reg16.HL, cycles = 19, size = 1u)
-        /* 0xE8 */ OpCodes.`RET PE` -> Ret(FlagsPredicate.PE, jcycles = 11, njcycles = 5, size = 1u)
-        /* 0xEA */ OpCodes.`JP PE, NN` -> Jp(FlagsPredicate.PE, Imm16, cycles = 10, size = 3u)
-        /* 0xEB */ OpCodes.`EX DE, HL` -> Ex(Reg16.DE, Reg16.HL, cycles = 4, size = 1u)
+        /* 0xE0 */ OpCodes.`RET PO` -> Inst.`RET PO`
+        /* 0xE1 */ OpCodes.`POP HL` -> Inst.`POP HL`
+        /* 0xE2 */ OpCodes.`JP PO, NN` -> Inst.`JP PO, NN`
+        /* 0xE3 */ OpCodes.`EX (SP), HL` -> Inst.`EX (SP), HL`
+        /* 0xE7 */ OpCodes.`RST 0x20` -> Inst.`RST 0x20`
+        /* 0xE8 */ OpCodes.`RET PE` -> Inst.`RET PE`
+        /* 0xEA */ OpCodes.`JP PE, NN` -> Inst.`JP PE, NN`
+        /* 0xEB */ OpCodes.`EX DE, HL` -> Inst.`EX DE, HL`
+        /* 0xEF */ OpCodes.`RST 0x28` -> Inst.`RST 0x28`
 
-        /* 0xF0 */ OpCodes.`RET P` -> Ret(FlagsPredicate.P, jcycles = 11, njcycles = 5, size = 1u)
-        /* 0xF1 */ OpCodes.`POP AF` -> Pop(Reg16.AF, cycles = 10, size = 1u)
-        /* 0xF2 */ OpCodes.`JP P, NN` -> Jp(FlagsPredicate.P, Imm16, cycles = 10, size = 3u)
-        /* 0xF8 */ OpCodes.`RET M` -> Ret(FlagsPredicate.M, jcycles = 11, njcycles = 5, size = 1u)
-        /* 0xFA */ OpCodes.`JP M, NN` -> Jp(FlagsPredicate.M, Imm16, cycles = 10, size = 3u)
+        /* 0xF0 */ OpCodes.`RET P` -> Inst.`RET P`
+        /* 0xF1 */ OpCodes.`POP AF` -> Inst.`POP AF`
+        /* 0xF2 */ OpCodes.`JP P, NN` -> Inst.`JP P, NN`
+        /* 0xF3 */ OpCodes.`DI` -> Inst.`DI`
+        /* 0xF7 */ OpCodes.`RST 0x30` -> Inst.`RST 0x30`
+        /* 0xF8 */ OpCodes.`RET M` -> Inst.`RET M`
+        /* 0xFA */ OpCodes.`JP M, NN` -> Inst.`JP M, NN`
+        /* 0xFB */ OpCodes.`EI` -> Inst.`EI`
+        /* 0xFF */ OpCodes.`RST 0x38` -> Inst.`RST 0x38`
 
         else -> Illegal
     }
 }
 
 suspend fun Processor.decode(): Inst {
-    val opcode: Int = bus.memReadByte(regs.pc).toInt()
-    return OPCODES_MAIN[opcode]
+    return decode(bus.memReadByte(regs.pc))
+}
+
+fun Processor.decode(opCode: UByte): Inst {
+    return OPCODES_MAIN[opCode.toInt()]
 }

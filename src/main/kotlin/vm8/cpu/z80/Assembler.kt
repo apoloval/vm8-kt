@@ -4,9 +4,9 @@ import vm8.byteorder.ByteOrder
 
 @Suppress("EXPERIMENTAL_IS_NOT_ENABLED", "UNUSED_PARAMETER")
 @OptIn(ExperimentalUnsignedTypes::class)
-class Assembler(private val buffer: ByteArray, org: Int = 0) {
-    private var pointer: Int = org
-    private val symbols: MutableMap<String, Int> = mutableMapOf()
+class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
+    private var pointer: UShort = org
+    private val symbols: MutableMap<String, UShort> = mutableMapOf()
 
     // Register names
     object A
@@ -52,7 +52,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
 
     fun DB(vararg bytes: UByte) {
         for (b in bytes) {
-            buffer[pointer++] = b.toByte()
+            buffer[(pointer++).toInt()] = b.toByte()
         }
     }
 
@@ -61,8 +61,8 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun DW(vararg bytes: UShort) {
         for (b in bytes) {
             val (v0, v1) = ByteOrder.LITTLE_ENDIAN.encode(b)
-            buffer[pointer++] = v0.toByte()
-            buffer[pointer++] = v1.toByte()
+            buffer[(pointer++).toInt()] = v0.toByte()
+            buffer[(pointer++).toInt()] = v1.toByte()
         }
     }
 
@@ -127,7 +127,11 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun DEC(dst: HL) = DB(OpCodes.`DEC HL`)
     fun DEC(dst: SP) = DB(OpCodes.`DEC SP`)
 
+    val DI: Unit get() = DB(OpCodes.DI)
+
     fun DJNZ(n: Int) { DB(OpCodes.`DJNZ N`); DB(n) }
+
+    val EI: Unit get() = DB(OpCodes.EI)
 
     fun EX(a: AF, b: `AF'`) = DB(OpCodes.`EX AF, AF'`)
     fun EX(a: `(SP)`, b: HL) = DB(OpCodes.`EX (SP), HL`)
@@ -286,6 +290,18 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
 
     val RRCA: Unit get() { DB(OpCodes.RRCA) }
 
+    fun RST(v: Int) { when(v) {
+        0x00 -> DB(OpCodes.`RST 0x00`)
+        0x08 -> DB(OpCodes.`RST 0x08`)
+        0x10 -> DB(OpCodes.`RST 0x10`)
+        0x18 -> DB(OpCodes.`RST 0x18`)
+        0x20 -> DB(OpCodes.`RST 0x20`)
+        0x28 -> DB(OpCodes.`RST 0x28`)
+        0x30 -> DB(OpCodes.`RST 0x30`)
+        0x38 -> DB(OpCodes.`RST 0x38`)
+        else -> throw IllegalArgumentException("invalid vector for RST instruction: $v")
+    }}
+
     val SCF: Unit get() { DB(OpCodes.SCF) }
 
     fun SBC(src: A) = DB(OpCodes.`SBC A`)
@@ -316,7 +332,7 @@ class Assembler(private val buffer: ByteArray, org: Int = 0) {
     fun XOR(src: `(HL)`) = DB(OpCodes.`XOR (HL)`)
 }
 
-fun ByteArray.asm(org: Int = 0, f: Assembler.() -> Unit): ByteArray {
+fun ByteArray.asm(org: UShort = 0u, f: Assembler.() -> Unit): ByteArray {
     val asm = Assembler(this, org)
     asm.f()
     return this

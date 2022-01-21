@@ -16,7 +16,7 @@ internal class FlagsTest : FunSpec({
     val cpu = Processor(sys)
 
     beforeEach { 
-        cpu.reset() 
+        cpu.requestReset()
         cpu.regs.f = 0x00u
     }
 

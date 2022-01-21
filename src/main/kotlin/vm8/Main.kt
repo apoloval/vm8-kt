@@ -6,9 +6,10 @@ import vm8.cpu.z80.Assembler.*
 import vm8.cpu.z80.MinimalSystem
 import vm8.cpu.z80.Processor
 import vm8.cpu.z80.asm
+import java.text.NumberFormat
 import kotlin.system.measureTimeMillis
 
-const val TOTAL_INST = 250_000_000
+const val TOTAL_INST = 300_000_000
 
 fun main() {
     val sys = MinimalSystem()
@@ -24,15 +25,14 @@ fun main() {
 
     val cpu = Processor(sys)
 
-    var cycles: Long = 0
     val elapsed = measureTimeMillis {
         runBlocking {
             launch {
                 repeat (TOTAL_INST) {
-                    cycles += cpu.run()
+                    cpu.run()
                 }
             }
         }
     }
-    println("Executed ${cycles / 1000} Mcycles in $elapsed ms: ${cycles / (1000* elapsed)} Mhz")
+    println("Executed ${NumberFormat.getInstance().format(cpu.cycles)} cycles in $elapsed ms: ${cpu.cycles / (1000* elapsed)} Mhz")
 }

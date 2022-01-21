@@ -44,31 +44,49 @@ suspend inline fun<reified T1, reified T2> behavesLike(arbA: Arb<T1>, arbB: Arb<
 }
 
 class ProcessorBehavior {
-    private val sys = MinimalSystem()
+    val sys = MinimalSystem()
     val cpu = Processor(sys)
 
     val regs by cpu::regs
     val bus by cpu::bus
     val mem by sys::memory
 
-    private var givenCycles: Int = 0
-
     suspend fun whenProcessorRuns() {
-        givenCycles = cpu.run()
+        cpu.run()
     }
 
-    suspend fun whenProcessorRuns(org: Int = 0x0000, f: Assembler.() -> Unit) {
+    suspend fun whenProcessorRuns(org: UShort = 0x0000u, f: Assembler.() -> Unit) {
         sys.memory.asm(org, f)
-        givenCycles = cpu.run()
+        cpu.run()
     }
 
     fun given(f: ProcessorBehavior.() -> Unit) {
         this.f()
     }
 
+    fun given(
+        i: UByte? = null,
+        im: IntMode? = null,
+        int: Boolean? = null,
+        intAckData: UByte? = null,
+        pc: UShort? = null,
+        sp: UShort? = null,
+    ) {
+        if (i != null) { regs.i = i }
+        if (im != null) { cpu.im = im }
+        if (int != null) { cpu.int = int }
+        if (intAckData != null) { sys.nextIntAck = intAckData }
+        if (pc != null) { regs.pc = pc }
+        if (sp != null) { regs.sp = sp }
+    }
+
+    fun givenCodeAt(org: UShort = 0x0000u, code: Assembler.() -> Unit) {
+        mem.asm(org, code)
+    }
+
     suspend fun expect(cycles: Int? = null, pc: Addr? = null, flags: UByte? = null, f: suspend ProcessorBehavior.() -> Unit = {}) {
         if (cycles != null)
-            givenCycles shouldBe cycles
+            cpu.cycles shouldBe cycles.toLong()
         if (pc != null)
             cpu.regs.pc shouldBe pc
         if (flags != null)

@@ -47,6 +47,80 @@ class ProcessorTest : FunSpec({
                 }}
             }
         }}
+
+        test("DI") { behavesLike { prevFlags ->
+            given { cpu.intEnabled = true }
+            whenProcessorRuns { DI }
+            expect(cycles = 4, pc = 0x0001u, flags = prevFlags) {
+                cpu.intEnabled shouldBe false
+            }
+        }}
+
+        test("Non-maskable interrupts") { behavesLike { prevFlags ->
+            given {
+                mem.asm(0x8000u) { HALT }
+                regs.pc = 0x8000u
+                regs.sp = 0xF000u
+                cpu.nmi = true
+            }
+            whenProcessorRuns()
+            expect(cycles = 11, pc = 0x0066u, flags = prevFlags) {
+                cpu.intEnabled shouldBe false
+                regs.sp shouldBe 0xEFFEu
+                bus.memReadWord(regs.sp) shouldBe 0x8000u
+            }
+        }}
+
+        context("Maskable interrupts") {
+            data class TestCase(val prepare: ProcessorBehavior.() -> Unit, val isr: UShort, val cycles: Int)
+
+            withData(mapOf(
+                "Mode 0" to TestCase(
+                    prepare = {
+                        given(
+                            im = IntMode.Zero,
+                            intAckData = OpCodes.`RST 0x08`.toUByte(),
+                        )
+                    },
+                    isr = 0x0008u,
+                    cycles = 13,
+                ),
+                "Mode 1" to TestCase(
+                    prepare = {
+                        given(im = IntMode.One)
+                    },
+                    isr = 0x0038u,
+                    cycles = 13,
+                ),
+                "Mode 2" to TestCase(
+                    prepare = {
+                        given(im = IntMode.Two, i = 0x01u, intAckData = 0x30u)
+                    },
+                    isr = 0x0130u,
+                    cycles = 19,
+                ),
+            )) { (prepare, isr, cycles) -> behavesLike { prevFlags ->
+                prepare()
+                givenCodeAt(0x8000u) {
+                    EI
+                    HALT
+                }
+                givenCodeAt(isr) { HALT }
+                given(pc = 0x8000u, sp = 0xF000u, int = true)
+
+                // Repeat 3 times to execute EI, HALT once, and then accept the interrupt.
+                // Please remember that interruptions are not accepted on the next instruction after EI.
+                // That's why we have to execute HALT at least once.
+                repeat(3) { whenProcessorRuns() }
+
+                // Expect cycles = cycles + 8 cause main program at 0x8000 requires 8 cycles before int is accepted
+                expect(cycles = cycles + 8, pc = isr, flags = prevFlags) {
+                    cpu.intEnabled shouldBe false
+                    regs.sp shouldBe 0xEFFEu
+                    bus.memReadWord(regs.sp) shouldBe 0x8001u
+                }
+            }}
+        }
     }
 
     context("Arithmetic and logic") {
@@ -1464,6 +1538,25 @@ class ProcessorTest : FunSpec({
                 }
             }
         }}
+
+        context("Reset") {
+            data class TestCase(val vector: UShort, val inst: Assembler.() -> Unit)
+
+            withData(mapOf(
+                "0x00" to TestCase(vector = 0x0000u, inst = { RST(0x00) }),
+                "0x08" to TestCase(vector = 0x0008u, inst = { RST(0x08) }),
+                "0x10" to TestCase(vector = 0x0010u, inst = { RST(0x10) }),
+                "0x18" to TestCase(vector = 0x0018u, inst = { RST(0x18) }),
+                "0x20" to TestCase(vector = 0x0020u, inst = { RST(0x20) }),
+                "0x28" to TestCase(vector = 0x0028u, inst = { RST(0x28) }),
+                "0x30" to TestCase(vector = 0x0030u, inst = { RST(0x30) }),
+                "0x38" to TestCase(vector = 0x0038u, inst = { RST(0x38) }),
+            )) { (vector, inst) -> behavesLike { prevFlags ->
+                given { regs.pc = 0x8000u}
+                whenProcessorRuns(0x8000u) { inst() }
+                expect(cycles = 11, pc = vector, flags = prevFlags)
+            }}
+        }
     }
 
     context("Load and exchange") {
