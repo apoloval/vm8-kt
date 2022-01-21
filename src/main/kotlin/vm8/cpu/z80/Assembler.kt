@@ -7,6 +7,29 @@ import vm8.byteorder.ByteOrder
 class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
     private var pointer: UShort = org
     private val symbols: MutableMap<String, UShort> = mutableMapOf()
+    private val relocations: MutableList<Relocation> = mutableListOf()
+
+    private sealed interface Relocation {
+        fun relocate()
+    }
+
+    private inner class WordFromSymbol(val addr: UShort, val symbol: String) : Relocation {
+        override fun relocate() {
+            val word = symbols.getValue(symbol).toUShort()
+            val (v0, v1) = ByteOrder.LITTLE_ENDIAN.encode(word)
+            buffer[addr.toInt()] = v0.toByte()
+            buffer[addr.toInt()+1] = v1.toByte()
+        }
+    }
+
+    private inner class ByteDistanceToSymbol(val addr: UShort, val from: UShort, val to: String) : Relocation {
+        override fun relocate() {
+            val toAddr = symbols.getValue(to).toUShort()
+            val dist = (toAddr.toInt() - from.toInt()).toByte()
+            buffer[addr.toInt()] = dist
+        }
+    }
+
 
     // Register names
     object A
@@ -44,7 +67,11 @@ class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
     operator fun UShort.not() = Indirect(this)
     operator fun UInt.not() = this.toUShort().not()
 
-    operator fun String.unaryPlus(): UShort = symbols.getValue(this).toUShort()
+    operator fun String.unaryPlus() = LABEL(this)
+
+    fun relocate() {
+        relocations.forEach { it.relocate() }
+    }
 
     fun LABEL(name: String) = symbols.put(name, pointer)
 
@@ -56,6 +83,11 @@ class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
         }
     }
 
+    fun DD(to: String, from: UShort = (pointer - 1u).toUShort()) {
+        relocations.add(ByteDistanceToSymbol(pointer, from, to))
+        DB(0)
+    }
+
     fun DW(vararg bytes: Int) = DW(*bytes.map { it.toUShort() }.toUShortArray())
 
     fun DW(vararg bytes: UShort) {
@@ -64,6 +96,11 @@ class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
             buffer[(pointer++).toInt()] = v0.toByte()
             buffer[(pointer++).toInt()] = v1.toByte()
         }
+    }
+
+    fun DW(symbol: String) {
+        relocations.add(WordFromSymbol(pointer, symbol))
+        DW(0)
     }
 
     fun ADC(dst: A, src: UByte) { DB(OpCodes.`ADC A, N`); DB(src) }
@@ -101,15 +138,24 @@ class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
     fun AND(src: L) = DB(OpCodes.`AND L`)
     fun AND(src: `(HL)`) = DB(OpCodes.`AND (HL)`)
 
+    fun CALL(dst: String) { DB(OpCodes.`CALL NN`); DW(dst) }
     fun CALL(dst: UShort) { DB(OpCodes.`CALL NN`); DW(dst) }
     fun CALL(cond: NZ, dst: UShort) { DB(OpCodes.`CALL NZ, NN`); DW(dst) }
+    fun CALL(cond: NZ, dst: String) { DB(OpCodes.`CALL NZ, NN`); DW(dst) }
     fun CALL(cond: Z, dst: UShort) { DB(OpCodes.`CALL Z, NN`); DW(dst) }
+    fun CALL(cond: Z, dst: String) { DB(OpCodes.`CALL Z, NN`); DW(dst) }
     fun CALL(cond: NC, dst: UShort) { DB(OpCodes.`CALL NC, NN`); DW(dst) }
+    fun CALL(cond: NC, dst: String) { DB(OpCodes.`CALL NC, NN`); DW(dst) }
     fun CALL(cond: C, dst: UShort) { DB(OpCodes.`CALL C, NN`); DW(dst) }
+    fun CALL(cond: C, dst: String) { DB(OpCodes.`CALL C, NN`); DW(dst) }
     fun CALL(cond: PO, dst: UShort) { DB(OpCodes.`CALL PO, NN`); DW(dst) }
+    fun CALL(cond: PO, dst: String) { DB(OpCodes.`CALL PO, NN`); DW(dst) }
     fun CALL(cond: PE, dst: UShort) { DB(OpCodes.`CALL PE, NN`); DW(dst) }
+    fun CALL(cond: PE, dst: String) { DB(OpCodes.`CALL PE, NN`); DW(dst) }
     fun CALL(cond: P, dst: UShort) { DB(OpCodes.`CALL P, NN`); DW(dst) }
+    fun CALL(cond: P, dst: String) { DB(OpCodes.`CALL P, NN`); DW(dst) }
     fun CALL(cond: M, dst: UShort) { DB(OpCodes.`CALL M, NN`); DW(dst) }
+    fun CALL(cond: M, dst: String) { DB(OpCodes.`CALL M, NN`); DW(dst) }
 
     val CCF: Unit get() = DB(OpCodes.CCF)
 
@@ -172,21 +218,35 @@ class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
     fun INC(dst: SP) = DB(OpCodes.`INC SP`)
 
     fun JP(addr: UShort) { DB(OpCodes.`JP NN`); DW(addr) }
+    fun JP(addr: String) { DB(OpCodes.`JP NN`); DW(addr) }
     fun JP(cond: Z, addr: UShort) { DB(OpCodes.`JP Z, NN`); DW(addr) }
+    fun JP(cond: Z, addr: String) { DB(OpCodes.`JP Z, NN`); DW(addr) }
     fun JP(cond: NZ, addr: UShort) { DB(OpCodes.`JP NZ, NN`); DW(addr) }
+    fun JP(cond: NZ, addr: String) { DB(OpCodes.`JP NZ, NN`); DW(addr) }
     fun JP(cond: C, addr: UShort) { DB(OpCodes.`JP C, NN`); DW(addr) }
+    fun JP(cond: C, addr: String) { DB(OpCodes.`JP C, NN`); DW(addr) }
     fun JP(cond: NC, addr: UShort) { DB(OpCodes.`JP NC, NN`); DW(addr) }
+    fun JP(cond: NC, addr: String) { DB(OpCodes.`JP NC, NN`); DW(addr) }
     fun JP(cond: PE, addr: UShort) { DB(OpCodes.`JP PE, NN`); DW(addr) }
+    fun JP(cond: PE, addr: String) { DB(OpCodes.`JP PE, NN`); DW(addr) }
     fun JP(cond: PO, addr: UShort) { DB(OpCodes.`JP PO, NN`); DW(addr) }
+    fun JP(cond: PO, addr: String) { DB(OpCodes.`JP PO, NN`); DW(addr) }
     fun JP(cond: P, addr: UShort) { DB(OpCodes.`JP P, NN`); DW(addr) }
+    fun JP(cond: P, addr: String) { DB(OpCodes.`JP P, NN`); DW(addr) }
     fun JP(cond: M, addr: UShort) { DB(OpCodes.`JP M, NN`); DW(addr) }
+    fun JP(cond: M, addr: String) { DB(OpCodes.`JP M, NN`); DW(addr) }
     fun JP(addr: `(HL)`) { DB(OpCodes.`JP (HL)`) }
 
     fun JR(rel: Byte) { DB(OpCodes.`JR N`); DB(rel.toUByte()) }
+    fun JR(to: String) { DB(OpCodes.`JR N`); DD(to) }
     fun JR(cond: Z, n: Byte) { DB(OpCodes.`JR Z, N`); DB(n.toUByte()) }
+    fun JR(cond: Z, to: String) { DB(OpCodes.`JR Z, N`); DD(to) }
     fun JR(cond: NZ, n: Byte) { DB(OpCodes.`JR NZ, N`); DB(n.toUByte()) }
+    fun JR(cond: NZ, to: String) { DB(OpCodes.`JR NZ, N`); DD(to) }
     fun JR(cond: C, n: Byte) { DB(OpCodes.`JR C, N`); DB(n.toUByte()) }
+    fun JR(cond: C, to: String) { DB(OpCodes.`JR C, N`); DD(to) }
     fun JR(cond: NC, n: Byte) { DB(OpCodes.`JR NC, N`); DB(n.toUByte()) }
+    fun JR(cond: NC, to: String) { DB(OpCodes.`JR NC, N`); DD(to) }
 
     fun LD(dst: A, src: UByte) { DB(OpCodes.`LD A, N`); DB(src) }
     fun LD(dst: B, src: UByte) { DB(OpCodes.`LD B, N`); DB(src) }
@@ -267,9 +327,13 @@ class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
 
     fun LD(dst: Indirect<UShort>, src: A) { DB(OpCodes.`LD (NN), A`); DW(dst.expr) }
     fun LD(dst: BC, src: UShort) { DB(OpCodes.`LD BC, NN`); DW(src) }
+    fun LD(dst: BC, src: String) { DB(OpCodes.`LD BC, NN`); DW(src) }
     fun LD(dst: DE, src: UShort) { DB(OpCodes.`LD DE, NN`); DW(src) }
+    fun LD(dst: DE, src: String) { DB(OpCodes.`LD DE, NN`); DW(src) }
     fun LD(dst: HL, src: UShort) { DB(OpCodes.`LD HL, NN`); DW(src) }
+    fun LD(dst: HL, src: String) { DB(OpCodes.`LD HL, NN`); DW(src) }
     fun LD(dst: SP, src: UShort) { DB(OpCodes.`LD SP, NN`); DW(src) }
+    fun LD(dst: SP, src: String) { DB(OpCodes.`LD SP, NN`); DW(src) }
     fun LD(dst: SP, src: HL) { DB(OpCodes.`LD SP, HL`) }
     fun LD(dst: Indirect<UShort>, src: HL) { DB(OpCodes.`LD (NN), HL`); DW(dst.expr) }
     fun LD(dst: HL, src: Indirect<UShort>) { DB(OpCodes.`LD HL, (NN)`); DW(src.expr) }
@@ -364,5 +428,6 @@ class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
 fun ByteArray.asm(org: UShort = 0u, f: Assembler.() -> Unit): ByteArray {
     val asm = Assembler(this, org)
     asm.f()
+    asm.relocate()
     return this
 }
