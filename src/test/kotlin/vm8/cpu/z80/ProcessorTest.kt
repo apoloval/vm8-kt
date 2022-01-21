@@ -2355,6 +2355,14 @@ class ProcessorTest : FunSpec({
                             LD(HL, !0x8000u.toUShort())
                         }
                     },
+                    "LD SP, HL" to TestCase(
+                        cycles = 6,
+                        size = 1,
+                        result = { regs.sp },
+                    ) {
+                        given(hl = it)
+                        givenCode { LD(SP, HL) }
+                    },
                 )
             ) { (cycles, size, result, prepare) -> behavesLike { value: UShort, prevFlags ->
                 prepare(value)

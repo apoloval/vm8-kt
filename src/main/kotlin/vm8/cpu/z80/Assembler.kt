@@ -270,6 +270,7 @@ class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
     fun LD(dst: DE, src: UShort) { DB(OpCodes.`LD DE, NN`); DW(src) }
     fun LD(dst: HL, src: UShort) { DB(OpCodes.`LD HL, NN`); DW(src) }
     fun LD(dst: SP, src: UShort) { DB(OpCodes.`LD SP, NN`); DW(src) }
+    fun LD(dst: SP, src: HL) { DB(OpCodes.`LD SP, HL`) }
     fun LD(dst: Indirect<UShort>, src: HL) { DB(OpCodes.`LD (NN), HL`); DW(dst.expr) }
     fun LD(dst: HL, src: Indirect<UShort>) { DB(OpCodes.`LD HL, (NN)`); DW(src.expr) }
 

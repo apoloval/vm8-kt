@@ -292,7 +292,7 @@ sealed interface Inst {
         /* 0xF6 */ val `OR N`           : Inst = Or8(Reg8.A, Imm8, cycles = 7, size = 2u)
         /* 0xF7 */ val `RST 0x30`       : Inst = Rst(0x0030u)
         /* 0xF8 */ val `RET M`          : Inst = Ret(FlagsPredicate.M, jcycles = 11, cycles = 5, size = 1u)
-        /* 0xF9 */
+        /* 0xF9 */ val `LD SP, HL`      : Inst = Ld16(Reg16.SP, Reg16.HL, cycles = 6, size = 1u)
         /* 0xFA */ val `JP M, NN`       : Inst = Jp(FlagsPredicate.M, Imm16, cycles = 10, size = 3u)
         /* 0xFB */ val `EI`             : Inst = Ei
         /* 0xFC */ val `CALL M, NN`     : Inst = Call(FlagsPredicate.M)
