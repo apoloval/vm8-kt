@@ -2360,7 +2360,7 @@ class ProcessorTest : FunSpec({
             } }
         }
 
-        context("Exchange") {
+        context("EX") {
             data class TestCase(
                 val cycles: Int,
                 val size: Int,
@@ -2411,6 +2411,30 @@ class ProcessorTest : FunSpec({
                 resB shouldBe a
             }}
         }
+
+        test("EXX") { behavesLike { prevFlags ->
+            given(
+                bc = 0x0101u,
+                de = 0x0202u,
+                hl = 0x0303u,
+                `bc'` = 0x0a0au,
+                `de'` = 0x0b0bu,
+                `hl'` = 0x0c0cu,
+            )
+            givenCode { EXX }
+            whenProcessorRuns()
+            expect(
+                cycles = 4,
+                pc = 0x0001u,
+                flags = prevFlags,
+                bc = 0x0a0au,
+                de = 0x0b0bu,
+                hl = 0x0c0cu,
+                `bc'` = 0x0101u,
+                `de'` = 0x0202u,
+                `hl'` = 0x0303u,
+            )
+        }}
 
         context("POP") {
             data class TestCase(

@@ -260,6 +260,7 @@ sealed interface Inst {
         /* 0xD6 */ val `SUB N`          : Inst = Sub8(Reg8.A, Imm8, withCarry = false, cycles = 7, size = 2u)
         /* 0xD7 */ val `RST 0x10`       : Inst = Rst(0x0010u)
         /* 0xD8 */ val `RET C`          : Inst = Ret(FlagsPredicate.C, jcycles = 11, cycles = 5, size = 1u)
+        /* 0xD9 */ val `EXX`            : Inst = Exx
         /* 0xDA */ val `JP C, NN`       : Inst = Jp(FlagsPredicate.C, Imm16, cycles = 10, size = 3u)
         /* 0xDC */ val `CALL C, NN`     : Inst = Call(FlagsPredicate.C)
         /* 0xDE */ val `SBC N`          : Inst = Sub8(Reg8.A, Imm8, withCarry = true, cycles = 7, size = 2u)
@@ -556,10 +557,23 @@ object Ei : Inst {
  */
 data class Ex(val a: DestOp16, val b: DestOp16, override val cycles: Long, override val size: UByte) : Inst {
     override suspend fun Processor.exec() {
-        val va = load16(a)
-        val vb = load16(b)
-        store16(a, vb)
-        store16(b, va)
+        swap16(a, b)
+        incPC()
+        incCycles()
+    }
+}
+
+/**
+ * EXX instruction
+ */
+object Exx : Inst {
+    override val cycles: Long = 4L
+    override val size: UByte = 1u
+
+    override suspend fun Processor.exec() {
+        swap16(Reg16.BC, Reg16.`BC'`)
+        swap16(Reg16.DE, Reg16.`DE'`)
+        swap16(Reg16.HL, Reg16.`HL'`)
         incPC()
         incCycles()
     }

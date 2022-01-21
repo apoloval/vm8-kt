@@ -14,6 +14,9 @@ class RegsBank {
     var sp: UShort = 0x0000u
 
     var `af'`: UShort = 0x0000u
+    var `bc'`: UShort = 0x0000u
+    var `de'`: UShort = 0x0000u
+    var `hl'`: UShort = 0x0000u
 
     var i: UByte = 0x00u
 

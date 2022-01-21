@@ -69,14 +69,17 @@ inline suspend fun Processor.load16(op: SrcOp16): UShort = with(op) { get() }
 
 inline suspend fun Processor.store16(op: DestOp16, v: UShort) { with(op) { set(v) } }
 
+inline suspend fun Processor.swap16(a: DestOp16, b: DestOp16) {
+    val va = load16(a)
+    val vb = load16(b)
+    store16(a, vb)
+    store16(b, va)
+}
+
 enum class Reg16 : DestOp16 {
     AF {
         override suspend fun Processor.get(): UShort = regs.af
         override suspend fun Processor.set(v: UShort) { regs.af = v }
-    }, 
-    `AF'` {
-        override suspend fun Processor.get(): UShort = regs.`af'`
-        override suspend fun Processor.set(v: UShort) { regs.`af'` = v }
     }, 
     BC {
         override suspend fun Processor.get(): UShort = regs.bc
@@ -97,6 +100,22 @@ enum class Reg16 : DestOp16 {
     SP {
         override suspend fun Processor.get(): UShort = regs.sp
         override suspend fun Processor.set(v: UShort) { regs.sp = v }
+    },
+    `AF'` {
+        override suspend fun Processor.get(): UShort = regs.`af'`
+        override suspend fun Processor.set(v: UShort) { regs.`af'` = v }
+    },
+    `BC'` {
+        override suspend fun Processor.get(): UShort = regs.`bc'`
+        override suspend fun Processor.set(v: UShort) { regs.`bc'` = v }
+    },
+    `DE'` {
+        override suspend fun Processor.get(): UShort = regs.`de'`
+        override suspend fun Processor.set(v: UShort) { regs.`de'` = v }
+    },
+    `HL'` {
+        override suspend fun Processor.get(): UShort = regs.`hl'`
+        override suspend fun Processor.set(v: UShort) { regs.`hl'` = v }
     },
 }
 

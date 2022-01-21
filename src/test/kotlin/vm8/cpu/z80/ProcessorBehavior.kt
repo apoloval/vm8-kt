@@ -67,6 +67,12 @@ class ProcessorBehavior {
     fun given(
         a: UByte? = null,
         b: UByte? = null,
+        bc: UShort? = null,
+        de: UShort? = null,
+        hl: UShort? = null,
+        `bc'`: UShort? = null,
+        `de'`: UShort? = null,
+        `hl'`: UShort? = null,
         i: UByte? = null,
         im: IntMode? = null,
         int: Boolean? = null,
@@ -78,6 +84,12 @@ class ProcessorBehavior {
     ) {
         if (a != null) { regs.a = a }
         if (b != null) { regs.b = b }
+        if (bc != null) { regs.bc = bc }
+        if (de != null) { regs.de = de }
+        if (hl != null) { regs.hl = hl }
+        if (`bc'` != null) { regs.`bc'` = `bc'` }
+        if (`de'` != null) { regs.`de'` = `de'` }
+        if (`hl'` != null) { regs.`hl'` = `hl'` }
         if (i != null) { regs.i = i }
         if (im != null) { cpu.im = im }
         if (int != null) { cpu.int = int }
@@ -95,16 +107,28 @@ class ProcessorBehavior {
     fun expect(
         a: UByte? = null,
         b: UByte? = null,
+        bc: UShort? = null,
+        `bc'`: UShort? = null,
         cycles: Int? = null,
+        de: UShort? = null,
+        `de'`: UShort? = null,
         flags: UByte? = null,
+        hl: UShort? = null,
+        `hl'`: UShort? = null,
         intEnabled: Boolean? = null,
         pc: Addr? = null,
         sp: Addr? = null,
     ) {
         if (a != null) regs.a shouldBe a
         if (b != null) regs.b shouldBe b
+        if (bc != null) regs.bc shouldBe bc
+        if (`bc'` != null) regs.`bc'` shouldBe `bc'`
         if (cycles != null) cpu.cycles shouldBe cycles.toLong()
+        if (de != null) regs.de shouldBe de
+        if (`de'` != null) regs.`de'` shouldBe `de'`
         if (flags != null) cpu.regs.f shouldBe flags
+        if (hl != null) regs.hl shouldBe hl
+        if (`hl'` != null) regs.`hl'` shouldBe `hl'`
         if (intEnabled != null) cpu.intEnabled shouldBe intEnabled
         if (pc != null) cpu.regs.pc shouldBe pc
         if (sp != null) cpu.regs.sp shouldBe sp

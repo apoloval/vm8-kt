@@ -151,6 +151,8 @@ class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
     fun EX(a: `(SP)`, b: HL) = DB(OpCodes.`EX (SP), HL`)
     fun EX(a: DE, b: HL) = DB(OpCodes.`EX DE, HL`)
 
+    val EXX: Unit get() = DB(OpCodes.EXX)
+
     val HALT: Unit get() = DB(OpCodes.HALT)
 
     fun INC(dst: A) = DB(OpCodes.`INC A`)
