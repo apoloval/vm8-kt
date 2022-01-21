@@ -241,12 +241,14 @@ sealed interface Inst {
         /* 0xC3 */ val `JP NN`          : Inst = Jp(FlagsPredicate.ALWAYS, Imm16, cycles = 10, size = 3u)
         /* 0xC4 */ val `CALL NZ, NN`    : Inst = Call(FlagsPredicate.NZ)
         /* 0xC5 */ val `PUSH BC`        : Inst = Push(Reg16.BC, cycles = 11, size = 1u)
+        /* 0xC6 */ val `ADD A, N`       : Inst = Add8(Reg8.A, Imm8, withCarry = false, cycles = 7, size = 2u)
         /* 0xC7 */ val `RST 0x00`       : Inst = Rst(0x0000u)
         /* 0xC8 */ val `RET Z`          : Inst = Ret(FlagsPredicate.Z, jcycles = 11, cycles = 5, size = 1u)
         /* 0xC9 */ val `RET`            : Inst = Ret(FlagsPredicate.ALWAYS, jcycles = 10, cycles = 10, size = 1u)
         /* 0xCA */ val `JP Z, NN`       : Inst = Jp(FlagsPredicate.Z, Imm16, cycles = 10, size = 3u)
         /* 0xCC */ val `CALL Z, NN`     : Inst = Call(FlagsPredicate.Z)
         /* 0xCD */ val `CALL NN`        : Inst = Call(FlagsPredicate.ALWAYS)
+        /* 0xCE */ val `ADC A, N`       : Inst = Add8(Reg8.A, Imm8, withCarry = true, cycles = 7, size = 2u)
         /* 0xCF */ val `RST 0x08`       : Inst = Rst(0x0008u)
 
         /* 0xD0 */ val `RET NC`         : Inst = Ret(FlagsPredicate.NC, jcycles = 11, cycles = 5, size = 1u)
@@ -255,10 +257,12 @@ sealed interface Inst {
         /* 0xD3 */ val `OUT (N), A`     : Inst = Out(Imm8, Reg8.A, cycles = 11, size = 2u)
         /* 0xD4 */ val `CALL NC, NN`    : Inst = Call(FlagsPredicate.NC)
         /* 0xD5 */ val `PUSH DE`        : Inst = Push(Reg16.DE, cycles = 11, size = 1u)
+        /* 0xD6 */ val `SUB N`          : Inst = Sub8(Reg8.A, Imm8, withCarry = false, cycles = 7, size = 2u)
         /* 0xD7 */ val `RST 0x10`       : Inst = Rst(0x0010u)
         /* 0xD8 */ val `RET C`          : Inst = Ret(FlagsPredicate.C, jcycles = 11, cycles = 5, size = 1u)
         /* 0xDA */ val `JP C, NN`       : Inst = Jp(FlagsPredicate.C, Imm16, cycles = 10, size = 3u)
         /* 0xDC */ val `CALL C, NN`     : Inst = Call(FlagsPredicate.C)
+        /* 0xDE */ val `SBC N`          : Inst = Sub8(Reg8.A, Imm8, withCarry = true, cycles = 7, size = 2u)
         /* 0xDF */ val `RST 0x18`       : Inst = Rst(0x0018u)
 
         /* 0xE0 */ val `RET PO`         : Inst = Ret(FlagsPredicate.PO, jcycles = 11, cycles = 5, size = 1u)
@@ -267,11 +271,13 @@ sealed interface Inst {
         /* 0xE3 */ val `EX (SP), HL`    : Inst = Ex(Ind16(Reg16.SP), Reg16.HL, cycles = 19, size = 1u)
         /* 0xE4 */ val `CALL PO, NN`    : Inst = Call(FlagsPredicate.PO)
         /* 0xE5 */ val `PUSH HL`        : Inst = Push(Reg16.HL, cycles = 11, size = 1u)
+        /* 0xE6 */ val `AND N`          : Inst = And8(Reg8.A, Imm8, cycles = 7, size = 2u)
         /* 0xE7 */ val `RST 0x20`       : Inst = Rst(0x0020u)
         /* 0xE8 */ val `RET PE`         : Inst = Ret(FlagsPredicate.PE, jcycles = 11, cycles = 5, size = 1u)
         /* 0xEA */ val `JP PE, NN`      : Inst = Jp(FlagsPredicate.PE, Imm16, cycles = 10, size = 3u)
         /* 0xEB */ val `EX DE, HL`      : Inst = Ex(Reg16.DE, Reg16.HL, cycles = 4, size = 1u)
         /* 0xEC */ val `CALL PE, NN`    : Inst = Call(FlagsPredicate.PE)
+        /* 0xEE */ val `XOR N`          : Inst = Xor8(Reg8.A, Imm8, cycles = 7, size = 2u)
         /* 0xEF */ val `RST 0x28`       : Inst = Rst(0x0028u)
 
         /* 0xF0 */ val `RET P`          : Inst = Ret(FlagsPredicate.P, jcycles = 11, cycles = 5, size = 1u)
@@ -280,11 +286,13 @@ sealed interface Inst {
         /* 0xF3 */ val `DI`             : Inst = Di
         /* 0xF4 */ val `CALL P, NN`     : Inst = Call(FlagsPredicate.P)
         /* 0xF5 */ val `PUSH AF`        : Inst = Push(Reg16.AF, cycles = 11, size = 1u)
+        /* 0xF6 */ val `OR N`           : Inst = Or8(Reg8.A, Imm8, cycles = 7, size = 2u)
         /* 0xF7 */ val `RST 0x30`       : Inst = Rst(0x0030u)
         /* 0xF8 */ val `RET M`          : Inst = Ret(FlagsPredicate.M, jcycles = 11, cycles = 5, size = 1u)
         /* 0xFA */ val `JP M, NN`       : Inst = Jp(FlagsPredicate.M, Imm16, cycles = 10, size = 3u)
         /* 0xFB */ val `EI`             : Inst = Ei
         /* 0xFC */ val `CALL M, NN`     : Inst = Call(FlagsPredicate.M)
+        /* 0xFE */ val `CP N`           : Inst = Cp8(Reg8.A, Imm8, cycles = 7, size = 2u)
         /* 0xFF */ val `RST 0x38`       : Inst = Rst(0x0038u)
     }
 }

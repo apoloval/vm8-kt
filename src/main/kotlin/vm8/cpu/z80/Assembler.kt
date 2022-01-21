@@ -66,6 +66,7 @@ class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
         }
     }
 
+    fun ADC(dst: A, src: UByte) { DB(OpCodes.`ADC A, N`); DB(src) }
     fun ADC(dst: A, src: A) = DB(OpCodes.`ADC A, A`)
     fun ADC(dst: A, src: B) = DB(OpCodes.`ADC A, B`)
     fun ADC(dst: A, src: C) = DB(OpCodes.`ADC A, C`)
@@ -75,6 +76,7 @@ class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
     fun ADC(dst: A, src: L) = DB(OpCodes.`ADC A, L`)
     fun ADC(dst: A, src: `(HL)`) = DB(OpCodes.`ADC A, (HL)`)
 
+    fun ADD(dst: A, src: UByte) { DB(OpCodes.`ADD A, N`); DB(src) }
     fun ADD(dst: A, src: A) = DB(OpCodes.`ADD A, A`)
     fun ADD(dst: A, src: B) = DB(OpCodes.`ADD A, B`)
     fun ADD(dst: A, src: C) = DB(OpCodes.`ADD A, C`)
@@ -89,6 +91,7 @@ class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
     fun ADD(dst: HL, src: HL) = DB(OpCodes.`ADD HL, HL`)
     fun ADD(dst: HL, src: SP) = DB(OpCodes.`ADD HL, SP`)
 
+    fun AND(src: UByte) { DB(OpCodes.`AND N`); DB(src) }
     fun AND(src: A) = DB(OpCodes.`AND A`)
     fun AND(src: B) = DB(OpCodes.`AND B`)
     fun AND(src: C) = DB(OpCodes.`AND C`)
@@ -110,6 +113,7 @@ class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
 
     val CCF: Unit get() = DB(OpCodes.CCF)
 
+    fun CP(src: UByte) { DB(OpCodes.`CP N`); DB(src) }
     fun CP(src: A) = DB(OpCodes.`CP A`)
     fun CP(src: B) = DB(OpCodes.`CP B`)
     fun CP(src: C) = DB(OpCodes.`CP C`)
@@ -266,6 +270,7 @@ class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
 
     val NOP: Unit get() = DB(OpCodes.NOP)
 
+    fun OR(src: UByte) { DB(OpCodes.`OR N`); DB(src) }
     fun OR(src: A) = DB(OpCodes.`OR A`)
     fun OR(src: B) = DB(OpCodes.`OR B`)
     fun OR(src: C) = DB(OpCodes.`OR C`)
@@ -319,6 +324,7 @@ class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
 
     val SCF: Unit get() { DB(OpCodes.SCF) }
 
+    fun SBC(src: UByte) { DB(OpCodes.`SBC N`); DB(src) }
     fun SBC(src: A) = DB(OpCodes.`SBC A`)
     fun SBC(src: B) = DB(OpCodes.`SBC B`)
     fun SBC(src: C) = DB(OpCodes.`SBC C`)
@@ -328,6 +334,7 @@ class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
     fun SBC(src: L) = DB(OpCodes.`SBC L`)
     fun SBC(src: `(HL)`) = DB(OpCodes.`SBC (HL)`)
 
+    fun SUB(src: UByte) { DB(OpCodes.`SUB N`); DB(src) }
     fun SUB(src: A) = DB(OpCodes.`SUB A`)
     fun SUB(src: B) = DB(OpCodes.`SUB B`)
     fun SUB(src: C) = DB(OpCodes.`SUB C`)
@@ -337,6 +344,7 @@ class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
     fun SUB(src: L) = DB(OpCodes.`SUB L`)
     fun SUB(src: `(HL)`) = DB(OpCodes.`SUB (HL)`)
 
+    fun XOR(src: UByte) { DB(OpCodes.`XOR N`); DB(src) }
     fun XOR(src: A) = DB(OpCodes.`XOR A`)
     fun XOR(src: B) = DB(OpCodes.`XOR B`)
     fun XOR(src: C) = DB(OpCodes.`XOR C`)

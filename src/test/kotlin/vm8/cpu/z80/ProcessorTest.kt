@@ -138,6 +138,14 @@ class ProcessorTest : FunSpec({
             )
 
             withData(mapOf(
+                "ADC A, N" to TestCase(
+                    cycles = 7,
+                    size = 2,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    mem.asm { ADC(A, b) }
+                },
                 "ADC A, A" to TestCase(
                     cycles = 4,
                     size = 1,
@@ -244,6 +252,14 @@ class ProcessorTest : FunSpec({
             )
 
             withData(mapOf(
+                "ADD A, N" to TestCase(
+                    cycles = 7,
+                    size = 2,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    mem.asm { ADD(A, b) }
+                },
                 "ADD A, A" to TestCase(
                     cycles = 4,
                     size = 1,
@@ -410,6 +426,14 @@ class ProcessorTest : FunSpec({
             )
 
             withData(mapOf(
+                "AND N" to TestCase(
+                    cycles = 7,
+                    size = 2,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    mem.asm { AND(b) }
+                },
                 "AND A" to TestCase(
                     cycles = 4,
                     size = 1,
@@ -510,6 +534,13 @@ class ProcessorTest : FunSpec({
             )
 
             withData(mapOf(
+                "CP N" to TestCase(
+                    cycles = 7,
+                    size = 2,
+                ) { a, b ->
+                    regs.a = a
+                    mem.asm { CP(b) }
+                },
                 "CP A" to TestCase(
                     cycles = 4,
                     size = 1,
@@ -934,6 +965,14 @@ class ProcessorTest : FunSpec({
             )
 
             withData(mapOf(
+                "OR N" to TestCase(
+                    cycles = 7,
+                    size = 2,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    mem.asm { OR(b) }
+                },
                 "OR A" to TestCase(
                     cycles = 4,
                     size = 1,
@@ -1242,6 +1281,14 @@ class ProcessorTest : FunSpec({
             )
 
             withData(mapOf(
+                "XOR N" to TestCase(
+                    cycles = 7,
+                    size = 2,
+                    result = { regs.a },
+                ) { a, b ->
+                    regs.a = a
+                    mem.asm { XOR(b) }
+                },
                 "XOR A" to TestCase(
                     cycles = 4,
                     size = 1,
