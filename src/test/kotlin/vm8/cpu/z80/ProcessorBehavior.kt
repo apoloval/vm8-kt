@@ -104,6 +104,10 @@ class ProcessorBehavior {
         mem.asm(org, code)
     }
 
+    suspend fun givenMemoryWord(addr: UShort, value: UShort) {
+        bus.memWriteWord(addr, value)
+    }
+
     fun expect(
         a: UByte? = null,
         b: UByte? = null,

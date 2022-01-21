@@ -246,6 +246,7 @@ object OpCodes {
     const val `AND N`       : Int = 0xE6
     const val `RST 0x20`    : Int = 0xE7
     const val `RET PE`      : Int = 0xE8
+    const val `JP (HL)`     : Int = 0xE9
     const val `JP PE, NN`   : Int = 0xEA
     const val `EX DE, HL`   : Int = 0xEB
     const val `CALL PE, NN` : Int = 0xEC
@@ -515,6 +516,7 @@ private val OPCODES_MAIN: Array<Inst> = Array(256) {
         /* 0xE6 */ OpCodes.`AND N` -> Inst.`AND N`
         /* 0xE7 */ OpCodes.`RST 0x20` -> Inst.`RST 0x20`
         /* 0xE8 */ OpCodes.`RET PE` -> Inst.`RET PE`
+        /* 0xE9 */ OpCodes.`JP (HL)` -> Inst.`JP (HL)`
         /* 0xEA */ OpCodes.`JP PE, NN` -> Inst.`JP PE, NN`
         /* 0xEB */ OpCodes.`EX DE, HL` -> Inst.`EX DE, HL`
         /* 0xEC */ OpCodes.`CALL PE, NN` -> Inst.`CALL PE, NN`

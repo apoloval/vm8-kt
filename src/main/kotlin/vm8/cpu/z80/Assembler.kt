@@ -180,6 +180,7 @@ class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
     fun JP(cond: PO, addr: UShort) { DB(OpCodes.`JP PO, NN`); DW(addr) }
     fun JP(cond: P, addr: UShort) { DB(OpCodes.`JP P, NN`); DW(addr) }
     fun JP(cond: M, addr: UShort) { DB(OpCodes.`JP M, NN`); DW(addr) }
+    fun JP(addr: `(HL)`) { DB(OpCodes.`JP (HL)`) }
 
     fun JR(rel: Byte) { DB(OpCodes.`JR N`); DB(rel.toUByte()) }
     fun JR(cond: Z, n: Byte) { DB(OpCodes.`JR Z, N`); DB(n.toUByte()) }
