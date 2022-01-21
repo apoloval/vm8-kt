@@ -65,36 +65,67 @@ class ProcessorBehavior {
     }
 
     fun given(
+        a: UByte? = null,
+        b: UByte? = null,
         i: UByte? = null,
         im: IntMode? = null,
         int: Boolean? = null,
         intAckData: UByte? = null,
+        intEnabled: Boolean? = null,
+        nmi: Boolean? = null,
         pc: UShort? = null,
         sp: UShort? = null,
     ) {
+        if (a != null) { regs.a = a }
+        if (b != null) { regs.b = b }
         if (i != null) { regs.i = i }
         if (im != null) { cpu.im = im }
         if (int != null) { cpu.int = int }
+        if (intEnabled != null) { cpu.intEnabled = intEnabled }
         if (intAckData != null) { sys.nextIntAck = intAckData }
+        if (nmi != null) { cpu.nmi = nmi }
         if (pc != null) { regs.pc = pc }
         if (sp != null) { regs.sp = sp }
     }
 
-    fun givenCodeAt(org: UShort = 0x0000u, code: Assembler.() -> Unit) {
+    fun givenCode(org: UShort = 0x0000u, code: Assembler.() -> Unit) {
         mem.asm(org, code)
     }
 
-    suspend fun expect(cycles: Int? = null, pc: Addr? = null, flags: UByte? = null, f: suspend ProcessorBehavior.() -> Unit = {}) {
-        if (cycles != null)
-            cpu.cycles shouldBe cycles.toLong()
-        if (pc != null)
-            cpu.regs.pc shouldBe pc
-        if (flags != null)
-            cpu.regs.f shouldBe flags
-        this.f()
+    fun expect(
+        a: UByte? = null,
+        b: UByte? = null,
+        cycles: Int? = null,
+        flags: UByte? = null,
+        intEnabled: Boolean? = null,
+        pc: Addr? = null,
+        sp: Addr? = null,
+    ) {
+        if (a != null) regs.a shouldBe a
+        if (b != null) regs.b shouldBe b
+        if (cycles != null) cpu.cycles shouldBe cycles.toLong()
+        if (flags != null) cpu.regs.f shouldBe flags
+        if (intEnabled != null) cpu.intEnabled shouldBe intEnabled
+        if (pc != null) cpu.regs.pc shouldBe pc
+        if (sp != null) cpu.regs.sp shouldBe sp
     }
 
-    suspend fun expectRotate(expected: UByte, carry: Boolean, flags: UByte) = expect(cycles = 4, pc = 0x0001u) {
+    suspend fun expectMemoryByte(addr: UShort, value: UByte) {
+        bus.memReadByte(addr) shouldBe value
+    }
+
+    suspend fun expectMemoryWord(addr: UShort, value: UShort) {
+        bus.memReadWord(addr) shouldBe value
+    }
+
+    suspend fun expectPushedWord(sp: UShort, value: UShort) {
+        expect(sp = sp.increment(-2))
+        expectMemoryWord(regs.sp, value)
+    }
+
+    fun expectRotate(expected: UByte, carry: Boolean, flags: UByte) {
+        expect(cycles = 4, pc = 0x0001u)
+
         regs.a shouldBe expected
 
         regs.f.bit(0) shouldBe carry
@@ -199,4 +230,6 @@ class ProcessorBehavior {
             )
         }
     }
+
+    suspend fun wordAtAddress(addr: UShort): UShort = bus.memReadWord(addr)
 }

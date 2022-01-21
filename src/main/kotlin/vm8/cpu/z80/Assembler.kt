@@ -98,6 +98,16 @@ class Assembler(private val buffer: ByteArray, org: UShort = 0u) {
     fun AND(src: L) = DB(OpCodes.`AND L`)
     fun AND(src: `(HL)`) = DB(OpCodes.`AND (HL)`)
 
+    fun CALL(dst: UShort) { DB(OpCodes.`CALL NN`); DW(dst) }
+    fun CALL(cond: NZ, dst: UShort) { DB(OpCodes.`CALL NZ, NN`); DW(dst) }
+    fun CALL(cond: Z, dst: UShort) { DB(OpCodes.`CALL Z, NN`); DW(dst) }
+    fun CALL(cond: NC, dst: UShort) { DB(OpCodes.`CALL NC, NN`); DW(dst) }
+    fun CALL(cond: C, dst: UShort) { DB(OpCodes.`CALL C, NN`); DW(dst) }
+    fun CALL(cond: PO, dst: UShort) { DB(OpCodes.`CALL PO, NN`); DW(dst) }
+    fun CALL(cond: PE, dst: UShort) { DB(OpCodes.`CALL PE, NN`); DW(dst) }
+    fun CALL(cond: P, dst: UShort) { DB(OpCodes.`CALL P, NN`); DW(dst) }
+    fun CALL(cond: M, dst: UShort) { DB(OpCodes.`CALL M, NN`); DW(dst) }
+
     val CCF: Unit get() = DB(OpCodes.CCF)
 
     fun CP(src: A) = DB(OpCodes.`CP A`)

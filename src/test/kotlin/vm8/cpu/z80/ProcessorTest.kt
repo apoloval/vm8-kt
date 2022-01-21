@@ -22,53 +22,54 @@ class ProcessorTest : FunSpec({
         }}
 
         test("CCF") { behavesLike { a: UByte, prevFlags ->
-            given { regs.a = a }
+            given(a)
             whenProcessorRuns { CCF }
-            expect(cycles = 4, pc = 0x0001u) {
-                expectFlags { flag -> when(flag) {
-                    Flag.C -> flagNotCopiedFrom(flag, prevFlags)
-                    Flag.N -> flagIsReset(flag)
-                    Flag.H -> flagCopiedFrom(flag, prevFlags, copiedFromFlag = Flag.C)
-                    Flag.F3, Flag.F5 -> flagCopiedFrom(flag, regs.a)
-                    else -> flagCopiedFrom(flag, prevFlags)
-                }}
-            }
+            expect(cycles = 4, pc = 0x0001u)
+            expectFlags { flag -> when(flag) {
+                Flag.C -> flagNotCopiedFrom(flag, prevFlags)
+                Flag.N -> flagIsReset(flag)
+                Flag.H -> flagCopiedFrom(flag, prevFlags, copiedFromFlag = Flag.C)
+                Flag.F3, Flag.F5 -> flagCopiedFrom(flag, regs.a)
+                else -> flagCopiedFrom(flag, prevFlags)
+            }}
         }}
 
         test("SCF") { behavesLike { a: UByte, prevFlags ->
-            given { regs.a = a }
+            given(a)
             whenProcessorRuns { SCF }
-            expect(cycles = 4, pc = 0x0001u) {
-                expectFlags { flag -> when(flag) {
-                    Flag.C -> flagIsSet(flag)
-                    Flag.N, Flag.H -> flagIsReset(flag)
-                    Flag.F3, Flag.F5 -> flagCopiedFrom(flag, regs.a)
-                    else -> flagCopiedFrom(flag, prevFlags)
-                }}
-            }
+            expect(cycles = 4, pc = 0x0001u)
+            expectFlags { flag -> when(flag) {
+                Flag.C -> flagIsSet(flag)
+                Flag.N, Flag.H -> flagIsReset(flag)
+                Flag.F3, Flag.F5 -> flagCopiedFrom(flag, regs.a)
+                else -> flagCopiedFrom(flag, prevFlags)
+            }}
+
         }}
 
         test("DI") { behavesLike { prevFlags ->
-            given { cpu.intEnabled = true }
+            given(intEnabled = true)
             whenProcessorRuns { DI }
-            expect(cycles = 4, pc = 0x0001u, flags = prevFlags) {
-                cpu.intEnabled shouldBe false
-            }
+            expect(
+                cycles = 4,
+                pc = 0x0001u,
+                flags = prevFlags,
+                intEnabled = false,
+            )
         }}
 
         test("Non-maskable interrupts") { behavesLike { prevFlags ->
-            given {
-                mem.asm(0x8000u) { HALT }
-                regs.pc = 0x8000u
-                regs.sp = 0xF000u
-                cpu.nmi = true
-            }
+            given(pc = 0x8000u, sp = 0xF000u, nmi = true)
+            givenCode(org = 0x8000u) { HALT }
             whenProcessorRuns()
-            expect(cycles = 11, pc = 0x0066u, flags = prevFlags) {
-                cpu.intEnabled shouldBe false
-                regs.sp shouldBe 0xEFFEu
-                bus.memReadWord(regs.sp) shouldBe 0x8000u
-            }
+            expect(
+                cycles = 11,
+                intEnabled = false,
+                pc = 0x0066u,
+                flags = prevFlags,
+            )
+            expectMemoryWord(regs.sp, 0x8000u)
+            expectPushedWord(0xF000u,0x8000u)
         }}
 
         context("Maskable interrupts") {
@@ -101,11 +102,11 @@ class ProcessorTest : FunSpec({
                 ),
             )) { (prepare, isr, cycles) -> behavesLike { prevFlags ->
                 prepare()
-                givenCodeAt(0x8000u) {
+                givenCode(0x8000u) {
                     EI
                     HALT
                 }
-                givenCodeAt(isr) { HALT }
+                givenCode(isr) { HALT }
                 given(pc = 0x8000u, sp = 0xF000u, int = true)
 
                 // Repeat 3 times to execute EI, HALT once, and then accept the interrupt.
@@ -114,11 +115,14 @@ class ProcessorTest : FunSpec({
                 repeat(3) { whenProcessorRuns() }
 
                 // Expect cycles = cycles + 8 cause main program at 0x8000 requires 8 cycles before int is accepted
-                expect(cycles = cycles + 8, pc = isr, flags = prevFlags) {
-                    cpu.intEnabled shouldBe false
-                    regs.sp shouldBe 0xEFFEu
-                    bus.memReadWord(regs.sp) shouldBe 0x8001u
-                }
+                expect(
+                    cycles = cycles + 8,
+                    intEnabled = false,
+                    pc = isr,
+                    sp = 0xEFFEu,
+                    flags = prevFlags,
+                )
+                expectPushedWord(0xF000u,0x8001u)
             }}
         }
     }
@@ -210,24 +214,23 @@ class ProcessorTest : FunSpec({
             )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UByte, b: UByte, prevFlags ->
                 prepare(a, b)
                 whenProcessorRuns()
-                expect(cycles, pc = size.toUShort()) {
-                    var expected = if (sameOperand) { (a + a).toUByte() } else { (a + b).toUByte() }
-                    if (Flag.C.isSet(prevFlags)) {
-                        expected++
-                    }
-
-                    result() shouldBe expected
-
-                    expectFlags { flag -> when(flag) {
-                        Flag.C -> flagIsSetOn(flag, carry(a, result()))
-                        Flag.N -> flagIsReset(flag)
-                        Flag.PV -> flagIsSetOn(flag, overflow(a, result()))
-                        Flag.H -> flagIsSetOn(flag, halfCarry(a, result()))
-                        Flag.Z -> flagIsSetOn(flag, isZero(result()))
-                        Flag.S -> flagIsSetOn(flag, isNegative(result()))
-                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
-                    }}
+                expect(cycles = cycles, pc = size.toUShort())
+                var expected = if (sameOperand) { (a + a).toUByte() } else { (a + b).toUByte() }
+                if (Flag.C.isSet(prevFlags)) {
+                    expected++
                 }
+
+                result() shouldBe expected
+
+                expectFlags { flag -> when(flag) {
+                    Flag.C -> flagIsSetOn(flag, carry(a, result()))
+                    Flag.N -> flagIsReset(flag)
+                    Flag.PV -> flagIsSetOn(flag, overflow(a, result()))
+                    Flag.H -> flagIsSetOn(flag, halfCarry(a, result()))
+                    Flag.Z -> flagIsSetOn(flag, isZero(result()))
+                    Flag.S -> flagIsSetOn(flag, isNegative(result()))
+                    Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
+                }}
             }}
         }
 
@@ -317,20 +320,19 @@ class ProcessorTest : FunSpec({
             )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UByte, b: UByte, _ ->
                 prepare(a, b)
                 whenProcessorRuns()
-                expect(cycles, pc = size.toUShort()) {
-                    if (sameOperand) { result() shouldBe (a + a).toUByte() }
-                    else { result() shouldBe (a + b).toUByte() }
+                expect(cycles = cycles, pc = size.toUShort())
+                if (sameOperand) { result() shouldBe (a + a).toUByte() }
+                else { result() shouldBe (a + b).toUByte() }
 
-                    expectFlags { flag -> when(flag) {
-                        Flag.C -> flagIsSetOn(flag, carry(a, result()))
-                        Flag.N -> flagIsReset(flag)
-                        Flag.PV -> flagIsSetOn(flag, overflow(a, result()))
-                        Flag.H -> flagIsSetOn(flag, halfCarry(a, result()))
-                        Flag.Z -> flagIsSetOn(flag, isZero(result()))
-                        Flag.S -> flagIsSetOn(flag, isNegative(result()))
-                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
-                    }}
-                }
+                expectFlags { flag -> when(flag) {
+                    Flag.C -> flagIsSetOn(flag, carry(a, result()))
+                    Flag.N -> flagIsReset(flag)
+                    Flag.PV -> flagIsSetOn(flag, overflow(a, result()))
+                    Flag.H -> flagIsSetOn(flag, halfCarry(a, result()))
+                    Flag.Z -> flagIsSetOn(flag, isZero(result()))
+                    Flag.S -> flagIsSetOn(flag, isNegative(result()))
+                    Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
+                }}
             }}
         }
 
@@ -383,19 +385,18 @@ class ProcessorTest : FunSpec({
             )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UShort, b: UShort, prevFlags ->
                 prepare(a, b)
                 whenProcessorRuns()
-                expect(cycles, pc = size.toUShort()) {
-                    if (sameOperand) { result() shouldBe (a + a).toUShort() }
-                    else { result() shouldBe (a + b).toUShort() }
+                expect(cycles = cycles, pc = size.toUShort())
+                if (sameOperand) { result() shouldBe (a + a).toUShort() }
+                else { result() shouldBe (a + b).toUShort() }
 
-                    expectFlags { flag -> when(flag) {
-                        Flag.C -> flagIsSetOn(flag, carry(a, result()))
-                        Flag.N -> flagIsReset(flag)
-                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result().high())
-                        Flag.H -> flagIsSetOn(flag, halfCarry(a, result()))
-                        Flag.V, Flag.Z, Flag.S -> flagCopiedFrom(flag, prevFlags)
-                        else -> flagCopiedFrom(flag, prevFlags)
-                    }}
-                }
+                expectFlags { flag -> when(flag) {
+                    Flag.C -> flagIsSetOn(flag, carry(a, result()))
+                    Flag.N -> flagIsReset(flag)
+                    Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result().high())
+                    Flag.H -> flagIsSetOn(flag, halfCarry(a, result()))
+                    Flag.V, Flag.Z, Flag.S -> flagCopiedFrom(flag, prevFlags)
+                    else -> flagCopiedFrom(flag, prevFlags)
+                }}
             }}
         }
 
@@ -485,19 +486,18 @@ class ProcessorTest : FunSpec({
             )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UByte, b: UByte, _ ->
                 prepare(a, b)
                 whenProcessorRuns()
-                expect(cycles, pc = size.toUShort()) {
-                    if (sameOperand) { result() shouldBe (a and a).toUByte() }
-                    else { result() shouldBe (a and b).toUByte() }
+                expect(cycles = cycles, pc = size.toUShort())
+                if (sameOperand) { result() shouldBe (a and a).toUByte() }
+                else { result() shouldBe (a and b).toUByte() }
 
-                    expectFlags { flag -> when(flag) {
-                        Flag.C, Flag.N -> flagIsReset(flag)
-                        Flag.PV -> flagIsSetOn(flag, hasEvenParity(result()))
-                        Flag.H -> flagIsSet(flag)
-                        Flag.Z -> flagIsSetOn(flag, isZero(result()))
-                        Flag.S -> flagIsSetOn(flag, isNegative(result()))
-                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
-                    }}
-                }
+                expectFlags { flag -> when(flag) {
+                    Flag.C, Flag.N -> flagIsReset(flag)
+                    Flag.PV -> flagIsSetOn(flag, hasEvenParity(result()))
+                    Flag.H -> flagIsSet(flag)
+                    Flag.Z -> flagIsSetOn(flag, isZero(result()))
+                    Flag.S -> flagIsSetOn(flag, isNegative(result()))
+                    Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
+                }}
             }}
         }
 
@@ -579,32 +579,28 @@ class ProcessorTest : FunSpec({
                 val result = if (sameOperand) 0u else (a - b).toUByte()
                 prepare(a, b)
                 whenProcessorRuns()
-                expect(cycles, pc = size.toUShort()) {
-                    expectFlags { flag -> when(flag) {
-                        Flag.C -> flagIsSetOn(flag, borrow(a, result))
-                        Flag.N -> flagIsSet(flag)
-                        Flag.PV -> flagIsSetOn(flag, underflow(a, result))
-                        Flag.H -> flagIsSetOn(flag, halfBorrow(a, result))
-                        Flag.Z -> flagIsSetOn(flag, isZero(result))
-                        Flag.S -> flagIsSetOn(flag, isNegative(result))
-                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, if (sameOperand) a else b)
-                    }}
-                }
+                expect(cycles = cycles, pc = size.toUShort())
+                expectFlags { flag -> when(flag) {
+                    Flag.C -> flagIsSetOn(flag, borrow(a, result))
+                    Flag.N -> flagIsSet(flag)
+                    Flag.PV -> flagIsSetOn(flag, underflow(a, result))
+                    Flag.H -> flagIsSetOn(flag, halfBorrow(a, result))
+                    Flag.Z -> flagIsSetOn(flag, isZero(result))
+                    Flag.S -> flagIsSetOn(flag, isNegative(result))
+                    Flag.F3, Flag.F5 -> flagCopiedFrom(flag, if (sameOperand) a else b)
+                }}
             }}
         }
 
         test("CPL") { behavesLike { a: UByte, prevFlags ->
             given { regs.a = a }
             whenProcessorRuns { CPL }
-            expect(cycles = 4, pc = 0x0001u) {
-                regs.a shouldBe a.inv()
-
-                expectFlags { flag -> when(flag) {
-                    Flag.C, Flag.PV, Flag.Z, Flag.S -> flagCopiedFrom(flag, prevFlags)
-                    Flag.N, Flag.H -> flagIsSet(flag)
-                    Flag.F3, Flag.F5 -> flagCopiedFrom(flag, regs.a)
-                }}
-            }
+            expect(cycles = 4, pc = 0x0001u, a = a.inv())
+            expectFlags { flag -> when(flag) {
+                Flag.C, Flag.PV, Flag.Z, Flag.S -> flagCopiedFrom(flag, prevFlags)
+                Flag.N, Flag.H -> flagIsSet(flag)
+                Flag.F3, Flag.F5 -> flagCopiedFrom(flag, regs.a)
+            }}
         }}
 
         context("DAA") {
@@ -624,20 +620,19 @@ class ProcessorTest : FunSpec({
                 val value = regs.a
                 val prevFlags = regs.f
                 whenProcessorRuns { DAA }
-                expect(cycles = 4, pc = 0x0001u) {
-                    regs.a.low() shouldBeLessThan 10u
-                    regs.a.high() shouldBeLessThan 10u
+                expect(cycles = 4, pc = 0x0001u)
+                regs.a.low() shouldBeLessThan 10u
+                regs.a.high() shouldBeLessThan 10u
 
-                    expectFlags { flag -> when(flag) {
-                        Flag.C -> whenFlagIsSetThen(flag, areNotEqual(value.high(), regs.a.high()))
-                        Flag.N -> flagCopiedFrom(flag, prevFlags)
-                        Flag.PV -> flagIsSetOn(flag, hasEvenParity(regs.a))
-                        Flag.H -> whenFlagIsSetThen(flag, areNotEqual(value.low(), regs.a.low()))
-                        Flag.Z -> flagIsSetOn(flag, isZero(regs.a))
-                        Flag.S -> flagIsSetOn(flag, isNegative(regs.a))
-                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, regs.a)
-                    }}
-                }
+                expectFlags { flag -> when(flag) {
+                    Flag.C -> whenFlagIsSetThen(flag, areNotEqual(value.high(), regs.a.high()))
+                    Flag.N -> flagCopiedFrom(flag, prevFlags)
+                    Flag.PV -> flagIsSetOn(flag, hasEvenParity(regs.a))
+                    Flag.H -> whenFlagIsSetThen(flag, areNotEqual(value.low(), regs.a.low()))
+                    Flag.Z -> flagIsSetOn(flag, isZero(regs.a))
+                    Flag.S -> flagIsSetOn(flag, isNegative(regs.a))
+                    Flag.F3, Flag.F5 -> flagCopiedFrom(flag, regs.a)
+                }}
             }}
         }
 
@@ -721,19 +716,18 @@ class ProcessorTest : FunSpec({
                 prepare(value)
                 whenProcessorRuns()
 
-                expect(cycles, pc = size.toUShort()) {
-                    result() shouldBe value.dec()
+                expect(cycles = cycles, pc = size.toUShort())
+                result() shouldBe value.dec()
 
-                    expectFlags { flag -> when(flag) {
-                        Flag.C -> flagCopiedFrom(flag, prevFlags)
-                        Flag.N -> flagIsSet(flag)
-                        Flag.PV -> flagIsSetOn(flag, underflow(value, result()))
-                        Flag.H -> flagIsSetOn(flag, halfBorrow(value, result()))
-                        Flag.Z -> flagIsSetOn(flag, isZero(result()))
-                        Flag.S -> flagIsSetOn(flag, isNegative(result()))
-                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
-                    }}
-                }
+                expectFlags { flag -> when(flag) {
+                    Flag.C -> flagCopiedFrom(flag, prevFlags)
+                    Flag.N -> flagIsSet(flag)
+                    Flag.PV -> flagIsSetOn(flag, underflow(value, result()))
+                    Flag.H -> flagIsSetOn(flag, halfBorrow(value, result()))
+                    Flag.Z -> flagIsSetOn(flag, isZero(result()))
+                    Flag.S -> flagIsSetOn(flag, isNegative(result()))
+                    Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
+                }}
             }}
         }
 
@@ -781,9 +775,8 @@ class ProcessorTest : FunSpec({
             )) { (cycles, size, result, prepare) -> behavesLike { value: UShort, prevFlags ->
                 prepare(value)
                 whenProcessorRuns()
-                expect(cycles, pc = size.toUShort(), prevFlags) {
-                    result() shouldBe value.dec()
-                }
+                expect(cycles = cycles, pc = size.toUShort(), flags = prevFlags)
+                result() shouldBe value.dec()
             }}
         }
 
@@ -867,19 +860,18 @@ class ProcessorTest : FunSpec({
                 prepare(value)
                 whenProcessorRuns()
 
-                expect(cycles, pc = size.toUShort()) {
-                    result() shouldBe value.inc()
+                expect(cycles = cycles, pc = size.toUShort())
+                result() shouldBe value.inc()
 
-                    expectFlags { flag -> when(flag) {
-                        Flag.C -> flagCopiedFrom(flag, prevFlags)
-                        Flag.N -> flagIsReset(flag)
-                        Flag.PV -> flagIsSetOn(flag, overflow(value, result()))
-                        Flag.H -> flagIsSetOn(flag, halfCarry(value, result()))
-                        Flag.Z -> flagIsSetOn(flag, isZero(result()))
-                        Flag.S -> flagIsSetOn(flag, isNegative(result()))
-                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
-                    }}
-                }
+                expectFlags { flag -> when(flag) {
+                    Flag.C -> flagCopiedFrom(flag, prevFlags)
+                    Flag.N -> flagIsReset(flag)
+                    Flag.PV -> flagIsSetOn(flag, overflow(value, result()))
+                    Flag.H -> flagIsSetOn(flag, halfCarry(value, result()))
+                    Flag.Z -> flagIsSetOn(flag, isZero(result()))
+                    Flag.S -> flagIsSetOn(flag, isNegative(result()))
+                    Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
+                }}
             }}
         }
 
@@ -927,9 +919,8 @@ class ProcessorTest : FunSpec({
             )) { (cycles, size, result, prepare) -> behavesLike { value: UShort, prevFlags ->
                 prepare(value)
                 whenProcessorRuns()
-                expect(cycles, pc = size.toUShort(), prevFlags) {
-                    result() shouldBe value.inc()
-                }
+                expect(cycles = cycles, pc = size.toUShort(), flags = prevFlags)
+                result() shouldBe value.inc()
             }}
         }
 
@@ -1019,18 +1010,17 @@ class ProcessorTest : FunSpec({
             )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UByte, b: UByte, _ ->
                 prepare(a, b)
                 whenProcessorRuns()
-                expect(cycles, pc = size.toUShort()) {
-                    if (sameOperand) { result() shouldBe (a or a) }
-                    else { result() shouldBe (a or b) }
+                expect(cycles = cycles, pc = size.toUShort())
+                if (sameOperand) { result() shouldBe (a or a) }
+                else { result() shouldBe (a or b) }
 
-                    expectFlags { flag -> when(flag) {
-                        Flag.C, Flag.N, Flag.H -> flagIsReset(flag)
-                        Flag.PV -> flagIsSetOn(flag, hasEvenParity(result()))
-                        Flag.Z -> flagIsSetOn(flag, isZero(result()))
-                        Flag.S -> flagIsSetOn(flag, isNegative(result()))
-                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
-                    }}
-                }
+                expectFlags { flag -> when(flag) {
+                    Flag.C, Flag.N, Flag.H -> flagIsReset(flag)
+                    Flag.PV -> flagIsSetOn(flag, hasEvenParity(result()))
+                    Flag.Z -> flagIsSetOn(flag, isZero(result()))
+                    Flag.S -> flagIsSetOn(flag, isNegative(result()))
+                    Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
+                }}
             }}
         }
 
@@ -1120,24 +1110,23 @@ class ProcessorTest : FunSpec({
             )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UByte, b: UByte, prevFlags ->
                 prepare(a, b)
                 whenProcessorRuns()
-                expect(cycles, pc = size.toUShort()) {
-                    var expected = if (sameOperand) { (a - a).toUByte() } else { (a - b).toUByte() }
-                    if (Flag.C.isSet(prevFlags)) {
-                        expected--
-                    }
-
-                    result() shouldBe expected
-
-                    expectFlags { flag -> when(flag) {
-                        Flag.C -> flagIsSetOn(flag, borrow(a, result()))
-                        Flag.N -> flagIsSet(flag)
-                        Flag.PV -> flagIsSetOn(flag, underflow(a, result()))
-                        Flag.H -> flagIsSetOn(flag, halfBorrow(a, result()))
-                        Flag.Z -> flagIsSetOn(flag, isZero(result()))
-                        Flag.S -> flagIsSetOn(flag, isNegative(result()))
-                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
-                    }}
+                expect(cycles = cycles, pc = size.toUShort())
+                var expected = if (sameOperand) { (a - a).toUByte() } else { (a - b).toUByte() }
+                if (Flag.C.isSet(prevFlags)) {
+                    expected--
                 }
+
+                result() shouldBe expected
+
+                expectFlags { flag -> when(flag) {
+                    Flag.C -> flagIsSetOn(flag, borrow(a, result()))
+                    Flag.N -> flagIsSet(flag)
+                    Flag.PV -> flagIsSetOn(flag, underflow(a, result()))
+                    Flag.H -> flagIsSetOn(flag, halfBorrow(a, result()))
+                    Flag.Z -> flagIsSetOn(flag, isZero(result()))
+                    Flag.S -> flagIsSetOn(flag, isNegative(result()))
+                    Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
+                }}
             }}
         }
 
@@ -1227,20 +1216,19 @@ class ProcessorTest : FunSpec({
             )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UByte, b: UByte, _ ->
                 prepare(a, b)
                 whenProcessorRuns()
-                expect(cycles, pc = size.toUShort()) {
-                    if (sameOperand) { result() shouldBe (a - a).toUByte() }
-                    else { result() shouldBe (a - b).toUByte() }
+                expect(cycles = cycles, pc = size.toUShort())
+                if (sameOperand) { result() shouldBe (a - a).toUByte() }
+                else { result() shouldBe (a - b).toUByte() }
 
-                    expectFlags { flag -> when(flag) {
-                        Flag.C -> flagIsSetOn(flag, borrow(a, result()))
-                        Flag.N -> flagIsSet(flag)
-                        Flag.PV -> flagIsSetOn(flag, underflow(a, result()))
-                        Flag.H -> flagIsSetOn(flag, halfBorrow(a, result()))
-                        Flag.Z -> flagIsSetOn(flag, isZero(result()))
-                        Flag.S -> flagIsSetOn(flag, isNegative(result()))
-                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
-                    }}
-                }
+                expectFlags { flag -> when(flag) {
+                    Flag.C -> flagIsSetOn(flag, borrow(a, result()))
+                    Flag.N -> flagIsSet(flag)
+                    Flag.PV -> flagIsSetOn(flag, underflow(a, result()))
+                    Flag.H -> flagIsSetOn(flag, halfBorrow(a, result()))
+                    Flag.Z -> flagIsSetOn(flag, isZero(result()))
+                    Flag.S -> flagIsSetOn(flag, isNegative(result()))
+                    Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
+                }}
             }}
         }
 
@@ -1330,18 +1318,17 @@ class ProcessorTest : FunSpec({
             )) { (cycles, size, sameOperand, result, prepare) -> behavesLike { a: UByte, b: UByte, _ ->
                 prepare(a, b)
                 whenProcessorRuns()
-                expect(cycles, pc = size.toUShort()) {
-                    if (sameOperand) { result() shouldBe (a xor a).toUByte() }
-                    else { result() shouldBe (a xor b).toUByte() }
+                expect(cycles = cycles, pc = size.toUShort())
+                if (sameOperand) { result() shouldBe (a xor a).toUByte() }
+                else { result() shouldBe (a xor b).toUByte() }
 
-                    expectFlags { flag -> when(flag) {
-                        Flag.C, Flag.N, Flag.H -> flagIsReset(flag)
-                        Flag.PV -> flagIsSetOn(flag, hasEvenParity(result()))
-                        Flag.Z -> flagIsSetOn(flag, isZero(result()))
-                        Flag.S -> flagIsSetOn(flag, isNegative(result()))
-                        Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
-                    }}
-                }
+                expectFlags { flag -> when(flag) {
+                    Flag.C, Flag.N, Flag.H -> flagIsReset(flag)
+                    Flag.PV -> flagIsSetOn(flag, hasEvenParity(result()))
+                    Flag.Z -> flagIsSetOn(flag, isZero(result()))
+                    Flag.S -> flagIsSetOn(flag, isNegative(result()))
+                    Flag.F3, Flag.F5 -> flagCopiedFrom(flag, result())
+                }}
             }}
         }
     }
@@ -1418,11 +1405,11 @@ class ProcessorTest : FunSpec({
             )) { (cycles, size, cond, prepare) -> behavesLike { dest: UShort, prevFlags ->
                 prepare(dest)
                 whenProcessorRuns()
-                if (cond()) {
-                    expect(cycles, pc = dest, prevFlags)
-                } else {
-                    expect(cycles, pc = size.toUShort(), prevFlags)
-                }
+                expect(
+                    cycles = cycles,
+                    flags = prevFlags,
+                    pc = if (cond()) dest else size.toUShort()
+                )
             }}
         }
 
@@ -1451,11 +1438,68 @@ class ProcessorTest : FunSpec({
             )) { (cond, prepare) -> behavesLike { n: Byte, prevFlags ->
                 prepare(n)
                 whenProcessorRuns()
-                if (cond()) {
-                    expect(cycles = 12, pc = 0x0000.toUShort().increment(n), prevFlags)
-                } else {
-                    expect(cycles = 7, pc = 0x0002u, prevFlags)
-                }
+                expect(
+                    cycles = if (cond()) 12 else 7,
+                    flags = prevFlags,
+                    pc = if (cond()) 0x0000.toUShort().increment(n) else 0x0002u,
+                )
+            }}
+        }
+
+        context("Call") {
+            data class TestCase(
+                val cond: ProcessorBehavior.() -> Boolean,
+                val inst: Assembler.(dest: UShort) -> Unit,
+            )
+
+            withData(mapOf(
+                "CALL NN" to TestCase(
+                    cond = { true },
+                    inst = { CALL(it) }
+                ),
+                "CALL NZ, NN" to TestCase(
+                    cond = { FlagsPredicate.NZ.evaluate(regs.f) },
+                    inst = { CALL(NZ, it) }
+                ),
+                "CALL Z, NN" to TestCase(
+                    cond = { FlagsPredicate.Z.evaluate(regs.f) },
+                    inst = { CALL(Z, it) }
+                ),
+                "CALL NC, NN" to TestCase(
+                    cond = { FlagsPredicate.NC.evaluate(regs.f) },
+                    inst = { CALL(NC, it) }
+                ),
+                "CALL C, NN" to TestCase(
+                    cond = { FlagsPredicate.C.evaluate(regs.f) },
+                    inst = { CALL(C, it) }
+                ),
+                "CALL PO, NN" to TestCase(
+                    cond = { FlagsPredicate.PO.evaluate(regs.f) },
+                    inst = { CALL(PO, it) }
+                ),
+                "CALL PE, NN" to TestCase(
+                    cond = { FlagsPredicate.PE.evaluate(regs.f) },
+                    inst = { CALL(PE, it) }
+                ),
+                "CALL P, NN" to TestCase(
+                    cond = { FlagsPredicate.P.evaluate(regs.f) },
+                    inst = { CALL(P, it) }
+                ),
+                "CALL M, NN" to TestCase(
+                    cond = { FlagsPredicate.M.evaluate(regs.f) },
+                    inst = { CALL(M, it) }
+                ),
+            )) { (cond, inst) -> behavesLike { dest: UShort, prevFlags ->
+                given(pc = 0x8000u, sp = 0xFFFFu)
+                givenCode(org = 0x8000u) { inst(dest) }
+
+                whenProcessorRuns()
+
+                expect(
+                    cycles = if (cond()) 17 else 10,
+                    flags = prevFlags,
+                    pc = if (cond()) dest else 0x8003u,
+                )
             }}
         }
 
@@ -1515,28 +1559,24 @@ class ProcessorTest : FunSpec({
             )) { (jcycles, cond, prepare) -> behavesLike { n: Byte, prevFlags ->
                 prepare(n)
                 whenProcessorRuns()
-                if (cond()) {
-                    expect(cycles = jcycles, pc = 0x8000u, prevFlags)
-                    regs.sp shouldBe 0x0000u
-                } else {
-                    expect(cycles = 5, pc = 0x0001u, prevFlags)
-                    regs.sp shouldBe 0xFFFEu
-                }
+                expect(
+                    cycles = if (cond()) jcycles else 5,
+                    pc = if (cond()) 0x8000u else 0x0001u,
+                    flags = prevFlags,
+                    sp = if (cond()) 0x0000u else 0xFFFEu,
+                )
             }}
         }
 
         test("DJNZ") { behavesLike { value: UByte, prevFlags ->
-            given { regs.b = value }
+            given(b = value)
             whenProcessorRuns { DJNZ(0x42) }
-            if (value == 1u.toUByte()) {
-                expect(cycles = 8, pc = 0x0002u, prevFlags) {
-                    regs.b shouldBe 0x00u
-                }
-            } else {
-                expect(cycles = 13, pc = 0x0042u, prevFlags) {
-                    regs.b shouldBe value.dec()
-                }
-            }
+            expect(
+                b = value.dec(),
+                cycles = if (regs.b.isZero()) 8 else 13,
+                pc = if (regs.b.isZero()) 0x0002u else 0x0042u,
+                flags = prevFlags,
+            )
         }}
 
         context("Reset") {
@@ -2201,9 +2241,8 @@ class ProcessorTest : FunSpec({
             ) { (cycles, size, result, prepare) -> behavesLike { value: UByte, prevFlags ->
                 prepare(value)
                 whenProcessorRuns()
-                expect(cycles, pc = size.toUShort(), prevFlags) {
-                    result(value) shouldBe value
-                }
+                expect(cycles = cycles, pc = size.toUShort(), flags = prevFlags)
+                result(value) shouldBe value
             } }
         }
 
@@ -2269,7 +2308,8 @@ class ProcessorTest : FunSpec({
             ) { (cycles, size, result, prepare) -> behavesLike { value: UShort, prevFlags ->
                 prepare(value)
                 whenProcessorRuns()
-                expect(cycles, pc = size.toUShort(), prevFlags) { result() shouldBe value }
+                expect(cycles = cycles, pc = size.toUShort(), flags = prevFlags)
+                result() shouldBe value
             } }
         }
 
@@ -2315,14 +2355,13 @@ class ProcessorTest : FunSpec({
             )) { (cycles, size, affectsFlags, result, prepare) -> behavesLike { a: UShort, b: UShort, prevFlags ->
                 prepare(a, b)
                 whenProcessorRuns()
-                expect(cycles, pc = size.toUShort()) {
-                    if (!affectsFlags) {
-                        regs.f shouldBe prevFlags
-                    }
-                    val (resA, resB) = result()
-                    resA shouldBe b
-                    resB shouldBe a
+                expect(cycles = cycles, pc = size.toUShort())
+                if (!affectsFlags) {
+                    expect(flags = prevFlags)
                 }
+                val (resA, resB) = result()
+                resA shouldBe b
+                resB shouldBe a
             }}
         }
 
@@ -2378,14 +2417,12 @@ class ProcessorTest : FunSpec({
             ) { (cycles, size, touchFlags, result, prepare) -> behavesLike { value: UShort, prevFlags ->
                 prepare(value)
                 whenProcessorRuns()
-                expect(cycles, pc = size.toUShort()) {
-                    if (!touchFlags) {
-                        regs.f shouldBe prevFlags
-                    }
-                    result() shouldBe value
-                    regs.sp shouldBe 0x0000u
+                expect(cycles = cycles, pc = size.toUShort(), sp = 0x0000u)
+                if (!touchFlags) {
+                    expect(flags = prevFlags)
                 }
-            } }
+                result() shouldBe value
+            }}
         }
     }
 
@@ -2406,9 +2443,8 @@ class ProcessorTest : FunSpec({
             )) { (cycles, size, result, prepare) -> behavesLike { value: UByte, prevFlags ->
                 prepare(value)
                 whenProcessorRuns()
-                expect(cycles, pc = size.toUShort(), prevFlags) {
-                    result() shouldBe value
-                }
+                expect(cycles = cycles, pc = size.toUShort(), flags = prevFlags)
+                result() shouldBe value
             }}
         }
     }
